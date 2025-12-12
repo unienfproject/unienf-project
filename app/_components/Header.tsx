@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Button } from "./ui/button";
+import Image from "next/image";
 
 export default function Header() {
   return (
@@ -7,25 +8,12 @@ export default function Header() {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex h-16 items-center justify-between lg:h-20">
           <Link className="group flex items-center gap-2" href="/">
-            <div className="bg-primary shadow-soft group-hover:shadow-glow flex h-10 w-10 items-center justify-center rounded-xl transition-shadow duration-300">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                className="lucide lucide-graduation-cap text-primary-foreground h-6 w-6"
-              >
-                <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
-                <path d="M22 10v6"></path>
-                <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path>
-              </svg>
-            </div>
-            <span className="text-foreground text-xl font-bold">UNIENF</span>
+            <Image
+              src="/logo.jpg"
+              alt="Logo da UNIENF"
+              width={90}
+              height={90}
+            />
           </Link>
           <nav className="hidden items-center gap-8 lg:flex">
             <Link
