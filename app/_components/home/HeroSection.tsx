@@ -35,7 +35,7 @@ export default function HeroSection() {
             </div>
             <h1 className="text-foreground mb-6 text-4xl leading-tight font-bold md:text-5xl lg:text-6xl">
               Formação em
-              <span className="gradient-text">Enfermagem</span>
+              <span className="gradient-text"> Enfermagem </span>
               de Excelência
             </h1>
             <p className="text-muted-foreground mx-auto mb-8 max-w-xl text-lg md:text-xl lg:mx-0">

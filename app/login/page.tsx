@@ -1,7 +1,74 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { Button } from "../_components/ui/button";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { title } from "process";
+import Toast from "../_hooks/use-toast";
+import { createClient } from "@/app/_lib/supabase/client";
+import { toast } from "sonner";
+import { ArrowRight } from "lucide-react";
+import { Input } from "../_components/ui/input";
+import { Label } from "../_components/ui/label";
 
 export default function Login() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("emailsent") === "true") {
+      Toast({
+        title: "E-mail enviado com sucesso",
+        description: "Verifique sua caixa de entrada",
+      });
+    }
+  }, [searchParams]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      const supabase = createClient();
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        Toast({
+          title: "Erro ao fazer login",
+          description: error.message,
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (data.user) {
+        Toast({
+          title: "Login realizado",
+          description: "Bem vindo a Unienf",
+        });
+        router.push("/");
+        router.refresh();
+      }
+    } catch (error) {
+      Toast({
+        title: "Erro inesperado",
+        description: "Ocorreu um erro ao fazer login, tente novamente",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="bg-background flex min-h-screen">
       <div className="bg-primary relative hidden items-center justify-center overflow-hidden lg:flex lg:w-1/2">
@@ -26,59 +93,91 @@ export default function Login() {
           </p>
         </div>
       </div>
-      <div className="flex-1 flex flex-col justify-center px-6 lg:px-16">
-        <div className="max-w-md w-full mx-auto"><a className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8" href="/">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-arrow-left w-4 h-4">
-            <path d="m12 19-7-7 7-7"></path>
-            <path d="M19 12H5"></path>
-          </svg>
-          Voltar para o site
-        </a>
-          <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-graduation-cap w-6 h-6 text-primary-foreground">
+      <div className="flex flex-1 flex-col justify-center px-6 lg:px-16">
+        <div className="mx-auto w-full max-w-md">
+          <Link
+            className="text-muted-foreground hover:text-primary mb-8 inline-flex items-center gap-2 text-sm transition-colors"
+            href="/"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              className="lucide lucide-arrow-left h-4 w-4"
+            >
+              <path d="m12 19-7-7 7-7"></path>
+              <path d="M19 12H5"></path>
+            </svg>
+            Voltar para o site
+          </Link>
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            {/* <div className="bg-primary flex h-10 w-10 items-center justify-center rounded-xl">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                className="lucide lucide-graduation-cap text-primary-foreground h-6 w-6"
+              >
                 <path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"></path>
                 <path d="M22 10v6"></path>
                 <path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"></path>
               </svg>
-            </div>
-            <span className="text-xl font-bold text-foreground">UNIENF</span>
+            </div> */}
+            <span className="text-foreground text-xl font-bold">UNIENF</span>
           </div>
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-foreground mb-2">Área do Aluno</h2>
-            <p className="text-muted-foreground">Digite suas credenciais para acessar o sistema</p>
+            <h2 className="text-foreground mb-2 text-2xl font-bold">
+              Área do Aluno
+            </h2>
+            <p className="text-muted-foreground">
+              Digite suas credenciais para acessar o sistema
+            </p>
           </div>
           <form className="space-y-5">
-            <div className="space-y-2">
-              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="email">E-mail</label>
-              <div className="relative">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-mail absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground">
-                  <rect width="20" height="16" x="2" y="4" rx="2"></rect>
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
-                </svg>
-                <input type="email" className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-11 h-12" id="email" placeholder="seu@email.com" required="" value="">
-              </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="password">Senha</label>
-                <a href="#" className="text-sm text-primary hover:underline">Esqueceu a senha?</a>
-              </div>
-              <div className="relative">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-lock absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground">
-                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                </svg>
-                <input type="password" className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-11 h-12" id="password" placeholder="••••••••" required="" value="">
-              </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="password">Senha</Label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
             </div>
-            <button className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg font-medium ring-offset-background transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md px-4 py-2 w-full h-12 text-base" type="submit">Entrar</button>
+            <Button type="submit" className="h-11 w-full" disabled={isLoading}>
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="border-primary-foreground/30 border-t-primary-foreground h-4 w-4 animate-spin rounded-full border-2" />
+                  Entrando...
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  Entrar
+                  <ArrowRight className="h-4 w-4" />
+                </div>
+              )}
+            </Button>
           </form>
-          <div className="mt-8 text-center"><p className="text-sm text-muted-foreground">
-            Precisa de ajuda?
-            <a href="#" className="text-primary hover:underline">Entre em contato</a>
-          </p>
-          </div>
         </div>
       </div>
     </div>
