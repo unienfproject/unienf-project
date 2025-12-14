@@ -67,10 +67,11 @@ export default function HeroSection() {
 
               <div className="bg-card shadow-large border-border/50 relative overflow-hidden rounded-3xl border">
                 <Image
-                  src="/"
+                  src="/img-hero-section.jpg"
                   alt="Profissional de enfermagem cuidando de paciente"
-                  width={50}
-                  height={50}
+                  width={500}
+                  height={500}
+                  quality={95}
                   className="h-[400px] w-full object-cover lg:h-[500px]"
                 />
                 <div className="from-foreground/80 absolute inset-x-0 bottom-0 bg-gradient-to-t to-transparent p-6">

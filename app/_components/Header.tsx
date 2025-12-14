@@ -7,13 +7,13 @@ export default function Header() {
   return (
     <header className="bg-card/95 border-border/50 fixed top-0 right-0 left-0 z-50 border-b backdrop-blur-md">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className="flex h-16 items-center justify-between lg:h-20">
+        <div className="flex h-16 items-center justify-between py-4 lg:h-28">
           <Link className="group flex items-center gap-2" href="/">
             <Image
-              src="/logo.jpg"
+              src="/logo-unienf-vf.png"
               alt="Logo da UNIENF"
-              width={90}
-              height={90}
+              width={120}
+              height={120}
             />
           </Link>
           <nav className="hidden items-center gap-8 lg:flex">
