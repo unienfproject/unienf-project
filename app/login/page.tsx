@@ -1,7 +1,7 @@
 "use client";
 
 import { createClient } from "@/app/_lib/supabase/client";
-import { ArrowRight } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -96,21 +96,7 @@ export default function Login() {
             className="text-muted-foreground hover:text-primary mb-8 inline-flex items-center gap-2 text-sm transition-colors"
             href="/"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              className="lucide lucide-arrow-left h-4 w-4"
-            >
-              <path d="m12 19-7-7 7-7"></path>
-              <path d="M19 12H5"></path>
-            </svg>
+            <ArrowLeft className="h-4 w-4" />
             Voltar para o site
           </Link>
           <div className="mb-8 flex items-center gap-3 lg:hidden">

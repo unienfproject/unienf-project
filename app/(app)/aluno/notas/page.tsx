@@ -1,6 +1,7 @@
 import { Button } from "@/app/_components/ui/button";
-import SideBar from "../Sidebar";
 import { Input } from "@/app/_components/ui/input";
+import { Award, Bell, Search, TrendingUp } from "lucide-react";
+import SideBar from "../Sidebar";
 
 export default function Notas() {
   return (
@@ -10,21 +11,7 @@ export default function Notas() {
         <header className="bg-card border-border flex h-16 items-center justify-between border-b px-6">
           <div className="max-w-md flex-1">
             <div className="relative">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                className="lucide lucide-search text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
-              >
-                <circle cx="11" cy="11" r="8"></circle>
-                <path d="m21 21-4.3-4.3"></path>
-              </svg>
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
               <Input
                 type="text"
                 className="border-input ring-offset-background file:text-foreground placeholder:text-muted-foreground bg-muted/50 focus-visible:ring-primary flex h-10 w-full rounded-md border-0 px-3 py-2 pl-10 text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
@@ -34,21 +21,7 @@ export default function Notas() {
           </div>
           <div className="flex items-center gap-4">
             <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground relative inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                className="lucide lucide-bell text-muted-foreground h-5 w-5"
-              >
-                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path>
-                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path>
-              </svg>
+              <Bell className="text-muted-foreground h-5 w-5" />
               <span className="bg-destructive absolute top-1 right-1 h-2 w-2 rounded-full"></span>
             </Button>
             <div className="border-border flex items-center gap-3 border-l pl-4">
@@ -93,21 +66,7 @@ export default function Notas() {
                     <span className="text-primary text-3xl font-bold">
                       8.50
                     </span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className="lucide lucide-trending-up text-success h-5 w-5"
-                    >
-                      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-                      <polyline points="16 7 22 7 22 13"></polyline>
-                    </svg>
+                    <TrendingUp className="text-success h-5 w-5" />
                   </div>
                 </div>
               </div>
@@ -137,21 +96,7 @@ export default function Notas() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              className="lucide lucide-award text-success h-5 w-5"
-                            >
-                              <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
-                              <circle cx="12" cy="8" r="6"></circle>
-                            </svg>
+                            <Award className="text-success h-5 w-5" />
                           </div>
                           <span className="text-foreground font-medium">
                             Anatomia Humana
@@ -183,21 +128,7 @@ export default function Notas() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              className="lucide lucide-award text-success h-5 w-5"
-                            >
-                              <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
-                              <circle cx="12" cy="8" r="6"></circle>
-                            </svg>
+                            <Award className="text-success h-5 w-5" />
                           </div>
                           <span className="text-foreground font-medium">
                             Farmacologia
@@ -229,21 +160,7 @@ export default function Notas() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              className="lucide lucide-award text-success h-5 w-5"
-                            >
-                              <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
-                              <circle cx="12" cy="8" r="6"></circle>
-                            </svg>
+                            <Award className="text-success h-5 w-5" />
                           </div>
                           <span className="text-foreground font-medium">
                             Enfermagem Clínica
@@ -275,21 +192,7 @@ export default function Notas() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              className="lucide lucide-award text-muted-foreground h-5 w-5"
-                            >
-                              <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
-                              <circle cx="12" cy="8" r="6"></circle>
-                            </svg>
+                            <Award className="text-muted-foreground h-5 w-5" />
                           </div>
                           <span className="text-foreground font-medium">
                             Biossegurança
@@ -321,21 +224,7 @@ export default function Notas() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              className="lucide lucide-award text-muted-foreground h-5 w-5"
-                            >
-                              <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
-                              <circle cx="12" cy="8" r="6"></circle>
-                            </svg>
+                            <Award className="text-muted-foreground h-5 w-5" />
                           </div>
                           <span className="text-foreground font-medium">
                             Ética Profissional
@@ -383,21 +272,7 @@ export default function Notas() {
                     <span className="text-primary text-3xl font-bold">
                       8.50
                     </span>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      className="lucide lucide-trending-up text-success h-5 w-5"
-                    >
-                      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
-                      <polyline points="16 7 22 7 22 13"></polyline>
-                    </svg>
+                    <TrendingUp className="text-success h-5 w-5" />
                   </div>
                 </div>
               </div>
@@ -427,21 +302,7 @@ export default function Notas() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              className="lucide lucide-award text-success h-5 w-5"
-                            >
-                              <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
-                              <circle cx="12" cy="8" r="6"></circle>
-                            </svg>
+                            <Award className="text-success h-5 w-5" />
                           </div>
                           <span className="text-foreground font-medium">
                             Fundamentos de Enfermagem
@@ -473,21 +334,7 @@ export default function Notas() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              className="lucide lucide-award text-success h-5 w-5"
-                            >
-                              <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
-                              <circle cx="12" cy="8" r="6"></circle>
-                            </svg>
+                            <Award className="text-success h-5 w-5" />
                           </div>
                           <span className="text-foreground font-medium">
                             Primeiros Socorros
@@ -519,21 +366,7 @@ export default function Notas() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              className="lucide lucide-award text-success h-5 w-5"
-                            >
-                              <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
-                              <circle cx="12" cy="8" r="6"></circle>
-                            </svg>
+                            <Award className="text-success h-5 w-5" />
                           </div>
                           <span className="text-foreground font-medium">
                             Saúde Coletiva
@@ -565,21 +398,7 @@ export default function Notas() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              className="lucide lucide-award text-success h-5 w-5"
-                            >
-                              <path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"></path>
-                              <circle cx="12" cy="8" r="6"></circle>
-                            </svg>
+                            <Award className="text-success h-5 w-5" />
                           </div>
                           <span className="text-foreground font-medium">
                             Higiene e Profilaxia
