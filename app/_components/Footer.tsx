@@ -1,10 +1,14 @@
 import { Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import LogoParks from "./LogoParks";
 
 export default function Footer() {
   return (
-    <footer id="contato" className="bg-foreground text-card py-16">
+    <footer
+      id="contato"
+      className="bg-foreground text-card flex flex-col items-center justify-center gap-4 py-16"
+    >
       <div className="container mx-auto px-4 lg:px-8">
         <div className="mb-12 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">
           <div>
@@ -164,6 +168,12 @@ export default function Footer() {
             </div>
           </div>
         </div>
+      </div>
+      <div className="flex items-center space-x-2">
+        <p className="text-white">Desenvolvido por</p>
+        <Link href="https://parkscompany.com.br" target="_blank">
+          <LogoParks />
+        </Link>
       </div>
     </footer>
   );
