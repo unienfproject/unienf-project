@@ -32,15 +32,12 @@ export function SignupForm({ className, ...props }: ComponentProps<"form">) {
   });
 
   const passwordValidation = {
-    minLength: formData.password.length >= 8,
     hasUpperCase: /[A-Z]/.test(formData.password),
     hasNumber: /[0-9]/.test(formData.password),
   };
 
   const isPasswordValid =
-    passwordValidation.minLength &&
-    passwordValidation.hasUpperCase &&
-    passwordValidation.hasNumber;
+    passwordValidation.hasUpperCase && passwordValidation.hasNumber;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,9 +91,9 @@ export function SignupForm({ className, ...props }: ComponentProps<"form">) {
     >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
-          <h1 className="text-2xl font-bold">Crie conta</h1>
+          <h1 className="text-2xl font-bold">Nova Matrícula</h1>
           <p className="text-muted-foreground text-sm text-balance">
-            Comece a organizar suas finanças hoje
+            Matrícula de um novo aluno.
           </p>
         </div>
         <Field>
@@ -117,6 +114,20 @@ export function SignupForm({ className, ...props }: ComponentProps<"form">) {
             id="email"
             type="email"
             placeholder="seu@email.com"
+            className="focus-neon shadow-accent/15 rounded-lg pr-10 shadow-lg"
+            required
+            value={formData.email}
+            onChange={(e) =>
+              setFormData({ ...formData, email: e.target.value })
+            }
+          />
+        </Field>
+        <Field>
+          <FieldLabel htmlFor="etiqueta">Etiqueta</FieldLabel>
+          <Input
+            id="etiqueta"
+            type="etiqueta"
+            placeholder="Etiqueta Turma"
             className="focus-neon shadow-accent/15 rounded-lg pr-10 shadow-lg"
             required
             value={formData.email}
@@ -157,21 +168,7 @@ export function SignupForm({ className, ...props }: ComponentProps<"form">) {
           </div>
           {formData.password && (
             <div className="mt-2 space-y-1 text-xs">
-              <div
-                className={cn(
-                  "flex items-center gap-2",
-                  passwordValidation.minLength
-                    ? "text-green-500"
-                    : "text-red-500",
-                )}
-              >
-                {passwordValidation.minLength ? (
-                  <Check className="h-3 w-3" />
-                ) : (
-                  <X className="h-3 w-3" />
-                )}
-                Mínimo 8 caracteres
-              </div>
+              <div className={cn("flex items-center gap-2")}></div>
               <div
                 className={cn(
                   "flex items-center gap-2",
@@ -236,59 +233,11 @@ export function SignupForm({ className, ...props }: ComponentProps<"form">) {
           </div>
         </Field>
         <Field>
-          <div className="flex items-start space-x-2 pt-2">
-            <Checkbox
-              id="terms"
-              className="border-accent cursor-pointer"
-              checked={formData.acceptTerms}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, acceptTerms: checked as boolean })
-              }
-            />
-            <div className="text-muted-foreground">
-              <label
-                htmlFor="terms"
-                className="text-muted-foreground flex cursor-pointer flex-wrap gap-1 text-sm"
-              >
-                Li e aceito os{" "}
-                <Link
-                  href="/terms"
-                  className="text-primary hover:text-primary/50 transition-colors hover:underline"
-                >
-                  Termos de Uso
-                </Link>{" "}
-                e a{" "}
-                <Link
-                  href="/privacy"
-                  className="text-primary hover:text-primary/50 transition-colors hover:underline"
-                >
-                  Política de Privacidade
-                </Link>
-              </label>
-            </div>
-          </div>
-        </Field>
-        <Field>
           <Button type="submit" disabled={isLoading || !formData.acceptTerms}>
-            {isLoading ? "Criando conta..." : "Criar Conta"}
+            {isLoading ? "Criando conta..." : "Cadastrar Aluno"}
           </Button>
         </Field>
-        <FieldSeparator>OU</FieldSeparator>
-        <Field>
-          <FieldDescription className="px-6 text-center">
-            Já tem uma conta? <a href="/login">Entrar</a>
-          </FieldDescription>
-        </Field>
       </FieldGroup>
-      <div className="text-muted-foreground space-x-4 text-center text-xs">
-        <Link href="/terms" className="hover:text-primary transition-colors">
-          Termos
-        </Link>
-        <span>·</span>
-        <Link href="/privacy" className="hover:text-primary transition-colors">
-          Privacidade
-        </Link>
-      </div>
     </form>
   );
 }
