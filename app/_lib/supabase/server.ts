@@ -14,12 +14,11 @@ export async function createServerSupabaseClient() {
         },
         setAll(cookiesToSet) {
           try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
-            );
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options);
+            });
           } catch {
-            // A chamada pode falhar se for feita durante renderização
-            // Isso é esperado e pode ser ignorado
+            // Em Server Components, set pode falhar. O middleware garante o refresh.
           }
         },
       },
