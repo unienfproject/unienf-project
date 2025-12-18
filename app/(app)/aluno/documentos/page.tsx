@@ -1,6 +1,6 @@
-import { getUserProfile, canAccessDocuments } from "@/app/_lib/actions/profile";
-import { getStudentDocuments } from "@/app/_lib/mockdata/docs.mock";
 import DocumentsView from "@/app/_components/documents/DocumentsView";
+import { canAccessDocuments, getUserProfile } from "@/app/_lib/actions/profile";
+import { getStudentDocuments } from "@/app/_lib/mockdata/docs.mock";
 
 export default async function DocumentosPage() {
   const profile = await getUserProfile();

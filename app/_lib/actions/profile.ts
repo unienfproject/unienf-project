@@ -66,7 +66,10 @@ export async function getUserProfile(): Promise<Profile | null> {
     }
 
     if (profileData) {
-      return profileData as Profile;
+      return {
+        ...profileData,
+        user_id: user.id,
+      } as Profile;
     }
 
     console.warn("Profile data é null ou undefined");
