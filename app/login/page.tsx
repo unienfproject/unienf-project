@@ -5,28 +5,50 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState } from "react"; // Removed: email, password state are now managed by react-hook-form
 import { Button } from "../_components/ui/button";
 import { Input } from "../_components/ui/input";
-import { Label } from "../_components/ui/label";
 import Toast from "../_hooks/use-toast";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../_components/ui/form"; // Added FormField, FormControl, FormMessage
+import { useForm } from "react-hook-form"; // New import for form management
+import { z } from "zod"; // New import for schema validation
+import { zodResolver } from "@hookform/resolvers/zod"; // New import for Zod resolver
+
+// Define the form schema using Zod for validation
+const FormSchema = z.object({
+  email: z.string().email({ message: "E-mail inválido." }),
+  password: z
+    .string()
+    .min(6, { message: "A senha deve ter no mínimo 6 caracteres." }),
+});
 
 export default function Login() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // Initialize react-hook-form with Zod resolver
+  const form = useForm<z.infer<typeof FormSchema>>({
+    resolver: zodResolver(FormSchema),
+    defaultValues: { email: "", password: "" },
+  });
+
+  // Handle form submission using react-hook-form's values
+  const handleSubmit = async (values: z.infer<typeof FormSchema>) => {
     setIsLoading(true);
 
     try {
       const supabase = createClient();
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: values.email, // Use values from the form
+        password: values.password, // Use values from the form
       });
 
       if (error) {
@@ -46,7 +68,8 @@ export default function Login() {
         router.push("/admin");
         router.refresh();
       }
-    } catch {
+    } catch (error) {
+      console.error("Erro inesperado durante o login:", error); // Log the error for debugging
       Toast({
         title: "Erro inesperado",
         description: "Ocorreu um erro ao fazer login, tente novamente",
@@ -100,39 +123,68 @@ export default function Login() {
               Digite suas credenciais para acessar o sistema da UNIENF
             </p>
           </div>
-          <form className="space-y-5" onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+          {/* Form component from shadcn/ui acts as a context provider */}
+          <Form {...form}>
+            {/* The actual form element, styled with className and onSubmit handler */}
+            <form
+              onSubmit={form.handleSubmit(handleSubmit)}
+              className="space-y-5"
+            >
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-2">
+                    <FormLabel htmlFor="email">E-mail</FormLabel>
+                    <FormControl>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem className="flex flex-col gap-2">
+                    <FormLabel htmlFor="password">Senha</FormLabel>
+                    <FormControl>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="********"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            <Button type="submit" className="h-11 w-full" disabled={isLoading}>
-              {isLoading ? (
-                <div className="flex items-center gap-2">
-                  <div className="border-primary-foreground/30 border-t-primary-foreground h-4 w-4 animate-spin rounded-full border-2" />
-                  Entrando...
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  Entrar
-                  <ArrowRight className="h-4 w-4" />
-                </div>
-              )}
-            </Button>
-          </form>
+              <Button
+                type="submit"
+                className="h-11 w-full"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="border-primary-foreground/30 border-t-primary-foreground h-4 w-4 animate-spin rounded-full border-2" />
+                    Entrando...
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    Entrar
+                    <ArrowRight className="h-4 w-4" />
+                  </div>
+                )}
+              </Button>
+            </form>
+          </Form>
         </div>
       </div>
     </div>

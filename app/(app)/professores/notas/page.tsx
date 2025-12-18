@@ -8,6 +8,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/_components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/app/_components/ui/table";
 import { Bell, Save, Search } from "lucide-react";
 export default function Notas() {
   return (
@@ -93,23 +101,23 @@ export default function Notas() {
               </h3>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-muted/30">
-                  <tr>
-                    <th className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
+              <Table className="w-full">
+                <TableHeader className="bg-muted/30">
+                  <TableRow>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
                       Aluno
-                    </th>
-                    <th className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
                       Matrícula
-                    </th>
-                    <th className="text-muted-foreground w-32 px-6 py-4 text-center text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground w-32 px-6 py-4 text-center text-sm font-medium">
                       Nota (0-10)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-border/50 bg-background border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow className="border-border/50 bg-background border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                           <span className="text-primary text-sm font-semibold">
@@ -120,11 +128,11 @@ export default function Notas() {
                           Maria Silva
                         </span>
                       </div>
-                    </td>
-                    <td className="text-muted-foreground px-6 py-4 text-sm">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground px-6 py-4 text-sm">
                       2024001
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
                       <Input
                         type="number"
                         className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring mx-auto flex h-10 w-24 rounded-md border px-3 py-2 text-center text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
@@ -134,10 +142,10 @@ export default function Notas() {
                         placeholder="0.0"
                         value=""
                       />
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-muted/10 border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-muted/10 border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                           <span className="text-primary text-sm font-semibold">
@@ -148,11 +156,11 @@ export default function Notas() {
                           João Santos
                         </span>
                       </div>
-                    </td>
-                    <td className="text-muted-foreground px-6 py-4 text-sm">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground px-6 py-4 text-sm">
                       2024002
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
                       <Input
                         type="number"
                         className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring mx-auto flex h-10 w-24 rounded-md border px-3 py-2 text-center text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
@@ -162,10 +170,10 @@ export default function Notas() {
                         placeholder="0.0"
                         value=""
                       />
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-background border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-background border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                           <span className="text-primary text-sm font-semibold">
@@ -176,11 +184,11 @@ export default function Notas() {
                           Ana Costa
                         </span>
                       </div>
-                    </td>
-                    <td className="text-muted-foreground px-6 py-4 text-sm">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground px-6 py-4 text-sm">
                       2024003
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
                       <Input
                         type="number"
                         className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring mx-auto flex h-10 w-24 rounded-md border px-3 py-2 text-center text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
@@ -190,10 +198,10 @@ export default function Notas() {
                         placeholder="0.0"
                         value=""
                       />
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-muted/10 border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-muted/10 border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                           <span className="text-primary text-sm font-semibold">
@@ -204,11 +212,11 @@ export default function Notas() {
                           Carlos Oliveira
                         </span>
                       </div>
-                    </td>
-                    <td className="text-muted-foreground px-6 py-4 text-sm">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground px-6 py-4 text-sm">
                       2024004
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
                       <Input
                         type="number"
                         className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring mx-auto flex h-10 w-24 rounded-md border px-3 py-2 text-center text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
@@ -218,10 +226,10 @@ export default function Notas() {
                         placeholder="0.0"
                         value=""
                       />
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-background border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-background border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                           <span className="text-primary text-sm font-semibold">
@@ -232,11 +240,11 @@ export default function Notas() {
                           Fernanda Lima
                         </span>
                       </div>
-                    </td>
-                    <td className="text-muted-foreground px-6 py-4 text-sm">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground px-6 py-4 text-sm">
                       2024005
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
                       <Input
                         type="number"
                         className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring mx-auto flex h-10 w-24 rounded-md border px-3 py-2 text-center text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
@@ -246,10 +254,10 @@ export default function Notas() {
                         placeholder="0.0"
                         value=""
                       />
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-muted/10 border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-muted/10 border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                           <span className="text-primary text-sm font-semibold">
@@ -260,11 +268,11 @@ export default function Notas() {
                           Ricardo Souza
                         </span>
                       </div>
-                    </td>
-                    <td className="text-muted-foreground px-6 py-4 text-sm">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground px-6 py-4 text-sm">
                       2024006
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
                       <Input
                         type="number"
                         className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring mx-auto flex h-10 w-24 rounded-md border px-3 py-2 text-center text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
@@ -274,10 +282,10 @@ export default function Notas() {
                         placeholder="0.0"
                         value=""
                       />
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-background border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-background border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                           <span className="text-primary text-sm font-semibold">
@@ -288,11 +296,11 @@ export default function Notas() {
                           Juliana Pereira
                         </span>
                       </div>
-                    </td>
-                    <td className="text-muted-foreground px-6 py-4 text-sm">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground px-6 py-4 text-sm">
                       2024007
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
                       <Input
                         type="number"
                         className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring mx-auto flex h-10 w-24 rounded-md border px-3 py-2 text-center text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
@@ -302,10 +310,10 @@ export default function Notas() {
                         placeholder="0.0"
                         value=""
                       />
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-muted/10 border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-muted/10 border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                           <span className="text-primary text-sm font-semibold">
@@ -316,11 +324,11 @@ export default function Notas() {
                           Pedro Mendes
                         </span>
                       </div>
-                    </td>
-                    <td className="text-muted-foreground px-6 py-4 text-sm">
+                    </TableCell>
+                    <TableCell className="text-muted-foreground px-6 py-4 text-sm">
                       2024008
-                    </td>
-                    <td className="px-6 py-4">
+                    </TableCell>
+                    <TableCell className="px-6 py-4">
                       <Input
                         type="number"
                         className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring mx-auto flex h-10 w-24 rounded-md border px-3 py-2 text-center text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
@@ -330,10 +338,10 @@ export default function Notas() {
                         placeholder="0.0"
                         value=""
                       />
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
             <div className="border-border bg-muted/20 flex items-center justify-between border-t p-6">
               <p className="text-muted-foreground text-sm">

@@ -3,6 +3,14 @@ import StatCard from "@/app/_components/StatCard";
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/app/_components/ui/table";
+import {
   Bell,
   Calendar,
   FileText,
@@ -152,78 +160,80 @@ export default function Overall() {
               </Button>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-border border-b">
-                    <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+              <Table className="w-full">
+                <TableHeader>
+                  <TableRow className="border-border border-b">
+                    <TableHead className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
                       Aluno
-                    </th>
-                    <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
                       Documento
-                    </th>
-                    <th className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
                       Status
-                    </th>
-                    <th className="text-muted-foreground px-4 py-3 text-right text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-4 py-3 text-right text-sm font-medium">
                       Ação
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-border/50 table-row-alternate border-b last:border-0">
-                    <td className="text-foreground px-4 py-3 text-sm">
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow className="border-border/50 table-row-alternate border-b last:border-0">
+                    <TableCell className="text-foreground px-4 py-3 text-sm">
                       Carlos Oliveira
-                    </td>
-                    <td className="text-foreground px-4 py-3 text-sm">RG</td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="text-foreground px-4 py-3 text-sm">
+                      RG
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
                       <span className="bg-warning/10 text-warning inline-flex rounded-full px-2 py-1 text-xs font-medium">
                         Pendente
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right">
                       <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
                         Revisar
                       </Button>
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 table-row-alternate border-b last:border-0">
-                    <td className="text-foreground px-4 py-3 text-sm">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 table-row-alternate border-b last:border-0">
+                    <TableCell className="text-foreground px-4 py-3 text-sm">
                       Fernanda Lima
-                    </td>
-                    <td className="text-foreground px-4 py-3 text-sm">
+                    </TableCell>
+                    <TableCell className="text-foreground px-4 py-3 text-sm">
                       Histórico Escolar
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
                       <span className="bg-warning/10 text-warning inline-flex rounded-full px-2 py-1 text-xs font-medium">
                         Pendente
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right">
                       <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
                         Revisar
                       </Button>
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 table-row-alternate border-b last:border-0">
-                    <td className="text-foreground px-4 py-3 text-sm">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 table-row-alternate border-b last:border-0">
+                    <TableCell className="text-foreground px-4 py-3 text-sm">
                       Ricardo Souza
-                    </td>
-                    <td className="text-foreground px-4 py-3 text-sm">
+                    </TableCell>
+                    <TableCell className="text-foreground px-4 py-3 text-sm">
                       Comprovante de Residência
-                    </td>
-                    <td className="px-4 py-3">
+                    </TableCell>
+                    <TableCell className="px-4 py-3">
                       <span className="bg-destructive/10 text-destructive inline-flex rounded-full px-2 py-1 text-xs font-medium">
                         Rejeitado
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-right">
+                    </TableCell>
+                    <TableCell className="px-4 py-3 text-right">
                       <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
                         Revisar
                       </Button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
           </div>
         </div>

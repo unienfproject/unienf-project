@@ -17,6 +17,8 @@ import { createClient } from "../_lib/supabase/client";
 import Link from "next/link";
 import { Checkbox } from "@/app/_components/ui/checkbox";
 import { Check, Eye, EyeOff, X } from "lucide-react";
+import { Form } from "../_components/ui/form";
+import { Label } from "../_components/ui/label";
 
 export function SignupForm({ className, ...props }: ComponentProps<"form">) {
   const router = useRouter();
@@ -153,8 +155,7 @@ export function SignupForm({ className, ...props }: ComponentProps<"form">) {
               required
               className="focus-neon shadow-accent/15 rounded-lg pr-10 shadow-lg"
             />
-            <button
-              type="button"
+            <Button
               onClick={() => setShowPassword(!showPassword)}
               className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
               aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
@@ -164,7 +165,7 @@ export function SignupForm({ className, ...props }: ComponentProps<"form">) {
               ) : (
                 <Eye className="h-4 w-4" />
               )}
-            </button>
+            </Button>
           </div>
           {formData.password && (
             <div className="mt-2 space-y-1 text-xs">
@@ -216,8 +217,7 @@ export function SignupForm({ className, ...props }: ComponentProps<"form">) {
               required
               className="focus-neon shadow-accent/15 rounded-lg pr-10 shadow-lg"
             />
-            <button
-              type="button"
+            <Button
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               className="text-muted-foreground hover:text-foreground absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
               aria-label={
@@ -229,7 +229,40 @@ export function SignupForm({ className, ...props }: ComponentProps<"form">) {
               ) : (
                 <Eye className="h-4 w-4" />
               )}
-            </button>
+            </Button>
+          </div>
+        </Field>
+        <Field>
+          <div className="flex items-start space-x-2 pt-2">
+            <Checkbox
+              id="terms"
+              className="border-accent cursor-pointer"
+              checked={formData.acceptTerms}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, acceptTerms: checked as boolean })
+              }
+            />
+            <div className="text-muted-foreground">
+              <Label
+                htmlFor="terms"
+                className="text-muted-foreground flex cursor-pointer flex-wrap gap-1 text-sm"
+              >
+                Li e aceito os{" "}
+                <Link
+                  href="/terms"
+                  className="text-primary hover:text-primary/50 transition-colors hover:underline"
+                >
+                  Termos de Uso
+                </Link>{" "}
+                e a{" "}
+                <Link
+                  href="/privacy"
+                  className="text-primary hover:text-primary/50 transition-colors hover:underline"
+                >
+                  Política de Privacidade
+                </Link>
+              </Label>
+            </div>
           </div>
         </Field>
         <Field>

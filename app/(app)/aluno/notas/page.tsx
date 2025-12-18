@@ -1,5 +1,13 @@
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/app/_components/ui/table";
 import { Award, Bell, Search, TrendingUp } from "lucide-react";
 
 export default function Notas() {
@@ -62,29 +70,29 @@ export default function Notas() {
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-muted/30">
-                  <tr>
-                    <th className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
+              <Table className="w-full">
+                <TableHeader className="bg-muted/30">
+                  <TableRow>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
                       Disciplina
-                    </th>
-                    <th className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
                       Nota 1
-                    </th>
-                    <th className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
                       Nota 2
-                    </th>
-                    <th className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
                       Média
-                    </th>
-                    <th className="text-muted-foreground px-6 py-4 text-right text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-right text-sm font-medium">
                       Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-border/50 bg-background border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow className="border-border/50 bg-background border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
                           <Award className="text-success h-5 w-5" />
@@ -93,30 +101,30 @@ export default function Notas() {
                           Anatomia Humana
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         8.5
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         9.0
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-lg font-bold">
                         8.75
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-right">
                       <span className="bg-success/10 text-success inline-flex rounded-full px-3 py-1 text-xs font-medium">
                         Aprovado
                       </span>
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-muted/10 border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-muted/10 border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
                           <Award className="text-success h-5 w-5" />
@@ -125,30 +133,30 @@ export default function Notas() {
                           Farmacologia
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         7.0
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         8.0
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-lg font-bold">
                         7.50
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-right">
                       <span className="bg-success/10 text-success inline-flex rounded-full px-3 py-1 text-xs font-medium">
                         Aprovado
                       </span>
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-background border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-background border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
                           <Award className="text-success h-5 w-5" />
@@ -157,30 +165,30 @@ export default function Notas() {
                           Enfermagem Clínica
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         9.0
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         9.5
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-lg font-bold">
                         9.25
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-right">
                       <span className="bg-success/10 text-success inline-flex rounded-full px-3 py-1 text-xs font-medium">
                         Aprovado
                       </span>
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-muted/10 border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-muted/10 border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
                           <Award className="text-muted-foreground h-5 w-5" />
@@ -189,30 +197,30 @@ export default function Notas() {
                           Biossegurança
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-warning text-sm font-medium">
                         6.5
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-muted-foreground text-sm font-medium">
                         -
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-muted-foreground text-lg font-bold">
                         -
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-right">
                       <span className="bg-muted text-muted-foreground inline-flex rounded-full px-3 py-1 text-xs font-medium">
                         Em andamento
                       </span>
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-background border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-background border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-lg">
                           <Award className="text-muted-foreground h-5 w-5" />
@@ -221,30 +229,30 @@ export default function Notas() {
                           Ética Profissional
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-muted-foreground text-sm font-medium">
                         -
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-muted-foreground text-sm font-medium">
                         -
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-muted-foreground text-lg font-bold">
                         -
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-right">
                       <span className="bg-muted text-muted-foreground inline-flex rounded-full px-3 py-1 text-xs font-medium">
                         Em andamento
                       </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
           </div>
           <div className="bg-card border-border/50 shadow-soft overflow-hidden rounded-2xl border">
@@ -266,29 +274,29 @@ export default function Notas() {
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-muted/30">
-                  <tr>
-                    <th className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
+              <Table className="w-full">
+                <TableHeader className="bg-muted/30">
+                  <TableRow>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
                       Disciplina
-                    </th>
-                    <th className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
                       Nota 1
-                    </th>
-                    <th className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
                       Nota 2
-                    </th>
-                    <th className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
                       Média
-                    </th>
-                    <th className="text-muted-foreground px-6 py-4 text-right text-sm font-medium">
+                    </TableHead>
+                    <TableHead className="text-muted-foreground px-6 py-4 text-right text-sm font-medium">
                       Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="border-border/50 bg-background border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow className="border-border/50 bg-background border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
                           <Award className="text-success h-5 w-5" />
@@ -297,30 +305,30 @@ export default function Notas() {
                           Fundamentos de Enfermagem
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         8.0
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         8.5
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-lg font-bold">
                         8.25
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-right">
                       <span className="bg-success/10 text-success inline-flex rounded-full px-3 py-1 text-xs font-medium">
                         Aprovado
                       </span>
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-muted/10 border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-muted/10 border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
                           <Award className="text-success h-5 w-5" />
@@ -329,30 +337,30 @@ export default function Notas() {
                           Primeiros Socorros
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         9.5
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         9.0
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-lg font-bold">
                         9.25
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-right">
                       <span className="bg-success/10 text-success inline-flex rounded-full px-3 py-1 text-xs font-medium">
                         Aprovado
                       </span>
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-background border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-background border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
                           <Award className="text-success h-5 w-5" />
@@ -361,30 +369,30 @@ export default function Notas() {
                           Saúde Coletiva
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         7.5
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         8.0
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-lg font-bold">
                         7.75
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-right">
                       <span className="bg-success/10 text-success inline-flex rounded-full px-3 py-1 text-xs font-medium">
                         Aprovado
                       </span>
-                    </td>
-                  </tr>
-                  <tr className="border-border/50 bg-muted/10 border-b last:border-0">
-                    <td className="px-6 py-4">
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-border/50 bg-muted/10 border-b last:border-0">
+                    <TableCell className="px-6 py-4">
                       <div className="flex items-center gap-3">
                         <div className="bg-success/10 flex h-10 w-10 items-center justify-center rounded-lg">
                           <Award className="text-success h-5 w-5" />
@@ -393,30 +401,30 @@ export default function Notas() {
                           Higiene e Profilaxia
                         </span>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         8.5
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-sm font-medium">
                         9.0
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-center">
                       <span className="text-success text-lg font-bold">
                         8.75
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    </TableCell>
+                    <TableCell className="px-6 py-4 text-right">
                       <span className="bg-success/10 text-success inline-flex rounded-full px-3 py-1 text-xs font-medium">
                         Aprovado
                       </span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
             </div>
           </div>
         </div>
