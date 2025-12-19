@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 
 type Props = {
   competenceYear: number;
@@ -15,13 +18,13 @@ export default function CreateCostModal({
 
   return (
     <>
-      <button
+      <Button
         type="button"
         onClick={() => setOpen(true)}
         className="h-10 rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
       >
         Lançar custo
-      </button>
+      </Button>
 
       {open ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
@@ -36,13 +39,13 @@ export default function CreateCostModal({
                   {competenceYear}
                 </p>
               </div>
-              <button
+              <Button
                 type="button"
                 onClick={() => setOpen(false)}
                 className="rounded-md border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50"
               >
                 Fechar
-              </button>
+              </Button>
             </div>
 
             <form
@@ -71,10 +74,10 @@ export default function CreateCostModal({
               }}
             >
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700">
+                <Label className="text-sm font-medium text-slate-700">
                   Categoria
-                </label>
-                <input
+                </Label>
+                <Input
                   name="category"
                   className="h-10 rounded-md border border-slate-200 px-3 text-sm"
                   placeholder="Ex.: Aluguel, Energia, Internet"
@@ -83,10 +86,10 @@ export default function CreateCostModal({
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="text-sm font-medium text-slate-700">
+                <Label className="text-sm font-medium text-slate-700">
                   Descrição
-                </label>
-                <input
+                </Label>
+                <Input
                   name="description"
                   className="h-10 rounded-md border border-slate-200 px-3 text-sm"
                   placeholder="Detalhe do custo"
@@ -96,10 +99,10 @@ export default function CreateCostModal({
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-slate-700">
+                  <Label className="text-sm font-medium text-slate-700">
                     Valor (R$)
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     name="amount"
                     className="h-10 rounded-md border border-slate-200 px-3 text-sm"
                     placeholder="Ex.: 380,00"
@@ -108,10 +111,10 @@ export default function CreateCostModal({
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="text-sm font-medium text-slate-700">
+                  <Label className="text-sm font-medium text-slate-700">
                     Data do custo
-                  </label>
-                  <input
+                  </Label>
+                  <Input
                     type="date"
                     name="incurredAt"
                     className="h-10 rounded-md border border-slate-200 px-3 text-sm"
@@ -122,19 +125,19 @@ export default function CreateCostModal({
               </div>
 
               <div className="flex items-center justify-end gap-2 border-t pt-4">
-                <button
+                <Button
                   type="button"
                   onClick={() => setOpen(false)}
                   className="h-10 rounded-md border border-slate-200 px-4 text-sm font-medium text-slate-900 hover:bg-slate-50"
                 >
                   Cancelar
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
                   className="h-10 rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
                 >
                   Salvar custo
-                </button>
+                </Button>
               </div>
             </form>
           </div>

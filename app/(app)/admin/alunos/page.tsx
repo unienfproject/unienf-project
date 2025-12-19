@@ -9,6 +9,7 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 import { Bell, Search } from "lucide-react";
+import Link from "next/link";
 
 export default function Alunos() {
   return (
@@ -54,24 +55,7 @@ export default function Alunos() {
               </p>
             </div>
             <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                className="lucide lucide-user-plus mr-2 h-4 w-4"
-              >
-                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-                <line x1="19" x2="19" y1="8" y2="14"></line>
-                <line x1="22" x2="16" y1="11" y2="11"></line>
-              </svg>
-              Novo Aluno
+              <Link href="/alunos/novo">+ Novo Aluno</Link>
             </Button>
           </div>
           <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-4">

@@ -17,7 +17,7 @@ export default async function FinanceiroPage() {
   }
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-col">
       <FinanceiroAdminView />
     </div>
   );
