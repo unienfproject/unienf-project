@@ -40,7 +40,7 @@ export default function About() {
             Por que escolher a UNIENF?
           </h2>
           <p className="text-muted-foreground text-lg">
-            Há mais de 15 anos formando profissionais de enfermagem qualificados
+            Há mais de 20 anos formando profissionais de enfermagem qualificados
             e comprometidos com o cuidado humanizado. Nossa missão é transformar
             vidas através da educação de excelência.
           </p>

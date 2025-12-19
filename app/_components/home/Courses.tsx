@@ -5,7 +5,7 @@ const courses = [
     title: "Técnico em Enfermagem",
     description:
       "Formação completa para atuar em hospitais, clínicas, postos de saúde e atendimento domiciliar.",
-    imageSrc: "/",
+    imageSrc: "/tecnico.enfermagem.jpg",
     imageAlt: "Técnico em Enfermagem",
     duration: "18 meses",
     modules: "12 módulos",
@@ -19,7 +19,7 @@ const courses = [
     title: "Auxiliar de Enfermagem",
     description:
       "Curso preparatório para quem deseja iniciar na área da saúde com uma formação rápida e prática.",
-    imageSrc: "/",
+    imageSrc: "/auxiliar.enfermagem.jpg",
     imageAlt: "Auxiliar de Enfermagem",
     duration: "12 meses",
     modules: "8 módulos",
@@ -33,7 +33,7 @@ const courses = [
     title: "Especialização em Urgência",
     description:
       "Para técnicos que desejam se especializar no atendimento de emergências e primeiros socorros.",
-    imageSrc: "/",
+    imageSrc: "/urgencia.webp",
     imageAlt: "Especialização em Urgência",
     duration: "6 meses",
     modules: "6 módulos",
