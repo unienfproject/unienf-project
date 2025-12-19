@@ -22,32 +22,22 @@ export default function Footer() {
             </Link>
             <p className="text-card/70 mb-4 text-sm leading-relaxed">
               Formando profissionais de enfermagem qualificados e comprometidos
-              com o cuidado humanizado há mais de 15 anos.
+              com o cuidado humanizado há mais de 20 anos.
             </p>
             <div className="flex items-center gap-3">
               <Link
-                href="#"
+                href="https://www.facebook.com/unienflagos/?locale=pt_BR"
+                target="_blank"
                 className="bg-card/10 hover:bg-primary flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
               >
                 <Facebook className="h-4 w-4" />
               </Link>
               <Link
-                href="#"
+                href="https://www.instagram.com/unienflagos/?hl=pt"
+                target="_blank"
                 className="bg-card/10 hover:bg-primary flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
               >
                 <Instagram className="h-4 w-4" />
-              </Link>
-              <Link
-                href="#"
-                className="bg-card/10 hover:bg-primary flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-              >
-                <Linkedin className="h-4 w-4" />
-              </Link>
-              <Link
-                href="#"
-                className="bg-card/10 hover:bg-primary flex h-9 w-9 items-center justify-center rounded-lg transition-colors"
-              >
-                <Youtube className="h-4 w-4" />
               </Link>
             </div>
           </div>
@@ -92,28 +82,13 @@ export default function Footer() {
             <h4 className="mb-4 text-lg font-semibold">Nossos Cursos</h4>
             <ul className="space-y-2">
               <li>
-                <Link
-                  href="#cursos"
-                  className="text-card/70 hover:text-primary text-sm transition-colors"
-                >
                   Técnico em Enfermagem
-                </Link>
               </li>
               <li>
-                <Link
-                  href="#cursos"
-                  className="text-card/70 hover:text-primary text-sm transition-colors"
-                >
-                  Auxiliar de Enfermagem
-                </Link>
+                  Especializações
               </li>
               <li>
-                <Link
-                  href="#cursos"
-                  className="text-card/70 hover:text-primary text-sm transition-colors"
-                >
-                  Especialização em Urgência
-                </Link>
+                  Aulas de Campo
               </li>
             </ul>
           </div>
@@ -123,25 +98,25 @@ export default function Footer() {
               <li>
                 <Link
                   className="text-card/70 hover:text-primary text-sm transition-colors"
-                  href="/login/aluno"
+                  href="https://wa.me/5511987654321" target="_blank"
                 >
-                  Área do Aluno
+                  Dúvidas Cursos
                 </Link>
               </li>
               <li>
                 <Link
                   className="text-card/70 hover:text-primary text-sm transition-colors"
-                  href="/login/professor"
+                  href="https://wa.me/5511987654321" target="_blank"
                 >
-                  Área do Professor
+                  Dúvidas Matrícula
                 </Link>
               </li>
               <li>
                 <Link
                   className="text-card/70 hover:text-primary text-sm transition-colors"
-                  href="/login/admin"
+                 href="https://wa.me/5511987654321" target="_blank"
                 >
-                  Área Administrativa
+                  Suporte Aluno
                 </Link>
               </li>
             </ul>

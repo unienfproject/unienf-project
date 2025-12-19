@@ -1,6 +1,7 @@
 import { ArrowRight, Award, Heart, Users } from "lucide-react";
 import Image from "next/image";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 export default function HeroSection() {
   return (
@@ -31,12 +32,16 @@ export default function HeroSection() {
               nós e faça a diferença na área da saúde.
             </p>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start">
-              <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-base font-semibold whitespace-nowrap shadow-lg transition-all duration-200 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                Quero saber mais
+              <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-[#25d366] text-primary-foreground hover:bg-[#25d366] inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-base font-semibold whitespace-nowrap shadow-lg transition-all duration-200 hover:shadow-xl focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer">
+                <Link href="https://wa.me/5511987654321" target="_blank" className="text-primary-foreground">
+                Whatsapp
+                </Link>
                 <ArrowRight className="h-5 w-5" />
               </Button>
-              <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border-primary text-primary hover:bg-primary hover:text-primary-foreground inline-flex h-10 items-center justify-center gap-2 rounded-lg border-2 bg-transparent px-4 py-2 text-base font-semibold whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                Ver cursos
+              <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border-primary text-primary bg-primary hover:text-primary-foreground inline-flex h-10 items-center justify-center gap-2 rounded-lg border-2 bg-transparent px-4 py-2 text-base font-semibold whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 cursor-pointer">
+                <Link href="#cursos">
+                  Ver cursos
+                </Link>
               </Button>
             </div>
             <div className="mt-12 flex items-center justify-center gap-8 lg:justify-start">
