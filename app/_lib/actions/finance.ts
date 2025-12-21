@@ -1,17 +1,22 @@
-export type PaymentStatus = "pending" | "paid";
-export type PaymentMethod = "cash" | "pix" | "debit" | "credit";
+export type MensalidadeStatus = "pendente" | "pago";
+export type FormaPagamento = "dinheiro" | "pix" | "debito" | "credito";
 
-export type TuitionInstallment = {
+export type MensalidadeRow = {
   id: string;
   studentId: string;
   studentName: string;
-  competenceYear: number;
-  competenceMonth: number; // 1-12
-  status: PaymentStatus;
 
-  paidAmount?: number | null;
-  paidAt?: string | null; // ISO date/time
-  paymentMethod?: PaymentMethod | null;
+  competenceYear: number;
+  competenceMonth: number;
+
+  status: MensalidadeStatus;
+
+  valor_mensalidade: number;
+
+  valorPago: number | null;
+  formaPagamento: FormaPagamento | null;
+
+  dataPagamento: string | null;
 };
 
 export type MonthlySummary = {
@@ -19,17 +24,19 @@ export type MonthlySummary = {
   month: number; // 1-12
   totalPaid: number;
   prevMonthTotalPaid: number;
-  delta: number; // totalPaid - prevMonthTotalPaid
-  deltaPct: number | null; // percentual, null se não existe base
+  delta: number;
+  deltaPct: number | null;
 };
 
 export type InternalCost = {
   id: string;
   competenceYear: number;
-  competenceMonth: number;
+  competenceMonth: number; // 1-12
   category: string;
   description: string;
   amount: number;
+
+  // ISO datetime para custos
   incurredAt: string; // ISO
 };
 

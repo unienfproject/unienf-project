@@ -76,19 +76,21 @@ export default async function FinanceiroAlunoView({
                     {monthLabel(r.competenceMonth)}
                   </td>
                   <td className="p-3">
-                    {r.status === "paid" ? (
+                    {r.status === "pago" ? (
                       <StatusBadge label="Pago" variant="green" />
                     ) : (
                       <StatusBadge label="Pendente" variant="yellow" />
                     )}
                   </td>
                   <td className="p-3 text-slate-700">
-                    {r.paidAmount ? `R$ ${r.paidAmount.toFixed(2)}` : "-"}
+                    {r.valorPago ? `R$ ${r.valorPago.toFixed(2)}` : "-"}
                   </td>
                   <td className="p-3 text-slate-700">
-                    {r.paymentMethod ?? "-"}
+                    {r.formaPagamento ?? "-"}
                   </td>
-                  <td className="p-3 text-slate-700">{r.paidAt ?? "-"}</td>
+                  <td className="p-3 text-slate-700">
+                    {r.dataPagamento ?? "-"}
+                  </td>
                 </tr>
               ))}
               {!rows.length ? (

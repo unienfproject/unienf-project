@@ -1,8 +1,5 @@
-import {
-  InternalCost,
-  MonthlySummary,
-  TuitionInstallment,
-} from "@/app/_lib/actions/finance";
+import { InternalCost, MonthlySummary } from "@/app/_lib/actions/finance";
+import { TuitionInstallment } from "@/app/_lib/actions/mensalidades";
 
 const installments: TuitionInstallment[] = [
   {
@@ -11,10 +8,11 @@ const installments: TuitionInstallment[] = [
     studentName: "Maria Silva",
     competenceYear: 2025,
     competenceMonth: 1,
-    status: "paid",
-    paidAmount: 350,
-    paidAt: "2025-01-05",
-    paymentMethod: "pix",
+    status: "pago",
+    valor_mensalidade: 350,
+    valorPago: 350,
+    dataPagamento: "2025-01-05",
+    formaPagamento: "pix",
   },
   {
     id: "p2",
@@ -22,10 +20,11 @@ const installments: TuitionInstallment[] = [
     studentName: "Maria Silva",
     competenceYear: 2025,
     competenceMonth: 2,
-    status: "paid",
-    paidAmount: 350,
-    paidAt: "2025-02-05",
-    paymentMethod: "pix",
+    status: "pago",
+    valor_mensalidade: 350,
+    valorPago: 350,
+    dataPagamento: "2025-02-05",
+    formaPagamento: "pix",
   },
   {
     id: "p3",
@@ -33,7 +32,11 @@ const installments: TuitionInstallment[] = [
     studentName: "Maria Silva",
     competenceYear: 2025,
     competenceMonth: 3,
-    status: "pending",
+    status: "pendente",
+    valor_mensalidade: 350,
+    valorPago: null,
+    dataPagamento: null,
+    formaPagamento: null,
   },
 
   {
@@ -42,10 +45,11 @@ const installments: TuitionInstallment[] = [
     studentName: "João Pereira",
     competenceYear: 2025,
     competenceMonth: 1,
-    status: "paid",
-    paidAmount: 350,
-    paidAt: "2025-01-10",
-    paymentMethod: "cash",
+    status: "pago",
+    valor_mensalidade: 350,
+    valorPago: 350,
+    dataPagamento: "2025-01-10",
+    formaPagamento: "dinheiro",
   },
   {
     id: "p5",
@@ -53,7 +57,11 @@ const installments: TuitionInstallment[] = [
     studentName: "João Pereira",
     competenceYear: 2025,
     competenceMonth: 2,
-    status: "pending",
+    status: "pendente",
+    valor_mensalidade: 350,
+    valorPago: null,
+    dataPagamento: null,
+    formaPagamento: null,
   },
 ];
 
@@ -98,17 +106,21 @@ export async function getAllInstallmentsByMonth(
 
 export async function markInstallmentPaid(
   installmentId: string,
-  patch: Pick<TuitionInstallment, "paidAmount" | "paidAt" | "paymentMethod">,
+  patch: {
+    paidAmount: number;
+    paidAt: string;
+    paymentMethod: "dinheiro" | "pix" | "debito" | "credito";
+  },
 ): Promise<void> {
   const idx = installments.findIndex((i) => i.id === installmentId);
   if (idx === -1) return;
 
   installments[idx] = {
     ...installments[idx],
-    status: "paid",
-    paidAmount: patch.paidAmount,
-    paidAt: patch.paidAt,
-    paymentMethod: patch.paymentMethod,
+    status: "pago",
+    valorPago: patch.paidAmount,
+    dataPagamento: patch.paidAt,
+    formaPagamento: patch.paymentMethod,
   };
 }
 
@@ -120,10 +132,10 @@ export async function markInstallmentPending(
 
   installments[idx] = {
     ...installments[idx],
-    status: "pending",
-    paidAmount: null,
-    paidAt: null,
-    paymentMethod: null,
+    status: "pendente",
+    valorPago: null,
+    dataPagamento: null,
+    formaPagamento: null,
   };
 }
 
@@ -136,9 +148,9 @@ export async function getMonthlySummary(
       (i) =>
         i.competenceYear === year &&
         i.competenceMonth === month &&
-        i.status === "paid",
+        i.status === "pago",
     )
-    .reduce((acc, cur) => acc + (cur.paidAmount ?? 0), 0);
+    .reduce((acc, cur) => acc + (cur.valorPago ?? 0), 0);
 
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear = month === 1 ? year - 1 : year;
@@ -148,9 +160,9 @@ export async function getMonthlySummary(
       (i) =>
         i.competenceYear === prevYear &&
         i.competenceMonth === prevMonth &&
-        i.status === "paid",
+        i.status === "pago",
     )
-    .reduce((acc, cur) => acc + (cur.paidAmount ?? 0), 0);
+    .reduce((acc, cur) => acc + (cur.valorPago ?? 0), 0);
 
   const delta = totalPaid - prevMonthTotalPaid;
   const deltaPct =

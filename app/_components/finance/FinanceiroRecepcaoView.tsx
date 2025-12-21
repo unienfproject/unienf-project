@@ -10,13 +10,13 @@ import {
 import type {
   PaymentMethod,
   TuitionInstallment,
-} from "@/app/_lib/actions/finance";
+} from "@/app/_lib/actions/mensalidades";
 
 const methods: { value: PaymentMethod; label: string }[] = [
-  { value: "cash", label: "Dinheiro" },
+  { value: "dinheiro", label: "Dinheiro" },
   { value: "pix", label: "Pix" },
-  { value: "debit", label: "Débito" },
-  { value: "credit", label: "Crédito" },
+  { value: "debito", label: "Débito" },
+  { value: "credito", label: "Crédito" },
 ];
 
 function monthLabel(month: number) {
@@ -194,12 +194,12 @@ function Row({
   }) => Promise<void>;
   onPending: () => Promise<void>;
 }) {
-  const [amount, setAmount] = useState(row.paidAmount ?? 350);
+  const [amount, setAmount] = useState(row.valorPago ?? 350);
   const [date, setDate] = useState(
-    row.paidAt ?? new Date().toISOString().slice(0, 10),
+    row.dataPagamento ?? new Date().toISOString().slice(0, 10),
   );
   const [method, setMethod] = useState<PaymentMethod>(
-    (row.paymentMethod ?? "pix") as PaymentMethod,
+    (row.formaPagamento ?? "pix") as PaymentMethod,
   );
 
   return (
@@ -207,7 +207,7 @@ function Row({
       <td className="p-3 font-medium text-slate-900">{row.studentName}</td>
 
       <td className="p-3">
-        {row.status === "paid" ? (
+        {row.status === "pago" ? (
           <StatusBadge label="Pago" variant="green" />
         ) : (
           <StatusBadge label="Pendente" variant="yellow" />
@@ -245,7 +245,7 @@ function Row({
       </td>
 
       <td className="flex flex-wrap gap-2 p-3">
-        {row.status === "paid" ? (
+        {row.status === "pago" ? (
           <button
             onClick={onPending}
             className="rounded-md border px-3 py-2 text-sm hover:bg-slate-50"

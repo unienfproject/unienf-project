@@ -6,8 +6,17 @@ export type Profile = {
   user_id: string;
   name: string | null;
   email: string | null;
+  telefone: string | null;
   avatar_url: string | null;
   role: string | null;
+};
+//informar Profile igual StudentRow
+//user_id === id
+//fazer isso no código diretamente
+export type StudentRow = {
+  id: string;
+  name: string;
+  email: string;
 };
 
 export async function canAccessDocuments(role: string) {
