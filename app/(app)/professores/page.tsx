@@ -10,6 +10,8 @@ import {
   Search,
   Users,
 } from "lucide-react";
+import NewUser from "@/app/(app)/admin/users/page";
+
 export default function Overall() {
   return (
     <div className="flex-1">
@@ -220,5 +222,6 @@ export default function Overall() {
         </div>
       </main>
     </div>
+
   );
 }

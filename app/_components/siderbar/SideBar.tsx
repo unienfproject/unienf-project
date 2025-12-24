@@ -51,6 +51,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: "Visão Geral", url: "/admin", icon: LayoutDashboard },
     { title: "Alunos", url: "/admin/alunos", icon: Users },
     { title: "Professores", url: "/admin/professores", icon: GraduationCap },
+    { title: "Usuários", url: "/admin/users", icon: Users },
     { title: "Turmas", url: "/admin/turmas", icon: FolderOpen },
     { title: "Cursos", url: "/admin/cursos", icon: GraduationCap },
     { title: "Financeiro", url: "/admin/financeiro", icon: WalletCards },
