@@ -236,19 +236,19 @@ function computeCostInsights(costs: Cost[]) {
 }
 
 function computeMensalidadeInsights(rows: MensalidadeRow[]) {
-  const totalAlunos = new Set(rows.map((r) => r.student_id)).size;
+  const totalAlunos = new Set(rows.map((r) => r.studentId)).size;
 
   const pagos = rows.filter((r) => r.status === "pago");
   const pendentes = rows.filter((r) => r.status === "pendente");
 
-  const alunosPagos = new Set(pagos.map((r) => r.student_id)).size;
-  const alunosPendentes = new Set(pendentes.map((r) => r.student_id)).size;
+  const alunosPagos = new Set(pagos.map((r) => r.studentId)).size;
+  const alunosPendentes = new Set(pendentes.map((r) => r.studentId)).size;
 
   const totalPrevisto = rows.reduce(
     (acc, r) => acc + (r.valor_mensalidade ?? 0),
     0,
   );
-  const totalRecebido = rows.reduce((acc, r) => acc + (r.valor_pago ?? 0), 0);
+  const totalRecebido = rows.reduce((acc, r) => acc + (r.valorPago ?? 0), 0);
 
   const totalPendente = Math.max(0, totalPrevisto - totalRecebido);
   const adimplenciaPct =
@@ -256,7 +256,7 @@ function computeMensalidadeInsights(rows: MensalidadeRow[]) {
 
   const ticketMedio =
     pagos.length > 0
-      ? pagos.reduce((acc, r) => acc + (r.valor_pago ?? 0), 0) / pagos.length
+      ? pagos.reduce((acc, r) => acc + (r.valorPago ?? 0), 0) / pagos.length
       : 0;
 
   return {

@@ -48,19 +48,6 @@ export type Cost = {
   incurredAt: string;
 };
 
-export type MensalidadeRow = {
-  id: string;
-  student_id: string;
-  name?: string | null; // se existir, ótimo; se não existir, buscar via profiles
-  competence_year: number;
-  competence_month: number;
-  status: "pago" | "pendente";
-  valor_mensalidade: number; // previsto
-  valor_pago: number | null; // pago
-  forma_pagamento?: "dinheiro" | "pix" | "debito" | "credito" | null;
-  data_pagamento?: string | null; // YYYY-MM-DD
-};
-
 export async function getMensalidadesByMonth(
   year: number,
   month: number,
