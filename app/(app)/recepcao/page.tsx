@@ -1,15 +1,13 @@
 import { getUserProfile } from "@/app/_lib/actions/profile";
-import {
-  listStudentsForRecepcao,
-  createStudent,
-} from "@/app/_lib/actions/recepcao";
+import { listStudentsForRecepcao } from "@/app/_lib/actions/recepcao";
 import { listMensalidadesForRecepcao } from "@/app/_lib/actions/mensalidades";
 import { MensalidadeRow } from "@/app/_lib/actions/finance";
-import { Bell, Search } from "lucide-react";
+import { Bell, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/app/_components/ui/input";
 import { Button } from "@/app/_components/ui/button";
-import { Label } from "@/app/_components/ui/label";
+import { listNoticesReadOnly } from "@/app/_lib/actions/recepcao";
+import { NoticeRow } from "@/app/_lib/actions/recepcao";
 
 function KpiCard({ title, value }: { title: string; value: string }) {
   return (
@@ -18,6 +16,13 @@ function KpiCard({ title, value }: { title: string; value: string }) {
       <div className="mt-1 text-2xl font-bold text-slate-900">{value}</div>
     </div>
   );
+}
+function formatDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleString("pt-BR");
+  } catch {
+    return iso;
+  }
 }
 
 export default async function RecepcaoHomePage() {
@@ -28,10 +33,8 @@ export default async function RecepcaoHomePage() {
   if (profile.role !== "recepção")
     return <div className="p-6">Sem acesso. Rota exclusiva da recepção.</div>;
 
-  // TODO SUPABASE (actions): buscar alunos
+  const notices = await listNoticesReadOnly();
   const students = await listStudentsForRecepcao();
-
-  // TODO SUPABASE (finance.ts): buscar mensalidades
   const mensalidades = await listMensalidadesForRecepcao();
 
   const totalAlunos = students.length;
@@ -41,24 +44,6 @@ export default async function RecepcaoHomePage() {
   const pagas = mensalidades.filter(
     (m: MensalidadeRow) => m.status === "pago",
   ).length;
-
-  async function actionCreateStudent(formData: FormData) {
-    "use server";
-    const name = String(formData.get("name") ?? "").trim();
-    const email = String(formData.get("email") ?? "")
-      .trim()
-      .toLowerCase();
-    const telefone = String(formData.get("telefone") ?? "").trim();
-
-    if (!name || !email || !email.includes("@")) return;
-
-    // TODO SUPABASE: esta action deve criar o aluno conforme seu fluxo (perfil e possivelmente auth)
-    await createStudent({
-      name,
-      email,
-      telefone: telefone ? telefone : null,
-    });
-  }
 
   return (
     <div className="flex flex-col">
@@ -74,9 +59,12 @@ export default async function RecepcaoHomePage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
+            <Plus className="h-5 w-5 text-white" />
+            <Link href="/NewStudent">Nova Matrícula</Link>
+          </Button>
           <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground relative inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-            <Bell className="text-muted-foreground h-5 w-5" />
-            <span className="bg-destructive absolute top-1 right-1 h-2 w-2 rounded-full"></span>
+            <Bell className="h-5 w-5 text-white" />
           </Button>
           <div className="border-border flex items-center gap-3 border-l pl-4">
             <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-full">
@@ -95,121 +83,50 @@ export default async function RecepcaoHomePage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Recepção</h1>
           <p className="text-slate-600">
-            Visão geral e atalhos. Operador:{" "}
-            {profile.name ?? profile.email ?? "Recepção"}.
+            Visão Geral <br />
+            Operador: {profile.name ?? profile.email ?? "Recepção"}.
           </p>
         </div>
-
-        <Link
-          href="/recepcao/alunos"
-          className="flex h-10 w-fit items-center rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
-        >
-          Ir para Alunos
-        </Link>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-3">
         <KpiCard title="Alunos cadastrados" value={String(totalAlunos)} />
         <KpiCard title="Mensalidades pendentes" value={String(pendentes)} />
         <KpiCard title="Mensalidades pagas" value={String(pagas)} />
-        <KpiCard title="Atalhos" value="Alunos, Docs, Financeiro, Avisos" />
       </div>
 
-      <section className="gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="border-b p-4">
-          <h2 className="font-semibold text-slate-900">Novo aluno</h2>
-          <p className="text-sm text-slate-600">
-            Cadastro rápido. O fluxo de criação de login depende da sua action.
-          </p>
+          <h2 className="font-semibold text-slate-900">Avisos Recentes</h2>
+          <p className="text-sm text-slate-600">Últimos Avisos</p>
         </div>
 
-        <form action={actionCreateStudent} className="p-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium text-slate-700">
-                Nome completo
-              </Label>
-              <Input
-                name="name"
-                className="h-10 rounded-md border border-slate-200 px-3 text-sm"
-                placeholder="Ex.: Maria Silva"
-                required
-              />
+        <div className="divide-y">
+          {notices.map((n: NoticeRow) => (
+            <div key={n.id} className="p-4">
+              <div className="flex flex-col gap-1 md:flex-row md:items-start md:justify-between">
+                <div>
+                  <h3 className="text-base font-semibold text-slate-900">
+                    {n.title}
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    {n.author_name} • {n.author_role} •{" "}
+                    {formatDate(n.created_at)}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-3 text-sm whitespace-pre-line text-slate-700">
+                {n.message}
+              </p>
             </div>
+          ))}
 
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium text-slate-700">
-                E-mail
-              </Label>
-              <Input
-                name="email"
-                className="h-10 rounded-md border border-slate-200 px-3 text-sm"
-                placeholder="Ex.: maria@exemplo.com"
-                required
-              />
+          {!notices.length ? (
+            <div className="p-6 text-center text-slate-500">
+              Nenhum aviso encontrado.
             </div>
-
-            <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium text-slate-700">
-                Telefone (opcional)
-              </Label>
-              <Input
-                name="telefone"
-                className="h-10 rounded-md border border-slate-200 px-3 text-sm"
-                placeholder="Ex.: (22) 99999-9999"
-              />
-            </div>
-          </div>
-
-          <div className="mt-4 flex items-center justify-end">
-            <Button
-              type="submit"
-              className="h-10 rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
-            >
-              Cadastrar
-            </Button>
-          </div>
-
-          <div className="mt-3 text-xs text-slate-500">
-            Observação: se sua action criar usuário no Auth, normalmente exige
-            service role ou fluxo de convite.
-          </div>
-        </form>
-      </section>
-
-      <section className="grid grid-cols-1 gap-6 p-6 md:grid-cols-4">
-        <Link
-          href="/recepcao/alunos"
-          className="rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50"
-        >
-          <div className="font-semibold text-slate-900">Alunos</div>
-          <div className="mt-1 text-sm text-slate-600">
-            Listar, editar e acessar perfil
-          </div>
-        </Link>
-        <Link
-          href="/recepcao/documentos"
-          className="rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50"
-        >
-          <div className="font-semibold text-slate-900">Documentos</div>
-          <div className="mt-1 text-sm text-slate-600">Checklist por aluno</div>
-        </Link>
-        <Link
-          href="/recepcao/financeiro"
-          className="rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50"
-        >
-          <div className="font-semibold text-slate-900">Financeiro</div>
-          <div className="mt-1 text-sm text-slate-600">
-            Pendentes, pagos, recibo
-          </div>
-        </Link>
-        <Link
-          href="/recepcao/avisos"
-          className="rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50"
-        >
-          <div className="font-semibold text-slate-900">Avisos</div>
-          <div className="mt-1 text-sm text-slate-600">Somente leitura</div>
-        </Link>
+          ) : null}
+        </div>
       </section>
     </div>
   );

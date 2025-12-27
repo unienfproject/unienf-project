@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { Bell, Search } from "lucide-react";
+import { Bell, Plus, Search } from "lucide-react";
 import Link from "next/link";
 
 export default function Alunos() {
@@ -26,9 +26,12 @@ export default function Alunos() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
+            <Plus className="h-5 w-5 text-white" />
+            <Link href="/alunos/novo">Nova Matrícula</Link>
+          </Button>
           <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground relative inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-            <Bell className="text-muted-foreground h-5 w-5" />
-            <span className="bg-destructive absolute top-1 right-1 h-2 w-2 rounded-full"></span>
+            <Bell className="h-5 w-5 text-white" />
           </Button>
           <div className="border-border flex items-center gap-3 border-l pl-4">
             <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-full">
@@ -54,9 +57,6 @@ export default function Alunos() {
                 Gerencie todos os alunos cadastrados
               </p>
             </div>
-            <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-              <Link href="/alunos/novo">+ Novo Aluno</Link>
-            </Button>
           </div>
           <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-4">
             <div className="flex flex-col gap-4 sm:flex-row">

@@ -3,15 +3,7 @@ import { Input } from "@/app/_components/ui/input";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { listNoticesReadOnly } from "@/app/_lib/actions/recepcao";
 import { Bell, Search } from "lucide-react";
-
-type NoticeRow = {
-  id: string;
-  title: string;
-  message: string;
-  created_at: string;
-  author_role: string;
-  author_name: string;
-};
+import { NoticeRow } from "@/app/_lib/actions/recepcao";
 
 function formatDate(iso: string) {
   try {
@@ -46,8 +38,7 @@ export default async function RecepcaoAvisosPage() {
         </div>
         <div className="flex items-center gap-4">
           <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground relative inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-            <Bell className="text-muted-foreground h-5 w-5" />
-            <span className="bg-destructive absolute top-1 right-1 h-2 w-2 rounded-full"></span>
+            <Bell className="h-5 w-5 text-white" />
           </Button>
           <div className="border-border flex items-center gap-3 border-l pl-4">
             <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-full">
@@ -69,7 +60,7 @@ export default async function RecepcaoAvisosPage() {
         </p>
       </div>
 
-      <section className="gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="m-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b p-4">
           <h2 className="font-semibold text-slate-900">Feed de avisos</h2>
           <p className="text-sm text-slate-600">

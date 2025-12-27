@@ -15,7 +15,7 @@ export default async function Financeiro() {
   }
 
   return (
-    <div className="flex-1 p-6">
+    <div className="flex-1">
       <FinanceiroAlunoView
         studentId={profile.user_id}
         studentName={profile.name ?? profile.email ?? "Aluno"}

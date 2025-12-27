@@ -26,8 +26,7 @@ export default function Turmas() {
         </div>
         <div className="flex items-center gap-4">
           <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground relative inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-            <Bell className="text-muted-foreground h-5 w-5" />
-            <span className="bg-destructive absolute top-1 right-1 h-2 w-2 rounded-full"></span>
+            <Bell className="h-5 w-5 text-white" />
           </Button>
           <div className="border-border flex items-center gap-3 border-l pl-4">
             <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-full">

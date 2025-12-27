@@ -143,3 +143,12 @@ export async function updateStudentProfile(_input: {
 
   revalidatePath("/recepcao");
 }
+
+export type NoticeRow = {
+  id: string;
+  title: string;
+  message: string;
+  created_at: string;
+  author_role: string;
+  author_name: string;
+};

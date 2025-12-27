@@ -14,7 +14,7 @@ import {
   createStudent,
   updateStudentProfile,
 } from "@/app/_lib/actions/recepcao";
-import { Bell, Search } from "lucide-react";
+import { Bell, Plus, Search } from "lucide-react";
 import Link from "next/link";
 
 type StudentRow = {
@@ -34,23 +34,6 @@ export default async function RecepcaoAlunosPage() {
 
   const students = await listStudentsForRecepcao(); // TODO SUPABASE
 
-  async function actionCreate(formData: FormData) {
-    "use server";
-    const name = String(formData.get("name") ?? "").trim();
-    const email = String(formData.get("email") ?? "")
-      .trim()
-      .toLowerCase();
-    const telefone = String(formData.get("telefone") ?? "").trim();
-
-    if (!name || !email || !email.includes("@")) return;
-
-    await createStudent({
-      name,
-      email,
-      telefone: telefone ? telefone : null,
-    });
-  }
-
   async function actionUpdate(formData: FormData) {
     "use server";
     const studentId = String(formData.get("studentId") ?? "");
@@ -67,7 +50,7 @@ export default async function RecepcaoAlunosPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="flex flex-col">
       <header className="bg-card border-border flex h-16 items-center justify-between border-b px-6">
         <div className="max-w-md flex-1">
           <div className="relative">
@@ -80,9 +63,12 @@ export default async function RecepcaoAlunosPage() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
+            <Plus className="h-5 w-5 text-white" />
+            <Link href="/NewStudent">Nova Matrícula</Link>
+          </Button>
           <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground relative inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-            <Bell className="text-muted-foreground h-5 w-5" />
-            <span className="bg-destructive absolute top-1 right-1 h-2 w-2 rounded-full"></span>
+            <Bell className="h-5 w-5 text-white" />
           </Button>
           <div className="border-border flex items-center gap-3 border-l pl-4">
             <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-full">
@@ -97,52 +83,8 @@ export default async function RecepcaoAlunosPage() {
           </div>
         </div>
       </header>
-      <div className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-slate-900">Alunos</h1>
-        <p className="text-slate-600">
-          Cadastre e edite alunos. Para documentos, use a rota de documentos por
-          aluno.
-        </p>
-      </div>
 
-      <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b p-4">
-          <h2 className="font-semibold text-slate-900">Novo aluno</h2>
-          <p className="text-sm text-slate-600">
-            Cadastro rápido para a recepção.
-          </p>
-        </div>
-
-        <form action={actionCreate} className="p-4">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Input
-              name="name"
-              className="h-10 rounded-md border border-slate-200 px-3 text-sm"
-              placeholder="Nome completo"
-              required
-            />
-            <Input
-              name="email"
-              className="h-10 rounded-md border border-slate-200 px-3 text-sm"
-              placeholder="E-mail"
-              required
-            />
-            <Input
-              name="telefone"
-              className="h-10 rounded-md border border-slate-200 px-3 text-sm"
-              placeholder="Telefone (opcional)"
-            />
-          </div>
-
-          <div className="mt-4 flex justify-end">
-            <Button className="h-10 rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600">
-              Cadastrar
-            </Button>
-          </div>
-        </form>
-      </section>
-
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="border-b p-4">
           <h2 className="font-semibold text-slate-900">Lista de alunos</h2>
           <p className="text-sm text-slate-600">
