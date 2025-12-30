@@ -1,8 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
+import { logAudit } from "@/app/_lib/actions/audit";
 import { getUserProfile } from "@/app/_lib/actions/profile";
+import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 import type {
   FormaPagamento,
@@ -78,7 +79,7 @@ export async function markMensalidadeAsPaid(input: {
   // Evitar sobrescrita indevida
   const { data: current, error: currentErr } = await supabase
     .from("mensalidades")
-    .select("status")
+    .select("status, aluno_id")
     .eq("id", mensalidadeId)
     .single();
 
@@ -89,18 +90,48 @@ export async function markMensalidadeAsPaid(input: {
     throw new Error("Esta mensalidade já está marcada como paga.");
   }
 
+  // Criar registro na tabela pagamentos
+  const { data: pagamento, error: pagamentoErr } = await supabase
+    .from("pagamentos")
+    .insert({
+      mensalidade_id: mensalidadeId,
+      valor_pago: valorPago,
+      forma_pagamento: formaPagamento,
+      data_pagamento: dataPagamento,
+      created_by: (await getUserProfile())?.user_id ?? null,
+      created_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (pagamentoErr) throw new Error(pagamentoErr.message);
+
+  // Atualizar mensalidade
   const { error } = await supabase
     .from("mensalidades")
     .update({
       status: "pago",
       valor_pago: valorPago,
-      forma_pagamento: formaPagamento,
-      data_pagamento: dataPagamento, // yyyy-mm-dd
-      updated_at: new Date().toISOString(), // remova se não existir a coluna
+      data_pagamento: dataPagamento,
+      updated_at: new Date().toISOString(),
     })
     .eq("id", mensalidadeId);
 
   if (error) throw new Error(error.message);
+
+  // Registrar auditoria
+  await logAudit({
+    action: "payment",
+    entity: "mensalidade",
+    entityId: mensalidadeId,
+    newValue: {
+      status: "pago",
+      valor_pago: valorPago,
+      forma_pagamento: formaPagamento,
+      data_pagamento: dataPagamento,
+    },
+    description: `Pagamento de R$ ${valorPago.toFixed(2)} registrado (${formaPagamento})`,
+  });
 
   revalidatePath("/recepcao/financeiro");
   revalidatePath("/recepcao");
@@ -115,23 +146,21 @@ export async function listMensalidadesForRecepcao(params?: {
 
   const supabase = await createServerSupabaseClient();
 
-  // Tabela correta (singular). Se a sua estiver plural, troque aqui.
-  const TABLE_NAME = "mensalidade";
-
+  // Usar estrutura real do banco: tabela "mensalidades" com coluna "aluno_id"
   let q = supabase
-    .from(TABLE_NAME)
+    .from("mensalidades")
     .select(
       `
         id,
-        student_id,
+        aluno_id,
         competence_year,
         competence_month,
         status,
         valor_mensalidade,
         valor_pago,
-        forma_pagamento,
+        data_vencimento,
         data_pagamento,
-        profiles:profiles!mensalidade_student_id_fkey ( name )
+        profiles:profiles!mensalidades_aluno_id_fkey ( name )
       `,
     )
     .order("competence_year", { ascending: false })
@@ -141,7 +170,7 @@ export async function listMensalidadesForRecepcao(params?: {
   if (status !== "todos") q = q.eq("status", status);
 
   const studentId = params?.studentId ? String(params.studentId).trim() : "";
-  if (studentId) q = q.eq("student_id", studentId);
+  if (studentId) q = q.eq("aluno_id", studentId);
 
   const { data, error } = await q;
 
@@ -153,27 +182,27 @@ export async function listMensalidadesForRecepcao(params?: {
 
   type SupabaseRow = {
     id: string;
-    student_id: string;
+    aluno_id: string;
     competence_year: number;
     competence_month: number;
     status: string;
     valor_mensalidade: number;
     valor_pago: number | null;
-    forma_pagamento: string | null;
+    data_vencimento: string | null;
     data_pagamento: string | null;
-    profiles: { name: string }[] | null;
+    profiles: { name: string } | null;
   };
 
   return (data ?? []).map((r: SupabaseRow) => ({
     id: String(r.id),
-    studentId: String(r.student_id),
-    studentName: r.profiles?.[0]?.name ?? "Aluno",
+    studentId: String(r.aluno_id),
+    studentName: r.profiles?.name ?? "Aluno",
     competenceYear: Number(r.competence_year),
     competenceMonth: Number(r.competence_month),
     status: r.status as MensalidadeStatus,
     valor_mensalidade: Number(r.valor_mensalidade),
     valorPago: r.valor_pago == null ? null : Number(r.valor_pago),
-    formaPagamento: (r.forma_pagamento ?? null) as FormaPagamento | null,
+    formaPagamento: null as FormaPagamento | null, // forma_pagamento está na tabela pagamentos
     dataPagamento: (r.data_pagamento ?? null) as string | null,
   }));
 }
@@ -239,4 +268,229 @@ function buildMensalidadesMock(input: {
 
   if (input.status === "todos") return base;
   return base.filter((m) => m.status === input.status);
+}
+
+/**
+ * Atualiza uma mensalidade existente.
+ * Apenas administrativo pode editar mensalidades.
+ */
+export async function updateMensalidade(input: {
+  mensalidadeId: string;
+  valorMensalidade?: number;
+  dataVencimento?: string; // yyyy-mm-dd
+  status?: "pendente" | "pago";
+}) {
+  const profile = await requireUserRole(["administrativo"]);
+
+  const mensalidadeId = String(input.mensalidadeId ?? "").trim();
+  if (!mensalidadeId) throw new Error("mensalidadeId inválido.");
+
+  const supabase = await createServerSupabaseClient();
+
+  // Verificar se a mensalidade existe
+  const { data: current, error: currentErr } = await supabase
+    .from("mensalidades")
+    .select("id")
+    .eq("id", mensalidadeId)
+    .single();
+
+  if (currentErr) throw new Error(currentErr.message);
+  if (!current) throw new Error("Mensalidade não encontrada.");
+
+  const updates: Record<string, any> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (input.valorMensalidade !== undefined) {
+    const valor = normalizeNumber(input.valorMensalidade);
+    if (valor === null || valor <= 0) {
+      throw new Error("Valor da mensalidade deve ser maior que zero.");
+    }
+    updates.valor_mensalidade = valor;
+  }
+
+  if (input.dataVencimento !== undefined) {
+    const data = String(input.dataVencimento).trim();
+    if (!isValidYYYYMMDD(data)) {
+      throw new Error("Data de vencimento inválida (formato: YYYY-MM-DD).");
+    }
+    updates.data_vencimento = data;
+  }
+
+  if (input.status !== undefined) {
+    updates.status = input.status;
+  }
+
+  const { error } = await supabase
+    .from("mensalidades")
+    .update(updates)
+    .eq("id", mensalidadeId);
+
+  if (error) throw new Error(error.message);
+
+  // Registrar auditoria
+  await logAudit({
+    action: "update",
+    entity: "mensalidade",
+    entityId: mensalidadeId,
+    newValue: updates,
+    description: `Mensalidade atualizada: ${Object.keys(updates).join(", ")}`,
+  });
+
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/recepcao/financeiro");
+}
+
+/**
+ * Atualiza um pagamento existente.
+ * Apenas administrativo pode editar pagamentos.
+ */
+export async function updatePagamento(input: {
+  pagamentoId: string;
+  valorPago?: number;
+  formaPagamento?: FormaPagamento;
+  dataPagamento?: string; // yyyy-mm-dd
+  observacao?: string | null;
+}) {
+  const profile = await requireUserRole(["administrativo"]);
+
+  const pagamentoId = String(input.pagamentoId ?? "").trim();
+  if (!pagamentoId) throw new Error("pagamentoId inválido.");
+
+  const supabase = await createServerSupabaseClient();
+
+  // Verificar se o pagamento existe
+  const { data: current, error: currentErr } = await supabase
+    .from("pagamentos")
+    .select("id, mensalidade_id")
+    .eq("id", pagamentoId)
+    .single();
+
+  if (currentErr) throw new Error(currentErr.message);
+  if (!current) throw new Error("Pagamento não encontrado.");
+
+  const updates: Record<string, any> = {};
+
+  if (input.valorPago !== undefined) {
+    const valor = normalizeNumber(input.valorPago);
+    if (valor === null || valor <= 0) {
+      throw new Error("Valor pago deve ser maior que zero.");
+    }
+    updates.valor_pago = valor;
+  }
+
+  if (input.formaPagamento !== undefined) {
+    assertFormaPagamento(input.formaPagamento);
+    updates.forma_pagamento = input.formaPagamento;
+  }
+
+  if (input.dataPagamento !== undefined) {
+    const data = String(input.dataPagamento).trim();
+    if (!isValidYYYYMMDD(data)) {
+      throw new Error("Data de pagamento inválida (formato: YYYY-MM-DD).");
+    }
+    updates.data_pagamento = data;
+  }
+
+  if (input.observacao !== undefined) {
+    updates.observacao = input.observacao;
+  }
+
+  const { error } = await supabase
+    .from("pagamentos")
+    .update(updates)
+    .eq("id", pagamentoId);
+
+  if (error) throw new Error(error.message);
+
+  // Registrar auditoria
+  await logAudit({
+    action: "update",
+    entity: "pagamento",
+    entityId: pagamentoId,
+    newValue: updates,
+    description: `Pagamento atualizado: ${Object.keys(updates).join(", ")}`,
+  });
+
+  // Atualizar também a mensalidade relacionada
+  if (input.valorPago !== undefined || input.dataPagamento !== undefined) {
+    const { data: pagamento } = await supabase
+      .from("pagamentos")
+      .select("valor_pago, data_pagamento")
+      .eq("id", pagamentoId)
+      .single();
+
+    if (pagamento) {
+      await supabase
+        .from("mensalidades")
+        .update({
+          valor_pago: pagamento.valor_pago,
+          data_pagamento: pagamento.data_pagamento,
+          status: "pago",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", current.mensalidade_id);
+    }
+  }
+
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/recepcao/financeiro");
+}
+
+/**
+ * Deleta um pagamento.
+ * Apenas administrativo pode deletar pagamentos.
+ */
+export async function deletePagamento(pagamentoId: string) {
+  const profile = await requireUserRole(["administrativo"]);
+
+  const supabase = await createServerSupabaseClient();
+
+  // Buscar o pagamento para pegar a mensalidade relacionada
+  const { data: pagamento, error: findErr } = await supabase
+    .from("pagamentos")
+    .select("id, mensalidade_id")
+    .eq("id", pagamentoId)
+    .single();
+
+  if (findErr) throw new Error(findErr.message);
+  if (!pagamento) throw new Error("Pagamento não encontrado.");
+
+  // Deletar o pagamento
+  const { error: deleteErr } = await supabase
+    .from("pagamentos")
+    .delete()
+    .eq("id", pagamentoId);
+
+  if (deleteErr) throw new Error(deleteErr.message);
+
+  // Registrar auditoria
+  await logAudit({
+    action: "delete",
+    entity: "pagamento",
+    entityId: pagamentoId,
+    description: `Pagamento deletado`,
+  });
+
+  // Verificar se há outros pagamentos para esta mensalidade
+  const { data: outrosPagamentos } = await supabase
+    .from("pagamentos")
+    .select("id")
+    .eq("mensalidade_id", pagamento.mensalidade_id);
+
+  // Se não houver mais pagamentos, atualizar a mensalidade para pendente
+  if (!outrosPagamentos || outrosPagamentos.length === 0) {
+    await supabase
+      .from("mensalidades")
+      .update({
+        status: "pendente",
+        valor_pago: null,
+        data_pagamento: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", pagamento.mensalidade_id);
+  }
+
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/recepcao/financeiro");
 }

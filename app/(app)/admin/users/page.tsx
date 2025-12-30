@@ -1,3 +1,7 @@
+import EditRoleButton from "@/app/_components/admin/EditRoleButton";
+import NewUserForm from "@/app/_components/admin/NewUserForm";
+import { Button } from "@/app/_components/ui/button";
+import { Input } from "@/app/_components/ui/input";
 import {
   Table,
   TableBody,
@@ -6,11 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import NewUserForm from "./NewUserForm";
 import { listInternalUsers } from "@/app/_lib/actions/users";
 import { Bell, Search } from "lucide-react";
-import { Input } from "@/app/_components/ui/input";
-import { Button } from "@/app/_components/ui/button";
 
 export default async function UsuariosPage() {
   let users: Awaited<ReturnType<typeof listInternalUsers>> = [];
@@ -86,6 +87,9 @@ export default async function UsuariosPage() {
                     <TableHead className="p-3 text-left font-semibold text-slate-700">
                       Função
                     </TableHead>
+                    <TableHead className="p-3 text-left font-semibold text-slate-700">
+                      Ações
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -101,7 +105,16 @@ export default async function UsuariosPage() {
                         {u.telefone}
                       </TableCell>
                       <TableCell className="p-3 text-slate-700">
-                        {u.role}
+                        <div className="flex items-center gap-2">
+                          <span className="capitalize">{u.role}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="p-3">
+                        <EditRoleButton
+                          userId={u.id}
+                          currentRole={u.role}
+                          userName={u.name}
+                        />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -109,7 +122,7 @@ export default async function UsuariosPage() {
                   {!users.length ? (
                     <TableRow>
                       <TableCell
-                        colSpan={4}
+                        colSpan={5}
                         className="p-6 text-center text-slate-500"
                       >
                         Nenhum usuário encontrado (ou sem permissão).

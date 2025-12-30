@@ -1,9 +1,15 @@
 "use server";
 
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { logAudit } from "@/app/_lib/actions/audit";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
-type Role = "recepção" | "coordenação" | "administrativo" | "professor";
+type Role =
+  | "recepção"
+  | "coordenação"
+  | "administrativo"
+  | "professor"
+  | "aluno";
 
 function normalizeCpf(cpf: string) {
   return cpf.replace(/\D/g, "");
@@ -139,4 +145,90 @@ export async function listInternalUsers() {
     telefone: (u.telefone ?? "") as string,
     role: (u.role ?? "") as string,
   }));
+}
+
+/**
+ * Atualiza a role de um usuário existente.
+ * Apenas usuários com role "administrativo" podem alterar roles.
+ *
+ * @param input - userId e nova role
+ * @returns void
+ * @throws Error se não tiver permissão ou se houver erro na atualização
+ */
+export async function updateUserRole(input: { userId: string; newRole: Role }) {
+  const supabase = await createServerSupabaseClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) throw new Error("Sessão inválida.");
+
+  // Verificar se o chamador é administrativo
+  const { data: callerProfile, error: callerErr } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("user_id", authData.user.id)
+    .single();
+
+  if (callerErr) throw new Error(callerErr.message);
+  if (!callerProfile || callerProfile.role !== "administrativo") {
+    throw new Error(
+      "Sem permissão para alterar roles. Apenas administrativo pode alterar roles.",
+    );
+  }
+
+  const userId = String(input.userId ?? "").trim();
+  const newRole = input.newRole;
+
+  if (!userId) throw new Error("userId é obrigatório.");
+  if (!newRole) throw new Error("newRole é obrigatório.");
+
+  // Validar se o usuário existe
+  const { data: targetUser, error: targetErr } = await supabase
+    .from("profiles")
+    .select("user_id, role")
+    .eq("user_id", userId)
+    .single();
+
+  if (targetErr) throw new Error(targetErr.message);
+  if (!targetUser) throw new Error("Usuário não encontrado.");
+
+  // Não permitir alterar a própria role
+  if (userId === authData.user.id) {
+    throw new Error("Você não pode alterar sua própria role.");
+  }
+
+  // Atualizar no Supabase Auth (app_metadata)
+  const admin = getAdminSupabase();
+  const { error: authUpdateErr } = await admin.auth.admin.updateUserById(
+    userId,
+    {
+      app_metadata: {
+        role: newRole,
+      },
+    },
+  );
+
+  if (authUpdateErr)
+    throw new Error(`Erro ao atualizar role no Auth: ${authUpdateErr.message}`);
+
+  // Atualizar na tabela profiles
+  const { error: profileUpdateErr } = await supabase
+    .from("profiles")
+    .update({
+      role: newRole,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+
+  if (profileUpdateErr) throw new Error(profileUpdateErr.message);
+
+  // Registrar auditoria
+  await logAudit({
+    action: "role_change",
+    entity: "user",
+    entityId: userId,
+    oldValue: { role: targetUser.role },
+    newValue: { role: newRole },
+    description: `Role alterada de "${targetUser.role}" para "${newRole}"`,
+  });
+
+  return { success: true, userId, oldRole: targetUser.role, newRole };
 }
