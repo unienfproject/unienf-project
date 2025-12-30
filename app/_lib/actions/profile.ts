@@ -10,9 +10,7 @@ export type Profile = {
   avatar_url: string | null;
   role: string | null;
 };
-//informar Profile igual StudentRow
-//user_id === id
-//fazer isso no código diretamente
+
 export type StudentRow = {
   id: string;
   name: string;

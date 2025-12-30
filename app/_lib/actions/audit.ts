@@ -36,10 +36,6 @@ export interface AuditLog {
   created_at: string;
 }
 
-/**
- * Registra uma ação de auditoria no sistema.
- * Esta função deve ser chamada sempre que houver uma alteração importante.
- */
 export async function logAudit(input: {
   action: AuditAction;
   entity: AuditEntity;
@@ -53,15 +49,12 @@ export async function logAudit(input: {
   try {
     const profile = await getUserProfile();
     if (!profile) {
-      // Se não houver perfil, ainda assim tentamos registrar (pode ser ação do sistema)
       console.warn("[Audit] Tentativa de log sem perfil de usuário");
       return;
     }
 
     const supabase = await createServerSupabaseClient();
 
-    // Verificar se a tabela audit_logs existe
-    // Se não existir, apenas logamos no console (não quebra o sistema)
     const { error } = await supabase.from("audit_logs").insert({
       user_id: profile.user_id,
       action: input.action,
@@ -76,19 +69,13 @@ export async function logAudit(input: {
     });
 
     if (error) {
-      // Não quebra o fluxo se a auditoria falhar
       console.error("[Audit] Erro ao registrar log:", error.message);
     }
   } catch (err) {
-    // Não quebra o fluxo se a auditoria falhar
     console.error("[Audit] Erro inesperado:", err);
   }
 }
 
-/**
- * Lista logs de auditoria.
- * Apenas administrativo pode ver logs de auditoria.
- */
 export async function listAuditLogs(params?: {
   entity?: AuditEntity;
   entityId?: string;
@@ -141,7 +128,6 @@ export async function listAuditLogs(params?: {
   const { data, error } = await query;
 
   if (error) {
-    // Se a tabela não existir, retorna array vazio
     if (error.code === "42P01") {
       return [];
     }

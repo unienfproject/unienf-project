@@ -5,11 +5,6 @@ import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-/**
- * Verifica se o usuário tem permissão para editar notas.
- * Professores podem editar notas de suas turmas.
- * Administrativo pode editar qualquer nota.
- */
 async function requireNoteEditPermission() {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
@@ -22,16 +17,10 @@ async function requireNoteEditPermission() {
   return profile;
 }
 
-/**
- * Lista todas as notas de uma avaliação específica.
- * Professores veem apenas notas de suas turmas.
- * Administrativo vê todas as notas.
- */
 export async function listNotasByAvaliacao(avaliacaoId: string) {
   const profile = await requireNoteEditPermission();
   const supabase = await createServerSupabaseClient();
 
-  // Buscar a avaliação para verificar a turma
   const { data: avaliacao, error: avaliacaoErr } = await supabase
     .from("avaliacoes")
     .select("id, turma_id, turmas!inner(professor_id)")
@@ -49,7 +38,6 @@ export async function listNotasByAvaliacao(avaliacaoId: string) {
     }
   }
 
-  // Buscar notas
   const { data: notas, error: notasErr } = await supabase
     .from("notas")
     .select(
@@ -80,11 +68,6 @@ export async function listNotasByAvaliacao(avaliacaoId: string) {
   }));
 }
 
-/**
- * Cria ou atualiza uma nota.
- * Professores podem criar/editar apenas em suas turmas.
- * Administrativo pode criar/editar qualquer nota.
- */
 export async function upsertNota(input: {
   avaliacaoId: string;
   alunoId: string;
@@ -93,13 +76,11 @@ export async function upsertNota(input: {
   const profile = await requireNoteEditPermission();
   const supabase = await createServerSupabaseClient();
 
-  // Validar valor da nota
   const value = Number(input.value);
   if (isNaN(value) || value < 0 || value > 10) {
     throw new Error("Nota deve estar entre 0 e 10.");
   }
 
-  // Buscar a avaliação para verificar a turma
   const { data: avaliacao, error: avaliacaoErr } = await supabase
     .from("avaliacoes")
     .select("id, turma_id, turmas!inner(professor_id)")
@@ -117,7 +98,6 @@ export async function upsertNota(input: {
     }
   }
 
-  // Verificar se a nota já existe
   const { data: existingNota } = await supabase
     .from("notas")
     .select("id")
@@ -126,14 +106,12 @@ export async function upsertNota(input: {
     .single();
 
   if (existingNota) {
-    // Buscar valor antigo para auditoria
     const { data: oldNota } = await supabase
       .from("notas")
       .select("value")
       .eq("id", existingNota.id)
       .single();
 
-    // Atualizar nota existente
     const { error: updateErr } = await supabase
       .from("notas")
       .update({
@@ -144,7 +122,6 @@ export async function upsertNota(input: {
 
     if (updateErr) throw new Error(updateErr.message);
 
-    // Registrar auditoria
     await logAudit({
       action: "update",
       entity: "nota",
@@ -154,7 +131,6 @@ export async function upsertNota(input: {
       description: `Nota atualizada de ${oldNota?.value ?? "N/A"} para ${value}`,
     });
   } else {
-    // Criar nova nota
     const { data: newNota, error: insertErr } = await supabase
       .from("notas")
       .insert({
@@ -169,7 +145,6 @@ export async function upsertNota(input: {
 
     if (insertErr) throw new Error(insertErr.message);
 
-    // Registrar auditoria
     if (newNota) {
       await logAudit({
         action: "create",
@@ -189,10 +164,6 @@ export async function upsertNota(input: {
   revalidatePath("/admin");
 }
 
-/**
- * Deleta uma nota.
- * Apenas administrativo pode deletar notas.
- */
 export async function deleteNota(notaId: string) {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
@@ -203,7 +174,6 @@ export async function deleteNota(notaId: string) {
 
   const supabase = await createServerSupabaseClient();
 
-  // Buscar nota antes de deletar para auditoria
   const { data: nota } = await supabase
     .from("notas")
     .select("id, value, aluno_id, avaliacao_id")
@@ -214,7 +184,6 @@ export async function deleteNota(notaId: string) {
 
   if (error) throw new Error(error.message);
 
-  // Registrar auditoria
   if (nota) {
     await logAudit({
       action: "delete",

@@ -1,8 +1,8 @@
 import StatusBadge from "@/app/_components/StatusBadge";
-import { getStudentInstallments } from "../../_lib/mockdata/finance.mock";
-import { Input } from "../ui/input";
 import { Bell, Search } from "lucide-react";
+import { getStudentInstallments } from "../../_lib/mockdata/finance.mock";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
 
 function monthLabel(month: number) {
   return (
@@ -30,7 +30,7 @@ export default async function FinanceiroAlunoView({
   studentId: string;
   studentName: string;
 }) {
-  const year = 2025; // você pode tornar isso selecionável depois
+  const year = 2025;
   const rows = await getStudentInstallments(studentId, year);
 
   return (

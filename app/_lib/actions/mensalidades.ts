@@ -76,7 +76,6 @@ export async function markMensalidadeAsPaid(input: {
 
   const supabase = await createServerSupabaseClient();
 
-  // Evitar sobrescrita indevida
   const { data: current, error: currentErr } = await supabase
     .from("mensalidades")
     .select("status, aluno_id")
@@ -90,7 +89,6 @@ export async function markMensalidadeAsPaid(input: {
     throw new Error("Esta mensalidade já está marcada como paga.");
   }
 
-  // Criar registro na tabela pagamentos
   const { data: pagamento, error: pagamentoErr } = await supabase
     .from("pagamentos")
     .insert({
@@ -106,7 +104,6 @@ export async function markMensalidadeAsPaid(input: {
 
   if (pagamentoErr) throw new Error(pagamentoErr.message);
 
-  // Atualizar mensalidade
   const { error } = await supabase
     .from("mensalidades")
     .update({
@@ -146,7 +143,6 @@ export async function listMensalidadesForRecepcao(params?: {
 
   const supabase = await createServerSupabaseClient();
 
-  // Usar estrutura real do banco: tabela "mensalidades" com coluna "aluno_id"
   let q = supabase
     .from("mensalidades")
     .select(
@@ -174,7 +170,6 @@ export async function listMensalidadesForRecepcao(params?: {
 
   const { data, error } = await q;
 
-  // Fallback: se a tabela/relacionamento ainda não existir, retorna mock para visualizar páginas.
   if (error) {
     console.warn("[listMensalidadesForRecepcao] fallback mock:", error.message);
     return buildMensalidadesMock({ status, studentId });
@@ -207,10 +202,6 @@ export async function listMensalidadesForRecepcao(params?: {
   }));
 }
 
-/**
- * MOCK local para UI (sem banco).
- * Retorna mensalidades suficientes para você visualizar filtros e tabelas.
- */
 function buildMensalidadesMock(input: {
   status: "pendente" | "pago" | "todos";
   studentId?: string;
@@ -287,7 +278,6 @@ export async function updateMensalidade(input: {
 
   const supabase = await createServerSupabaseClient();
 
-  // Verificar se a mensalidade existe
   const { data: current, error: currentErr } = await supabase
     .from("mensalidades")
     .select("id")
@@ -359,7 +349,6 @@ export async function updatePagamento(input: {
 
   const supabase = await createServerSupabaseClient();
 
-  // Verificar se o pagamento existe
   const { data: current, error: currentErr } = await supabase
     .from("pagamentos")
     .select("id, mensalidade_id")
@@ -412,7 +401,6 @@ export async function updatePagamento(input: {
     description: `Pagamento atualizado: ${Object.keys(updates).join(", ")}`,
   });
 
-  // Atualizar também a mensalidade relacionada
   if (input.valorPago !== undefined || input.dataPagamento !== undefined) {
     const { data: pagamento } = await supabase
       .from("pagamentos")
@@ -437,16 +425,11 @@ export async function updatePagamento(input: {
   revalidatePath("/recepcao/financeiro");
 }
 
-/**
- * Deleta um pagamento.
- * Apenas administrativo pode deletar pagamentos.
- */
 export async function deletePagamento(pagamentoId: string) {
   const profile = await requireUserRole(["administrativo"]);
 
   const supabase = await createServerSupabaseClient();
 
-  // Buscar o pagamento para pegar a mensalidade relacionada
   const { data: pagamento, error: findErr } = await supabase
     .from("pagamentos")
     .select("id, mensalidade_id")
@@ -456,7 +439,6 @@ export async function deletePagamento(pagamentoId: string) {
   if (findErr) throw new Error(findErr.message);
   if (!pagamento) throw new Error("Pagamento não encontrado.");
 
-  // Deletar o pagamento
   const { error: deleteErr } = await supabase
     .from("pagamentos")
     .delete()
@@ -464,7 +446,6 @@ export async function deletePagamento(pagamentoId: string) {
 
   if (deleteErr) throw new Error(deleteErr.message);
 
-  // Registrar auditoria
   await logAudit({
     action: "delete",
     entity: "pagamento",
@@ -472,13 +453,11 @@ export async function deletePagamento(pagamentoId: string) {
     description: `Pagamento deletado`,
   });
 
-  // Verificar se há outros pagamentos para esta mensalidade
   const { data: outrosPagamentos } = await supabase
     .from("pagamentos")
     .select("id")
     .eq("mensalidade_id", pagamento.mensalidade_id);
 
-  // Se não houver mais pagamentos, atualizar a mensalidade para pendente
   if (!outrosPagamentos || outrosPagamentos.length === 0) {
     await supabase
       .from("mensalidades")
