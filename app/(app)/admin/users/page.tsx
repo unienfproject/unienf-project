@@ -1,5 +1,4 @@
 import EditRoleButton from "@/app/_components/admin/EditRoleButton";
-import NewUserForm from "@/app/_components/admin/NewUserForm";
 import {
   Table,
   TableBody,
@@ -9,6 +8,7 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 import { listInternalUsers } from "@/app/_lib/actions/users";
+import UsersPageClient from "./UsersPageClient";
 
 export default async function UsuariosPage() {
   let users: Awaited<ReturnType<typeof listInternalUsers>> = [];
@@ -23,13 +23,7 @@ export default async function UsuariosPage() {
     <main>
       <div className="flex-1">
         <div className="mx-auto gap-4 p-4">
-          <h1 className="mb-6 text-2xl font-bold text-black">
-            Cadastro de Usuários do Sistema
-          </h1>
-
-          <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-            <NewUserForm />
-          </div>
+          <UsersPageClient users={users} />
 
           <div className="mt-6 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
             <div className="border-b p-4">

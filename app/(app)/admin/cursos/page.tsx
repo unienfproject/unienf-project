@@ -1,3 +1,6 @@
+"use client";
+
+import CreateCursoDialog from "@/app/_components/admin/CreateCursoDialog";
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
 import {
@@ -8,10 +11,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
+import { useState } from "react";
 
 export default function Cursos() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   return (
     <div className="flex flex-col">
+      <CreateCursoDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       <main className="p-6">
         <div className="space-y-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -23,7 +30,10 @@ export default function Cursos() {
                 Gerencie os cursos realizados.
               </p>
             </div>
-            <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
+            <Button
+              onClick={() => setDialogOpen(true)}
+              className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"

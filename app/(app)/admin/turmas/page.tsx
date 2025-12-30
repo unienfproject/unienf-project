@@ -1,3 +1,6 @@
+"use client";
+
+import CreateTurmaDialog from "@/app/_components/admin/CreateTurmaDialog";
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
 import {
@@ -8,22 +11,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
+import { useState } from "react";
 
 export default function Turmas() {
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   return (
     <div className="flex flex-col">
+      <CreateTurmaDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       <main className="p-6">
         <div className="space-y-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-foreground text-2xl font-bold">
-                Disciplinas Cadastradas
+                Turmas Cadastradas
               </h1>
               <p className="text-muted-foreground">
-                Gerencie todas as disciplinas cadastradas
+                Gerencie todas as turmas cadastradas
               </p>
             </div>
-            <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
+            <Button
+              onClick={() => setDialogOpen(true)}
+              className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="24"
@@ -41,7 +51,7 @@ export default function Turmas() {
                 <line x1="19" x2="19" y1="8" y2="14"></line>
                 <line x1="22" x2="16" y1="11" y2="11"></line>
               </svg>
-              Nova Disciplina
+              Nova Turma
             </Button>
           </div>
           <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-4">
