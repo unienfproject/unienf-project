@@ -1,8 +1,8 @@
 "use client";
 
+import { finalizeClass } from "@/app/_lib/actions/classes";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { finalizeClass } from "@/app/_lib/actions/classes";
 
 function Kpi({ title, value }: { title: string; value: string }) {
   return (
@@ -13,9 +13,9 @@ function Kpi({ title, value }: { title: string; value: string }) {
   );
 }
 
-import CreateClassModal from "./CreateClassmodal";
-import { Input } from "../../ui/input";
+import { Search } from "lucide-react";
 import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
 import {
   Table,
   TableBody,
@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../ui/table";
-import { Bell, Search } from "lucide-react";
+import CreateClassModal from "./CreateClassmodal";
 
 type ClassRow = {
   id: string;
@@ -126,7 +126,6 @@ export default function TeacherClassesView({
         </div>
       </div>
 
-      {/* Cards principais */}
       <div className="grid grid-cols-1 gap-3 p-6 md:grid-cols-3">
         <Kpi
           title="Turmas ativas"
@@ -230,7 +229,6 @@ export default function TeacherClassesView({
                         onClick={() => {
                           startTransition(async () => {
                             await finalizeClass({ classId: c.id, teacherId });
-                            //router.refresh()
                           });
                         }}
                         className="rounded-md bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
@@ -262,7 +260,6 @@ export default function TeacherClassesView({
         </div>
       </div>
 
-      {/* Criar turma */}
       {openCreate ? (
         <CreateClassModal
           teacherId={teacherId}

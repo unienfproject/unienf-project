@@ -65,10 +65,6 @@ export default function CreateCostModal({
                   incurredAt: String(fd.get("incurredAt") ?? "").trim(),
                 };
 
-                // Aqui você vai trocar para Server Action:
-                // await createInternalCost(payload);
-                // router.refresh();
-
                 console.log("Novo custo (mock):", payload);
                 setOpen(false);
               }}

@@ -1,11 +1,11 @@
 "use client";
 
-import DocumentCard from "./DocumentCard";
+import { Bell, Search } from "lucide-react";
 import { DocumentItem } from "../../_lib/actions/documents";
 import { updateStudentDocument } from "../../_lib/mockdata/docs.mock";
-import { Bell, Search } from "lucide-react";
-import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import DocumentCard from "./DocumentCard";
 
 type Props = {
   title: string;
@@ -90,7 +90,6 @@ export default function DocumentsView({
             doc={doc}
             canEdit={canEdit}
             onMarkDelivered={async (delivered) => {
-              // Aqui você vai trocar pelo Server Action que atualiza no Supabase
               await updateStudentDocument(studentId, doc.id, {
                 status: delivered ? "delivered" : "pending",
               });

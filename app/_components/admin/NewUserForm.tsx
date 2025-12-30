@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Eye, EyeOff, Check, X } from "lucide-react";
-import { toast } from "sonner";
+import { Check, Eye, EyeOff, X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
-import { Button } from "../../../_components/ui/button";
-import { Input } from "../../../_components/ui/input";
-import { Label } from "../../../_components/ui/label";
-import { Textarea } from "../../../_components/ui/textarea";
+import { Button } from "@/app/_components/ui/button";
+import { Input } from "@/app/_components/ui/input";
+import { Label } from "@/app/_components/ui/label";
+import { Textarea } from "@/app/_components/ui/textarea";
 import { cn } from "@/app/_lib/utils";
 
 import {
@@ -17,7 +17,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../../../_components/ui/select";
+} from "@/app/_components/ui/select";
 
 import { createInternalUser } from "@/app/_lib/actions/users";
 

@@ -12,15 +12,17 @@ export default function Location() {
             Venha nos conhecer
           </h2>
           <p className="text-muted-foreground text-lg">
-            Estamos localizados em uma região de fácil acesso, em São Pedro da Aldeia.
+            Estamos localizados em uma região de fácil acesso, em São Pedro da
+            Aldeia.
           </p>
         </div>
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           <div className="shadow-medium border-border/50 animate-slide-in-left h-[400px] overflow-hidden rounded-2xl border">
-          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3677.1763739633593!2d-42.10735852469177!3d-22.832963279307094!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x970fb97cc65167%3A0xfaad73cbd70fe859!2sUNIENF%20Lagos!5e0!3m2!1spt-BR!2sbr!4v1766110304598!5m2!1spt-BR!2sbr" 
-          width="600" 
-          height="450">
-          </iframe>
+            <iframe
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3677.1763739633593!2d-42.10735852469177!3d-22.832963279307094!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x970fb97cc65167%3A0xfaad73cbd70fe859!2sUNIENF%20Lagos!5e0!3m2!1spt-BR!2sbr!4v1766110304598!5m2!1spt-BR!2sbr"
+              width="600"
+              height="450"
+            ></iframe>
           </div>
           <div className="animate-slide-up flex flex-col justify-center space-y-6">
             <div className="bg-card border-border/50 shadow-soft hover-lift rounded-2xl border p-6">
@@ -51,7 +53,7 @@ export default function Location() {
                   <p className="text-muted-foreground">
                     (22) 2621-1627
                     <br />
-                    (22) 98765-4321 (WhatsApp) {/**Alterar contato para whatsapp da empresa.*/}
+                    (22) 98765-4321 (WhatsApp)
                   </p>
                 </div>
               </div>

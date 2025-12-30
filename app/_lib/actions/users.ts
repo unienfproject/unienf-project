@@ -1,9 +1,15 @@
 "use server";
 
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+import { logAudit } from "@/app/_lib/actions/audit";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
-type Role = "recepção" | "coordenação" | "administrativo" | "professor";
+type Role =
+  | "recepção"
+  | "coordenação"
+  | "administrativo"
+  | "professor"
+  | "aluno";
 
 function normalizeCpf(cpf: string) {
   return cpf.replace(/\D/g, "");
@@ -17,7 +23,6 @@ function isValidEmail(email: string) {
   return email.includes("@");
 }
 
-// TODO SUPABASE: coloque SUPABASE_SERVICE_ROLE_KEY no .env (NUNCA no client)
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -35,7 +40,6 @@ export async function createInternalUser(input: {
   role: Role;
   observation?: string | null;
 }) {
-  // Só permite se quem está chamando for administrativo
   const supabase = await createServerSupabaseClient();
   const { data: authData } = await supabase.auth.getUser();
   if (!authData.user) throw new Error("Sessão inválida.");
@@ -70,7 +74,7 @@ export async function createInternalUser(input: {
     {
       email,
       password,
-      email_confirm: true, // admin cria já confirmado
+      email_confirm: true,
       user_metadata: {
         name,
         telefone,
@@ -86,8 +90,6 @@ export async function createInternalUser(input: {
 
   const userId = created.user.id;
 
-  // TODO SUPABASE
-  // Adicionar colunas em profile para CPF e Observações.
   const { error: profileErr } = await supabase.from("profiles").upsert(
     {
       user_id: userId,
@@ -95,8 +97,6 @@ export async function createInternalUser(input: {
       telefone,
       email,
       role,
-      // cpf: cpf, // TODO: adicionar coluna
-      // observation: input.observation ?? null, // TODO: adicionar coluna
       updated_at: new Date().toISOString(),
     },
     { onConflict: "user_id" },
@@ -123,7 +123,6 @@ export async function listInternalUsers() {
     throw new Error("Sem permissão para listar usuários.");
   }
 
-  // TODO SUPABASE
   const { data, error } = await supabase
     .from("profiles")
     .select("user_id, name, email, telefone, role, created_at")
@@ -139,4 +138,76 @@ export async function listInternalUsers() {
     telefone: (u.telefone ?? "") as string,
     role: (u.role ?? "") as string,
   }));
+}
+
+export async function updateUserRole(input: { userId: string; newRole: Role }) {
+  const supabase = await createServerSupabaseClient();
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) throw new Error("Sessão inválida.");
+
+  const { data: callerProfile, error: callerErr } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("user_id", authData.user.id)
+    .single();
+
+  if (callerErr) throw new Error(callerErr.message);
+  if (!callerProfile || callerProfile.role !== "administrativo") {
+    throw new Error(
+      "Sem permissão para alterar roles. Apenas administrativo pode alterar roles.",
+    );
+  }
+
+  const userId = String(input.userId ?? "").trim();
+  const newRole = input.newRole;
+
+  if (!userId) throw new Error("userId é obrigatório.");
+  if (!newRole) throw new Error("newRole é obrigatório.");
+
+  const { data: targetUser, error: targetErr } = await supabase
+    .from("profiles")
+    .select("user_id, role")
+    .eq("user_id", userId)
+    .single();
+
+  if (targetErr) throw new Error(targetErr.message);
+  if (!targetUser) throw new Error("Usuário não encontrado.");
+
+  if (userId === authData.user.id) {
+    throw new Error("Você não pode alterar sua própria role.");
+  }
+
+  const admin = getAdminSupabase();
+  const { error: authUpdateErr } = await admin.auth.admin.updateUserById(
+    userId,
+    {
+      app_metadata: {
+        role: newRole,
+      },
+    },
+  );
+
+  if (authUpdateErr)
+    throw new Error(`Erro ao atualizar role no Auth: ${authUpdateErr.message}`);
+
+  const { error: profileUpdateErr } = await supabase
+    .from("profiles")
+    .update({
+      role: newRole,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+
+  if (profileUpdateErr) throw new Error(profileUpdateErr.message);
+
+  await logAudit({
+    action: "role_change",
+    entity: "user",
+    entityId: userId,
+    oldValue: { role: targetUser.role },
+    newValue: { role: newRole },
+    description: `Role alterada de "${targetUser.role}" para "${newRole}"`,
+  });
+
+  return { success: true, userId, oldRole: targetUser.role, newRole };
 }

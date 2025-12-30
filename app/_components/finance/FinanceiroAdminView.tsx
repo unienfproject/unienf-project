@@ -1,165 +1,16 @@
-// import StatusBadge from "@/app/_components/StatusBadge";
-// import {
-//   getMonthlySummary,
-//   getCostsByMonth,
-// } from "../../_lib/mockdata/finance.mock";
-
-// function monthLabel(month: number) {
-//   return (
-//     [
-//       "Jan",
-//       "Fev",
-//       "Mar",
-//       "Abr",
-//       "Mai",
-//       "Jun",
-//       "Jul",
-//       "Ago",
-//       "Set",
-//       "Out",
-//       "Nov",
-//       "Dez",
-//     ][month - 1] ?? `M${month}`
-//   );
-// }
-
-// export default async function FinanceiroAdminView() {
-//   const year = 2025;
-//   const month = 2;
-
-//   const summary = await getMonthlySummary(year, month);
-//   const costs = await getCostsByMonth(year, month);
-
-//   const totalCosts = costs.reduce((acc, cur) => acc + cur.amount, 0);
-//   const net = summary.totalPaid - totalCosts;
-
-//   return (
-//     <div className="flex flex-col gap-6 p-6">
-//       <div>
-//         <h1 className="text-2xl font-bold text-slate-900">Financeiro</h1>
-//         <p className="text-slate-600">
-//           Administrativo: visão geral, progressão mensal e custos internos.
-//         </p>
-//       </div>
-
-//       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-//         <Card
-//           title={`Recebido em ${monthLabel(month)}/${year}`}
-//           value={`R$ ${summary.totalPaid.toFixed(2)}`}
-//           badge={<StatusBadge label="Entradas" variant="blue" />}
-//         />
-//         <Card
-//           title={`Custos em ${monthLabel(month)}/${year}`}
-//           value={`R$ ${totalCosts.toFixed(2)}`}
-//           badge={<StatusBadge label="Custos" variant="gray" />}
-//         />
-//         <Card
-//           title="Saldo do mês"
-//           value={`R$ ${net.toFixed(2)}`}
-//           badge={
-//             <StatusBadge
-//               label="Resultado"
-//               variant={net >= 0 ? "green" : "yellow"}
-//             />
-//           }
-//         />
-//       </div>
-
-//       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-//         <div className="border-b p-4">
-//           <h2 className="font-semibold text-slate-900">
-//             Custos internos do mês
-//           </h2>
-//           <p className="text-sm text-slate-600">
-//             Lançamentos internos para controle administrativo.
-//           </p>
-//         </div>
-
-//         <div className="overflow-auto">
-//           <table className="w-full min-w-[900px] text-sm">
-//             <thead className="border-b bg-slate-50">
-//               <tr>
-//                 <th className="p-3 text-left font-semibold text-slate-700">
-//                   Categoria
-//                 </th>
-//                 <th className="p-3 text-left font-semibold text-slate-700">
-//                   Descrição
-//                 </th>
-//                 <th className="p-3 text-left font-semibold text-slate-700">
-//                   Valor
-//                 </th>
-//                 <th className="p-3 text-left font-semibold text-slate-700">
-//                   Data
-//                 </th>
-//               </tr>
-//             </thead>
-//             <tbody>
-//               {costs.map((c) => (
-//                 <tr key={c.id} className="border-b last:border-b-0">
-//                   <td className="p-3 font-medium text-slate-900">
-//                     {c.category}
-//                   </td>
-//                   <td className="p-3 text-slate-700">{c.description}</td>
-//                   <td className="p-3 text-slate-700">{`R$ ${c.amount.toFixed(2)}`}</td>
-//                   <td className="p-3 text-slate-700">{c.incurredAt}</td>
-//                 </tr>
-//               ))}
-//               {!costs.length ? (
-//                 <tr>
-//                   <td colSpan={4} className="p-6 text-center text-slate-500">
-//                     Sem custos lançados.
-//                   </td>
-//                 </tr>
-//               ) : null}
-//             </tbody>
-//           </table>
-//         </div>
-
-//         <div className="border-t p-4 text-xs text-slate-500">
-//           Próximo passo: adicionar formulário e Server Action para criar custos
-//           no Supabase com permissão apenas do ADMINISTRATIVO.
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// function Card({
-//   title,
-//   value,
-//   badge,
-// }: {
-//   title: string;
-//   value: string;
-//   badge: React.ReactNode;
-// }) {
-//   return (
-//     <div className="flex flex-col gap-2 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-//       <div className="flex items-center justify-between gap-3">
-//         <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
-//         {badge}
-//       </div>
-//       <div className="text-2xl font-bold text-slate-900">{value}</div>
-//     </div>
-//   );
-// }
-
-//ANALISAR CÓDIGO, TENTATIVA DE MELHORA PARA PÁGINA FINANCEIRA,SERÁ ALTERADA
-//PRECISA JOGAR ALGUMAS FUNÇÕES PARA A _ACTIONS FINANCE ORGANIZAR O QUE SERÁ MOSTRADO DA MELHOR FORMA.
 import StatusBadge from "@/app/_components/StatusBadge";
-import CreateCostModal from "./CreateCostModal";
-import { Bell, Search } from "lucide-react";
 import {
   Cost,
   MensalidadeRow,
-  getMensalidadesByMonth,
   getFinanceiroEntriesByMonth,
+  getMensalidadesByMonth,
 } from "@/app/_lib/actions/finance";
+import { Bell, Search } from "lucide-react";
+import CreateCostModal from "./CreateCostModal";
 
-// Mock atual (você vai substituir por Supabase)
 import {
-  getMonthlySummary,
   getCostsByMonth,
+  getMonthlySummary,
 } from "../../_lib/mockdata/finance.mock";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -192,27 +43,6 @@ function formatPct(value: number | null) {
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(1)}%`;
 }
-//   id: string;
-//   category: string;
-//   description: string;
-//   amount: number;
-//   incurredAt: string;
-// }; //Informado em Actions finance.ts
-
-// // Exemplo de tipo que você provavelmente terá na tabela mensalidade.
-// // Ajuste os nomes conforme seu schema real.
-// type MensalidadeRow = {
-//   id: string;
-//   student_id: string;
-//   student_name?: string | null; // se existir, ótimo; se não existir, buscar via profiles
-//   competence_year: number;
-//   competence_month: number;
-//   status: "pago" | "pendente";
-//   valor_mensalidade: number; // previsto
-//   valor_pago: number | null; // pago
-//   forma_pagamento?: "dinheiro" | "pix" | "debito" | "credito" | null;
-//   data_pagamento?: string | null; // YYYY-MM-DD
-// }; //Informado em Actions finance.ts
 
 function computeCostInsights(costs: Cost[]) {
   const totalCosts = costs.reduce((acc, cur) => acc + cur.amount, 0);
@@ -279,23 +109,16 @@ export default async function FinanceiroAdminView({
   const year = Number(searchParams?.year ?? 2025);
   const month = Number(searchParams?.month ?? 2);
 
-  // Entradas: hoje vem do mock summary
-  // TODO SUPABASE: substituir getMonthlySummary por agregação real de pagamentos/receitas
   const summary = await getMonthlySummary(year, month);
-
-  // Custos internos: hoje vem do mock
-  // TODO SUPABASE: substituir getCostsByMonth pela tabela internal_costs
   const costs = (await getCostsByMonth(year, month)) as Cost[];
 
   const { totalCosts, count, maxCost, categoriesSorted } =
     computeCostInsights(costs);
   const net = summary.totalPaid - totalCosts;
 
-  // Mensalidades do mês (tabela mensalidade)
   const mensalidades = await getMensalidadesByMonth(year, month);
   const mensalidadeInsights = computeMensalidadeInsights(mensalidades);
 
-  // Livro-caixa opcional (tabela financeiro)
   const financeiroEntries = await getFinanceiroEntriesByMonth(year, month);
   const hasFinanceiroEntries =
     Array.isArray(financeiroEntries) && financeiroEntries.length > 0;
@@ -346,7 +169,6 @@ export default async function FinanceiroAdminView({
           </div>
         </main>
 
-        {/* KPIs principais */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <Card
             title={`Recebido em ${monthLabel(month)}/${year}`}
@@ -391,7 +213,6 @@ export default async function FinanceiroAdminView({
           />
         </div>
 
-        {/* Mensalidades: visão gerencial */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b p-4">
             <h2 className="font-semibold text-slate-900">
@@ -399,10 +220,6 @@ export default async function FinanceiroAdminView({
             </h2>
             <p className="text-sm text-slate-600">
               Consolidado de previsão, recebido, pendente e adimplência.
-              <span className="text-xs text-slate-500">
-                {" "}
-                (Dados vindos da tabela mensalidade)
-              </span>
             </p>
           </div>
 
@@ -455,14 +272,8 @@ export default async function FinanceiroAdminView({
               </p>
             </div>
           </div>
-
-          <div className="border-t p-4 text-xs text-slate-500">
-            TODO SUPABASE: se a tabela mensalidade não tiver student_name, faça
-            join indireto buscando em profiles pelo student_id.
-          </div>
         </div>
 
-        {/* Custos: insights */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
@@ -542,7 +353,6 @@ export default async function FinanceiroAdminView({
           </div>
         </div>
 
-        {/* Tabela de custos */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="flex flex-col gap-1 border-b p-4 md:flex-row md:items-end md:justify-between">
             <div>
@@ -604,14 +414,8 @@ export default async function FinanceiroAdminView({
               </tbody>
             </table>
           </div>
-
-          <div className="border-t p-4 text-xs text-slate-500">
-            TODO SUPABASE: trocar getCostsByMonth por select real em
-            internal_costs e integrar CreateCostModal a uma Server Action.
-          </div>
         </div>
 
-        {/* Livro-caixa opcional: tabela financeiro */}
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b p-4">
             <h2 className="font-semibold text-slate-900">
@@ -625,22 +429,12 @@ export default async function FinanceiroAdminView({
 
           <div className="p-4 text-sm text-slate-700">
             {hasFinanceiroEntries ? (
-              <p>
-                TODO SUPABASE: renderizar tabela com as colunas reais da tabela
-                financeiro.
-              </p>
+              <p>Movimentações gerais do período.</p>
             ) : (
               <p className="text-slate-500">
-                Nenhuma movimentação geral carregada (placeholder). Conecte a
-                tabela financeiro quando estiver pronta.
+                Nenhuma movimentação geral carregada.
               </p>
             )}
-          </div>
-
-          <div className="border-t p-4 text-xs text-slate-500">
-            TODO SUPABASE: definir schema e filtros
-            (competence_year/competence_month ou data) para consolidar
-            movimentações gerais.
           </div>
         </div>
       </div>

@@ -1,8 +1,8 @@
 "use client";
 
-import ProtectedRoute from "../_components/auth/ProtectedRoute";
-import { AppSidebar } from "../_components/siderbar/SideBar";
-import { SidebarInset, SidebarProvider } from "../_components/ui/sidebar";
+import ProtectedRoute from "@/app/_components/auth/ProtectedRoute";
+import { AppSidebar } from "@/app/_components/siderbar/SideBar";
+import { SidebarInset, SidebarProvider } from "@/app/_components/ui/sidebar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   return (
