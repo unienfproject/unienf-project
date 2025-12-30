@@ -13,9 +13,7 @@ function Kpi({ title, value }: { title: string; value: string }) {
   );
 }
 
-import { Search } from "lucide-react";
 import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
 import {
   Table,
   TableBody,
@@ -64,38 +62,6 @@ export default function TeacherClassesView({
 
   return (
     <div className="flex flex-col">
-      <header className="bg-card border-border flex h-16 items-center justify-between border-b px-6">
-        <div className="max-w-md flex-1">
-          <div className="relative">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <Input
-              type="text"
-              className="border-input ring-offset-background file:text-foreground placeholder:text-muted-foreground bg-muted/50 focus-visible:ring-primary flex h-10 w-full rounded-md border-0 px-3 py-2 pl-10 text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-1 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
-              placeholder="Buscar..."
-            />
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <Button
-            type="button"
-            onClick={() => setOpenCreate(true)}
-            className="bg-primary hover:bg-primary-600 h-10 rounded-md px-4 text-sm font-medium text-white"
-          >
-            Nova turma
-          </Button>
-          <div className="border-border flex items-center gap-3 border-l pl-4">
-            <div className="bg-primary flex h-9 w-9 items-center justify-center rounded-full">
-              <span className="text-primary-foreground text-sm font-semibold">
-                P
-              </span>
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-foreground text-sm font-medium">Professor</p>
-              <p className="text-muted-foreground text-xs">Professor</p>
-            </div>
-          </div>
-        </div>
-      </header>
       <div className="flex flex-col gap-3 p-6 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Minhas Turmas</h1>
