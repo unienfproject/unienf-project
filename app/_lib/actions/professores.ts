@@ -82,3 +82,37 @@ export async function createProfessor(input: {
   revalidatePath("/admin/professores");
   return { userId };
 }
+
+export type ProfessorRow = {
+  id: string;
+  name: string;
+  email: string;
+  telefone: string | null;
+  createdAt: string;
+};
+
+export async function listProfessores(): Promise<ProfessorRow[]> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "administrativo") {
+    throw new Error("Sem permissão para listar professores.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("user_id, name, email, telefone, created_at")
+    .eq("role", "professor")
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((p) => ({
+    id: p.user_id,
+    name: p.name ?? "",
+    email: p.email ?? "",
+    telefone: p.telefone,
+    createdAt: p.created_at,
+  }));
+}

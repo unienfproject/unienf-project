@@ -11,10 +11,51 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+
+type CursoMock = {
+  id: string;
+  name: string;
+  professor: string;
+  tag: string;
+};
+
+const mockCursos: CursoMock[] = [
+  {
+    id: "1",
+    name: "Técnico Enfermagem",
+    professor: "Maria da Silva",
+    tag: "TECN2024.1",
+  },
+  {
+    id: "2",
+    name: "Instrumentação Cirúrgica",
+    professor: "João Paulo",
+    tag: "INSTRU2024.1",
+  },
+  {
+    id: "3",
+    name: "Auxiliar de Enfermagem",
+    professor: "Ana Costa",
+    tag: "AUX2024.1",
+  },
+];
 
 export default function Cursos() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredCursos = useMemo(() => {
+    if (!searchTerm.trim()) return mockCursos;
+
+    const term = searchTerm.toLowerCase().trim();
+    return mockCursos.filter(
+      (curso) =>
+        curso.name.toLowerCase().includes(term) ||
+        curso.professor.toLowerCase().includes(term) ||
+        curso.tag.toLowerCase().includes(term),
+    );
+  }, [searchTerm]);
 
   return (
     <div className="flex flex-col">
@@ -74,9 +115,10 @@ export default function Cursos() {
                 </svg>
                 <Input
                   type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 pl-10 text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
                   placeholder="Buscar por curso..."
-                  value=""
                 />
               </div>
               <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
@@ -118,322 +160,101 @@ export default function Cursos() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow className="border-border/50 hover:bg-muted/20 bg-background border-b transition-colors last:border-0">
-                    <TableCell className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                          <span className="text-primary text-sm font-semibold">
-                            T
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-foreground text-sm font-medium">
-                            Técnico Enfermagem
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-foreground px-6 py-4 text-sm">
-                      Maria da Silva
-                    </TableCell>
-                    <TableCell className="text-foreground px-6 py-4 text-sm">
-                      TECN2024.1
-                    </TableCell>
-                    <TableCell className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            className="lucide lucide-eye mr-1 h-4 w-4"
-                          >
-                            <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                          </svg>
-                          Ver Turma
-                        </Button>
-                        <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            className="lucide lucide-ellipsis-vertical h-4 w-4"
-                          >
-                            <circle cx="12" cy="12" r="1"></circle>
-                            <circle cx="12" cy="5" r="1"></circle>
-                            <circle cx="12" cy="19" r="1"></circle>
-                          </svg>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="border-border/50 hover:bg-muted/20 bg-muted/10 border-b transition-colors last:border-0">
-                    <TableCell className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                          <span className="text-primary text-sm font-semibold">
-                            I
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-foreground text-sm font-medium">
-                            Instrumentação Cirúrgica
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-foreground px-6 py-4 text-sm">
-                      João Paulo
-                    </TableCell>
-                    <TableCell className="text-foreground px-6 py-4 text-sm">
-                      INSTRU2024.1
-                    </TableCell>
-                    <TableCell className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            className="lucide lucide-eye mr-1 h-4 w-4"
-                          >
-                            <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                          </svg>
-                          Ver Turma
-                        </Button>
-                        <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            className="lucide lucide-ellipsis-vertical h-4 w-4"
-                          >
-                            <circle cx="12" cy="12" r="1"></circle>
-                            <circle cx="12" cy="5" r="1"></circle>
-                            <circle cx="12" cy="19" r="1"></circle>
-                          </svg>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="border-border/50 hover:bg-muted/20 bg-background border-b transition-colors last:border-0">
-                    <TableCell className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                          <span className="text-primary text-sm font-semibold">
-                            P
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-foreground text-sm font-medium">
-                            Primeiros Socorros
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-foreground px-6 py-4 text-sm">
-                      Carla Maria
-                    </TableCell>
-                    <TableCell className="text-foreground px-6 py-4 text-sm">
-                      PRISOC2024.1
-                    </TableCell>
-                    <TableCell className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            className="lucide lucide-eye mr-1 h-4 w-4"
-                          >
-                            <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                          </svg>
-                          Ver Turma
-                        </Button>
-                        <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            className="lucide lucide-ellipsis-vertical h-4 w-4"
-                          >
-                            <circle cx="12" cy="12" r="1"></circle>
-                            <circle cx="12" cy="5" r="1"></circle>
-                            <circle cx="12" cy="19" r="1"></circle>
-                          </svg>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="border-border/50 hover:bg-muted/20 bg-muted/10 border-b transition-colors last:border-0">
-                    <TableCell className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                          <span className="text-primary text-sm font-semibold">
-                            G
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-foreground text-sm font-medium">
-                            Geriatria
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-foreground px-6 py-4 text-sm">
-                      Emanuelle Ribeiro
-                    </TableCell>
-                    <TableCell className="text-foreground px-6 py-4 text-sm">
-                      GERIA2024.1
-                    </TableCell>
-                    <TableCell className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            className="lucide lucide-eye mr-1 h-4 w-4"
-                          >
-                            <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                          </svg>
-                          Ver Turma
-                        </Button>
-                        <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            className="lucide lucide-ellipsis-vertical h-4 w-4"
-                          >
-                            <circle cx="12" cy="12" r="1"></circle>
-                            <circle cx="12" cy="5" r="1"></circle>
-                            <circle cx="12" cy="19" r="1"></circle>
-                          </svg>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="border-border/50 hover:bg-muted/20 bg-background border-b transition-colors last:border-0">
-                    <TableCell className="px-6 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                          <span className="text-primary text-sm font-semibold">
-                            E
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-foreground text-sm font-medium">
-                            Enfermagem do Trabalho
-                          </p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-foreground px-6 py-4 text-sm">
-                      Rogério Li Guang Yao
-                    </TableCell>
-                    <TableCell className="text-foreground px-6 py-4 text-sm">
-                      ENF2024.1
-                    </TableCell>
-                    <TableCell className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            className="lucide lucide-eye mr-1 h-4 w-4"
-                          >
-                            <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                          </svg>
-                          Ver Turma
-                        </Button>
-                        <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            className="lucide lucide-ellipsis-vertical h-4 w-4"
-                          >
-                            <circle cx="12" cy="12" r="1"></circle>
-                            <circle cx="12" cy="5" r="1"></circle>
-                            <circle cx="12" cy="19" r="1"></circle>
-                          </svg>
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
+                  {filteredCursos.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-muted-foreground px-6 py-4 text-center"
+                      >
+                        {searchTerm
+                          ? "Nenhum curso encontrado com o termo pesquisado."
+                          : "Nenhum curso encontrado."}
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredCursos.map((curso) => {
+                      const initials = curso.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2);
+
+                      return (
+                        <TableRow
+                          key={curso.id}
+                          className="border-border/50 hover:bg-muted/20 bg-background border-b transition-colors last:border-0"
+                        >
+                          <TableCell className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                                <span className="text-primary text-sm font-semibold">
+                                  {initials}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="text-foreground text-sm font-medium">
+                                  {curso.name}
+                                </p>
+                              </div>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-foreground px-6 py-4 text-sm">
+                            {curso.professor}
+                          </TableCell>
+                          <TableCell className="text-foreground px-6 py-4 text-sm">
+                            {curso.tag}
+                          </TableCell>
+                          <TableCell className="px-6 py-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  className="lucide lucide-eye mr-1 h-4 w-4"
+                                >
+                                  <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
+                                  <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                Ver Turma
+                              </Button>
+                              <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="24"
+                                  height="24"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  stroke-width="2"
+                                  stroke-linecap="round"
+                                  stroke-linejoin="round"
+                                  className="lucide lucide-ellipsis-vertical h-4 w-4"
+                                >
+                                  <circle cx="12" cy="12" r="1"></circle>
+                                  <circle cx="12" cy="5" r="1"></circle>
+                                  <circle cx="12" cy="19" r="1"></circle>
+                                </svg>
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
                 </TableBody>
               </Table>
             </div>
             <div className="border-border/50 flex items-center justify-between border-t px-6 py-4">
               <p className="text-muted-foreground text-sm">
-                Mostrando 5 de 5 cursos.
+                Mostrando {filteredCursos.length} de {mockCursos.length} cursos
               </p>
               <div className="flex items-center gap-2">
                 <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
