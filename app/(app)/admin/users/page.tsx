@@ -8,7 +8,7 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 import { listInternalUsers } from "@/app/_lib/actions/users";
-import UsersPageClient from "./UsersPageClient";
+import UsersPageClient from "@/app/_components/admin/UsersPageClient";
 
 export default async function UsuariosPage() {
   let users: Awaited<ReturnType<typeof listInternalUsers>> = [];

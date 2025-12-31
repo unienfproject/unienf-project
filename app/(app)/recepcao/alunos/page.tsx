@@ -1,4 +1,7 @@
+"use client";
+
 import { Button } from "@/app/_components/ui/button";
+import { Input } from "@/app/_components/ui/input";
 import {
   Table,
   TableBody,
@@ -7,55 +10,90 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { getUserProfile } from "@/app/_lib/actions/profile";
 import {
   listStudentsForRecepcao,
-  createStudent,
   updateStudentProfile,
+  type StudentRowForRecepcao,
 } from "@/app/_lib/actions/recepcao";
-import { Plus } from "lucide-react";
+import { Search } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
-type StudentRow = {
-  id: string;
-  name: string;
-  email: string;
-  telefone?: string | null;
-};
+export default function RecepcaoAlunosPage() {
+  const [students, setStudents] = useState<StudentRowForRecepcao[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
 
-export default async function RecepcaoAlunosPage() {
-  const profile = await getUserProfile();
+  useEffect(() => {
+    async function loadStudents() {
+      setLoading(true);
+      try {
+        const data = await listStudentsForRecepcao(searchTerm || undefined);
+        setStudents(data);
+      } catch (error) {
+        console.error("Erro ao carregar alunos:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadStudents();
+  }, [searchTerm]);
 
-  if (!profile)
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
-  if (profile.role !== "recepção")
-    return <div className="p-6">Sem acesso.</div>;
+  const filteredStudents = useMemo(() => {
+    if (!searchTerm.trim()) return students;
+    const term = searchTerm.toLowerCase().trim();
+    return students.filter(
+      (s) =>
+        s.name.toLowerCase().includes(term) ||
+        s.email.toLowerCase().includes(term) ||
+        (s.telefone && s.telefone.toLowerCase().includes(term)),
+    );
+  }, [students, searchTerm]);
 
-  const students = await listStudentsForRecepcao(); // TODO SUPABASE
-
-  async function actionUpdate(formData: FormData) {
-    "use server";
+  async function handleUpdate(formData: FormData) {
     const studentId = String(formData.get("studentId") ?? "");
     const name = String(formData.get("name") ?? "").trim();
     const telefone = String(formData.get("telefone") ?? "").trim();
 
     if (!studentId || !name) return;
 
-    await updateStudentProfile({
-      studentId,
-      name,
-      telefone: telefone ? telefone : null,
-    });
+    try {
+      await updateStudentProfile({
+        studentId,
+        name,
+        telefone: telefone ? telefone : null,
+      });
+      // Recarregar lista após atualização
+      const data = await listStudentsForRecepcao(searchTerm || undefined);
+      setStudents(data);
+    } catch (error) {
+      console.error("Erro ao atualizar aluno:", error);
+      alert("Erro ao atualizar dados do aluno.");
+    }
   }
 
   return (
     <div className="flex flex-col">
-      <section className="gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm m-6">
+      <section className="m-6 gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="border-b p-4">
-          <h2 className="font-semibold text-slate-900">Lista de alunos</h2>
-          <p className="text-sm text-slate-600">
-            Editar nome e telefone. E-mail é apenas informativo.
-          </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-semibold text-slate-900">Lista de alunos</h2>
+              <p className="text-sm text-slate-600">
+                Busque por nome, email ou telefone. Edite nome e telefone.
+              </p>
+            </div>
+            <div className="relative max-w-md flex-1">
+              <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-slate-400" />
+              <Input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por nome, email ou telefone..."
+                className="h-10 rounded-md border border-slate-200 px-3 pl-10 text-sm"
+              />
+            </div>
+          </div>
         </div>
 
         <div className="overflow-auto">
@@ -78,82 +116,99 @@ export default async function RecepcaoAlunosPage() {
             </TableHeader>
 
             <TableBody>
-              {students.map((s: StudentRow) => (
-                <TableRow key={s.id} className="border-b last:border-b-0">
-                  <TableCell className="p-3">
-                    <form
-                      action={actionUpdate}
-                      className="flex items-center gap-2"
-                    >
-                      <Input type="hidden" name="studentId" value={s.id} />
-                      <Input
-                        name="name"
-                        defaultValue={s.name}
-                        className="h-9 w-[320px] rounded-md border border-slate-200 px-3 text-sm"
-                      />
-                      <Button className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium hover:bg-slate-50">
-                        Salvar
-                      </Button>
-                    </form>
-                  </TableCell>
-
-                  <TableCell className="p-3 text-slate-700">
-                    {s.email}
-                  </TableCell>
-
-                  <TableCell className="p-3">
-                    <form
-                      action={actionUpdate}
-                      className="flex items-center gap-2"
-                    >
-                      <Input type="hidden" name="studentId" value={s.id} />
-                      <Input type="hidden" name="name" value={s.name} />
-                      <Input
-                        name="telefone"
-                        defaultValue={s.telefone ?? ""}
-                        className="h-9 w-[220px] rounded-md border border-slate-200 px-3 text-sm"
-                      />
-                      <Button className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium hover:bg-slate-50">
-                        Salvar
-                      </Button>
-                    </form>
-                  </TableCell>
-
-                  <TableCell className="p-3">
-                    <div className="flex flex-wrap gap-2">
-                      <Link
-                        href={`/dashboard/alunos/${s.id}`}
-                        className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
-                      >
-                        Ver perfil
-                      </Link>
-                      <Link
-                        href={`/dashboard/alunos/${s.id}/documentos`}
-                        className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
-                      >
-                        Documentos
-                      </Link>
-                      <Link
-                        href={`/recepcao/financeiro?studentId=${s.id}`}
-                        className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
-                      >
-                        Financeiro
-                      </Link>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-
-              {!students.length ? (
+              {loading ? (
                 <TableRow>
                   <TableCell
                     colSpan={4}
                     className="p-6 text-center text-slate-500"
                   >
-                    Sem alunos cadastrados.
+                    Carregando alunos...
                   </TableCell>
                 </TableRow>
-              ) : null}
+              ) : filteredStudents.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="p-6 text-center text-slate-500"
+                  >
+                    {searchTerm
+                      ? "Nenhum aluno encontrado com o termo pesquisado."
+                      : "Sem alunos cadastrados."}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredStudents.map((s) => (
+                  <TableRow key={s.id} className="border-b last:border-b-0">
+                    <TableCell className="p-3">
+                      <form
+                        action={handleUpdate}
+                        className="flex items-center gap-2"
+                      >
+                        <Input type="hidden" name="studentId" value={s.id} />
+                        <Input
+                          name="name"
+                          defaultValue={s.name}
+                          className="h-9 w-[320px] rounded-md border border-slate-200 px-3 text-sm"
+                        />
+                        <Button
+                          type="submit"
+                          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium hover:bg-slate-50"
+                        >
+                          Salvar
+                        </Button>
+                      </form>
+                    </TableCell>
+
+                    <TableCell className="p-3 text-slate-700">
+                      {s.email}
+                    </TableCell>
+
+                    <TableCell className="p-3">
+                      <form
+                        action={handleUpdate}
+                        className="flex items-center gap-2"
+                      >
+                        <Input type="hidden" name="studentId" value={s.id} />
+                        <Input type="hidden" name="name" value={s.name} />
+                        <Input
+                          name="telefone"
+                          defaultValue={s.telefone ?? ""}
+                          className="h-9 w-[220px] rounded-md border border-slate-200 px-3 text-sm"
+                        />
+                        <Button
+                          type="submit"
+                          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium hover:bg-slate-50"
+                        >
+                          Salvar
+                        </Button>
+                      </form>
+                    </TableCell>
+
+                    <TableCell className="p-3">
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          href={`/dashboard/alunos/${s.id}`}
+                          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                        >
+                          Ver perfil
+                        </Link>
+                        <Link
+                          href={`/dashboard/alunos/${s.id}/documentos`}
+                          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                        >
+                          Documentos
+                        </Link>
+                        <Link
+                          href={`/recepcao/financeiro?studentId=${s.id}`}
+                          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
+                        >
+                          Financeiro
+                        </Link>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </div>
