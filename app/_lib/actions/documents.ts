@@ -1,4 +1,4 @@
-export type DocumentStatus = "pending" | "delivered";
+export type DocumentStatus = "pending" | "delivered" | "rejected";
 
 export type DocumentItem = {
   id: string;

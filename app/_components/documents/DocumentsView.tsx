@@ -63,6 +63,12 @@ export default function DocumentsView({
                 status: delivered ? "delivered" : "pending",
               });
             }}
+            onMarkRejected={async (rejected, notes) => {
+              await updateStudentDocument(studentId, doc.id, {
+                status: rejected ? "rejected" : "pending",
+                notes: rejected ? notes : doc.notes,
+              });
+            }}
             onSaveNotes={async (notes) => {
               await updateStudentDocument(studentId, doc.id, { notes });
             }}
