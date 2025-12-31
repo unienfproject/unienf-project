@@ -9,7 +9,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
+import { EllipsisVertical, Eye, Funnel, UserSearch } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Input } from "../ui/input";
 
 type Aluno = {
   id: string;
@@ -45,22 +47,8 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
       <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-4">
         <div className="flex flex-col gap-4 sm:flex-row">
           <div className="relative flex-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-search text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2"
-            >
-              <circle cx="11" cy="11" r="8"></circle>
-              <path d="m21 21-4.3-4.3"></path>
-            </svg>
-            <input
+            <UserSearch className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2" />
+            <Input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -69,20 +57,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
             />
           </div>
           <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="lucide lucide-filter mr-2 h-4 w-4"
-            >
-              <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-            </svg>
+            <Funnel />
             Filtros
           </Button>
         </div>
@@ -166,40 +141,11 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
                       <TableCell className="px-6 py-4 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="lucide lucide-eye mr-1 h-4 w-4"
-                            >
-                              <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"></path>
-                              <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
+                            <Eye />
                             Ver Perfil
                           </Button>
                           <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="24"
-                              height="24"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="lucide lucide-ellipsis-vertical h-4 w-4"
-                            >
-                              <circle cx="12" cy="12" r="1"></circle>
-                              <circle cx="12" cy="5" r="1"></circle>
-                              <circle cx="12" cy="19" r="1"></circle>
-                            </svg>
+                            <EllipsisVertical />
                           </Button>
                         </div>
                       </TableCell>
@@ -227,4 +173,3 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
     </>
   );
 }
-

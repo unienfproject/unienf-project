@@ -2,7 +2,7 @@
 
 import CreateAlunoDialog from "@/app/_components/admin/CreateAlunoDialog";
 import { Button } from "@/app/_components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -34,7 +34,7 @@ export default function AlunosPageClient({ alunos }: AlunosPageClientProps) {
           </p>
         </div>
         <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" />
+          <UserPlus />
           Nova Matrícula
         </Button>
       </div>
@@ -51,4 +51,3 @@ export default function AlunosPageClient({ alunos }: AlunosPageClientProps) {
     </>
   );
 }
-
