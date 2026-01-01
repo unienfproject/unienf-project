@@ -1,6 +1,6 @@
-import { listAlunos } from "@/app/_lib/actions/alunos";
 import AlunosPageClient from "@/app/_components/admin/AlunosPageClient";
 import AlunosTable from "@/app/_components/admin/AlunosTable";
+import { listAlunos } from "@/app/_lib/actions/alunos";
 
 export default async function Alunos() {
   let alunos: Awaited<ReturnType<typeof listAlunos>> = [];

@@ -85,7 +85,7 @@ export default function TeacherClassesView({
           <Button
             type="button"
             onClick={() => setOpenCreate(true)}
-            className="h-10 rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
+            className="bg-primary hover:bg-primary h-10 rounded-md px-4 text-sm font-medium text-white"
           >
             Nova turma
           </Button>
