@@ -18,7 +18,9 @@ export type NoticeRow = {
     | { type: "alunos"; studentCount: number };
 };
 
-export async function listNoticesForTeacher(teacherId: string) {
+export async function listNoticesForTeacher(
+  teacherId: string,
+): Promise<NoticeRow[]> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
   if (profile.role !== "professor") throw new Error("Sem permissão.");
@@ -55,7 +57,7 @@ export async function createNotice(input: {
   target:
     | { type: "turma"; classId: string }
     | { type: "alunos"; studentIds: string[] };
-}) {
+}): Promise<{ avisoId: string }> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
   if (profile.role !== "professor") throw new Error("Sem permissão.");
@@ -63,5 +65,81 @@ export async function createNotice(input: {
 
   const supabase = await createServerSupabaseClient();
 
+  const { data: aviso, error: avisoError } = await supabase
+    .from("avisos")
+    .insert({
+      title: input.title.trim(),
+      message: input.message.trim(),
+      author_id: profile.user_id,
+      scope_type: input.target.type,
+      turma_id: input.target.type === "turma" ? input.target.classId : null,
+      created_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (avisoError) throw new Error(avisoError.message);
+  if (!aviso) throw new Error("Falha ao criar aviso.");
+
+  if (input.target.type === "alunos") {
+    if (input.target.studentIds.length > 0) {
+      const avisoAlunos = input.target.studentIds.map((alunoId) => ({
+        aviso_id: aviso.id,
+        aluno_id: alunoId,
+      }));
+
+      const { error } = await supabase.from("aviso_alunos").insert(avisoAlunos);
+      if (error) throw new Error(error.message);
+    }
+  }
+
   revalidatePath("/professores/avisos");
+  return { avisoId: aviso.id };
+}
+
+export async function createAvisoAdmin(input: {
+  title: string;
+  message: string;
+  target:
+    | { type: "turma"; classId: string }
+    | { type: "alunos"; studentIds: string[] };
+}): Promise<{ avisoId: string }> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "administrativo") {
+    throw new Error("Sem permissão para criar avisos.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: aviso, error: avisoError } = await supabase
+    .from("avisos")
+    .insert({
+      title: input.title.trim(),
+      message: input.message.trim(),
+      author_id: profile.user_id,
+      scope_type: input.target.type,
+      turma_id: input.target.type === "turma" ? input.target.classId : null,
+      created_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (avisoError) throw new Error(avisoError.message);
+  if (!aviso) throw new Error("Falha ao criar aviso.");
+
+  if (input.target.type === "alunos") {
+    if (input.target.studentIds.length > 0) {
+      const avisoAlunos = input.target.studentIds.map((alunoId) => ({
+        aviso_id: aviso.id,
+        aluno_id: alunoId,
+      }));
+
+      const { error } = await supabase.from("aviso_alunos").insert(avisoAlunos);
+      if (error) throw new Error(error.message);
+    }
+  }
+
+  revalidatePath("/admin/avisos");
+  return { avisoId: aviso.id };
 }

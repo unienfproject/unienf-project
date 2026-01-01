@@ -13,12 +13,11 @@ import { cn } from "@/app/_lib/utils";
 import { useRouter } from "next/navigation";
 import { ComponentProps, useState } from "react";
 import { toast } from "sonner";
-import { createClient } from "../_lib/supabase/client";
+import { createClient } from "@/app/_lib/supabase/client";
 import Link from "next/link";
 import { Checkbox } from "@/app/_components/ui/checkbox";
 import { Check, Eye, EyeOff, X } from "lucide-react";
-import { Form } from "../_components/ui/form";
-import { Label } from "../_components/ui/label";
+import { Label } from "@/app/_components/ui/label";
 
 export function SignupForm({ className, ...props }: ComponentProps<"form">) {
   const router = useRouter();
@@ -31,7 +30,7 @@ export function SignupForm({ className, ...props }: ComponentProps<"form">) {
     etiqueta: "",
     password: "",
     confirmPassword: "",
-    acceptTerms: false, // Adicionado o campo acceptTerms
+    acceptTerms: false,
   });
 
   const passwordValidation = {
@@ -274,3 +273,4 @@ export function SignupForm({ className, ...props }: ComponentProps<"form">) {
     </form>
   );
 }
+
