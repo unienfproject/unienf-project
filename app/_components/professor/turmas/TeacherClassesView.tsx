@@ -24,7 +24,6 @@ import {
   TableRow,
 } from "../../ui/table";
 import CreateClassModal from "./CreateClassmodal";
-import { Input } from "../../ui/input";
 
 type ClassRow = {
   id: string;

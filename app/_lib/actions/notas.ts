@@ -33,7 +33,7 @@ export async function listNotasByAvaliacao(avaliacaoId: string) {
 
   // Se for professor, verificar se é o professor da turma
   if (profile.role === "professor") {
-    const turma = avaliacao.turmas as any;
+    const turma = avaliacao.turmas as unknown as { professor_id: string };
     if (turma?.professor_id !== profile.user_id) {
       throw new Error("Você não tem permissão para ver notas desta turma.");
     }
@@ -62,8 +62,8 @@ export async function listNotasByAvaliacao(avaliacaoId: string) {
     avaliacaoId: n.avaliacao_id,
     alunoId: n.aluno_id,
     value: Number(n.value),
-    alunoName: (n.profiles as any)?.name ?? "",
-    alunoEmail: (n.profiles as any)?.email ?? "",
+    alunoName: (n.profiles as unknown as { name: string })?.name ?? "",
+    alunoEmail: (n.profiles as unknown as { email: string })?.email ?? "",
     createdAt: n.created_at,
     updatedAt: n.updated_at,
   }));
@@ -93,7 +93,7 @@ export async function upsertNota(input: {
 
   // Se for professor, verificar se é o professor da turma
   if (profile.role === "professor") {
-    const turma = avaliacao.turmas as any;
+    const turma = avaliacao.turmas as unknown as { professor_id: string };
     if (turma?.professor_id !== profile.user_id) {
       throw new Error("Você não tem permissão para editar notas desta turma.");
     }

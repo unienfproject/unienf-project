@@ -1,15 +1,13 @@
 "use server";
 
 import { createServerSupabaseClient } from "../supabase/server";
+import type { Profile as ProfileFull, ProfileRole } from "../types/database";
 
-export type Profile = {
-  user_id: string;
-  name: string | null;
-  email: string | null;
-  telefone: string | null;
-  avatar_url: string | null;
-  role: string | null;
-};
+// Tipo parcial do Profile para uso em funções que não retornam todos os campos
+export type Profile = Omit<ProfileFull, "created_at" | "updated_at">;
+
+// Re-export para compatibilidade
+export type { ProfileRole };
 
 export type StudentRow = {
   id: string;
