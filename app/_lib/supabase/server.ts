@@ -17,9 +17,7 @@ export async function createServerSupabaseClient() {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
             });
-          } catch {
-            // Em Server Components, set pode falhar. O middleware garante o refresh.
-          }
+          } catch {}
         },
       },
     },

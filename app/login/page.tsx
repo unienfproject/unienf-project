@@ -5,7 +5,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react"; // Removed: email, password state are now managed by react-hook-form
+import { useState } from "react";
 import { Button } from "../_components/ui/button";
 import { Input } from "../_components/ui/input";
 import Toast from "../_hooks/use-toast";
@@ -16,12 +16,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "../_components/ui/form"; // Added FormField, FormControl, FormMessage
-import { useForm } from "react-hook-form"; // New import for form management
-import { z } from "zod"; // New import for schema validation
-import { zodResolver } from "@hookform/resolvers/zod"; // New import for Zod resolver
+} from "../_components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
 
-// Define the form schema using Zod for validation
 const FormSchema = z.object({
   email: z.string().email({ message: "E-mail inválido." }),
   password: z
@@ -33,13 +32,11 @@ export default function Login() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize react-hook-form with Zod resolver
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  // Handle form submission using react-hook-form's values
   const handleSubmit = async (values: z.infer<typeof FormSchema>) => {
     setIsLoading(true);
 
@@ -47,8 +44,8 @@ export default function Login() {
       const supabase = createClient();
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: values.email, // Use values from the form
-        password: values.password, // Use values from the form
+        email: values.email,
+        password: values.password,
       });
 
       if (error) {
@@ -69,7 +66,7 @@ export default function Login() {
         router.refresh();
       }
     } catch (error) {
-      console.error("Erro inesperado durante o login:", error); // Log the error for debugging
+      console.error("Erro inesperado durante o login:", error);
       Toast({
         title: "Erro inesperado",
         description: "Ocorreu um erro ao fazer login, tente novamente",
@@ -123,9 +120,7 @@ export default function Login() {
               Digite suas credenciais para acessar o sistema da UNIENF
             </p>
           </div>
-          {/* Form component from shadcn/ui acts as a context provider */}
           <Form {...form}>
-            {/* The actual form element, styled with className and onSubmit handler */}
             <form
               onSubmit={form.handleSubmit(handleSubmit)}
               className="space-y-5"

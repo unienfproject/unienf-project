@@ -56,8 +56,6 @@ export default function Notas() {
                     <TableHead className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
                       Recuperação
                     </TableHead>
-                    {/*/A nota da Recuperação vai substituir a nota da média das 3 avaliações se for maior que a media.
-                      //Então (IF "RECUPERAÇÃO" > "AVA1+AVA2+AVA3/3" = "RECUPERAÇÃO" ELSE = AVA1+AVA2+AVA3/3)*/}
                     <TableHead className="text-muted-foreground px-6 py-4 text-center text-sm font-medium">
                       Média
                     </TableHead>

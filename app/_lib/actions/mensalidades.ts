@@ -116,7 +116,6 @@ export async function markMensalidadeAsPaid(input: {
 
   if (error) throw new Error(error.message);
 
-  // Registrar auditoria
   await logAudit({
     action: "payment",
     entity: "mensalidade",
@@ -199,7 +198,7 @@ export async function listMensalidadesForRecepcao(params?: {
       status: r.status as MensalidadeStatus,
       valor_mensalidade: Number(r.valor_mensalidade),
       valorPago: r.valor_pago == null ? null : Number(r.valor_pago),
-      formaPagamento: null as FormaPagamento | null, // forma_pagamento está na tabela pagamentos
+      formaPagamento: null as FormaPagamento | null,
       dataPagamento: (r.data_pagamento ?? null) as string | null,
     };
   });
@@ -264,10 +263,6 @@ function buildMensalidadesMock(input: {
   return base.filter((m) => m.status === input.status);
 }
 
-/**
- * Atualiza uma mensalidade existente.
- * Apenas administrativo pode editar mensalidades.
- */
 export async function updateMensalidade(input: {
   mensalidadeId: string;
   valorMensalidade?: number;
@@ -321,7 +316,6 @@ export async function updateMensalidade(input: {
 
   if (error) throw new Error(error.message);
 
-  // Registrar auditoria
   await logAudit({
     action: "update",
     entity: "mensalidade",
@@ -334,10 +328,6 @@ export async function updateMensalidade(input: {
   revalidatePath("/recepcao/financeiro");
 }
 
-/**
- * Atualiza um pagamento existente.
- * Apenas administrativo pode editar pagamentos.
- */
 export async function updatePagamento(input: {
   pagamentoId: string;
   valorPago?: number;
@@ -395,7 +385,6 @@ export async function updatePagamento(input: {
 
   if (error) throw new Error(error.message);
 
-  // Registrar auditoria
   await logAudit({
     action: "update",
     entity: "pagamento",

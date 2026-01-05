@@ -63,7 +63,6 @@ export default function RecepcaoAlunosPage() {
         name,
         telefone: telefone ? telefone : null,
       });
-      // Recarregar lista após atualização
       const data = await listStudentsForRecepcao(searchTerm || undefined);
       setStudents(data);
     } catch (error) {

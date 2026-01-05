@@ -81,7 +81,6 @@ export default async function RecepcaoFinanceiroPage({
     if (!["dinheiro", "pix", "debito", "credito"].includes(forma)) return;
     if (!data) return;
 
-    // TODO SUPABASE: atualizar mensalidade para pago
     await markMensalidadeAsPaid({
       mensalidadeId,
       valorPago,

@@ -86,7 +86,6 @@ export async function updateStudentDocument(
 export async function getPendingDocumentsGeneralized(): Promise<
   { studentId: string; studentName: string; pendingCount: number }[]
 > {
-  // Visão "GENERALIZADA" para administrativo: quantos pendentes por aluno
   return [
     { studentId: "stu-001", studentName: "Maria Silva", pendingCount: 2 },
     { studentId: "stu-002", studentName: "João Pereira", pendingCount: 1 },

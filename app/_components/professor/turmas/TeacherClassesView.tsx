@@ -107,7 +107,6 @@ export default function TeacherClassesView({
         <Kpi title="Total de turmas" value={String(classes.length)} />
       </div>
 
-      {/* Tabela */}
       <div className="m-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b p-4">
           <h2 className="font-semibold text-slate-900">Turmas</h2>

@@ -21,13 +21,10 @@ export default async function ProfessorAvisosPage() {
     );
   }
 
-  // TODO SUPABASE: buscar avisos visíveis ao professor (autor=professor OU autor=coordenação/admin)
   const notices = await listNoticesForTeacher(profile.user_id);
 
-  // TODO SUPABASE: buscar turmas que o professor pode selecionar (criadas/vinculadas)
   const classes = await listTeacherClassesForPicker(profile.user_id);
 
-  // TODO SUPABASE: buscar alunos (para seleção manual) – pode ser perfis role=aluno
   const students = await listStudentsForPicker();
 
   return (

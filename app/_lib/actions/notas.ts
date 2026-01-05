@@ -31,7 +31,6 @@ export async function listNotasByAvaliacao(avaliacaoId: string) {
   if (avaliacaoErr) throw new Error(avaliacaoErr.message);
   if (!avaliacao) throw new Error("Avaliação não encontrada.");
 
-  // Se for professor, verificar se é o professor da turma
   if (profile.role === "professor") {
     const turma = avaliacao.turmas as unknown as { professor_id: string };
     if (turma?.professor_id !== profile.user_id) {
@@ -91,7 +90,6 @@ export async function upsertNota(input: {
   if (avaliacaoErr) throw new Error(avaliacaoErr.message);
   if (!avaliacao) throw new Error("Avaliação não encontrada.");
 
-  // Se for professor, verificar se é o professor da turma
   if (profile.role === "professor") {
     const turma = avaliacao.turmas as unknown as { professor_id: string };
     if (turma?.professor_id !== profile.user_id) {

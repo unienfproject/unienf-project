@@ -21,13 +21,10 @@ export default async function ProfessorTurmasPage() {
     );
   }
 
-  // Turmas do professor cadastradas no supabase
   const classes = await listTeacherClasses(profile.user_id);
 
-  // Disciplinas cadastradas no supabase
   const subjects = await listSubjectsForPicker();
 
-  // Alunos cadastrados no supabase
   const students = await listStudentsForPicker();
 
   return (
