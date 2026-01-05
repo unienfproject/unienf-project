@@ -94,7 +94,7 @@ export type ProfessorRow = {
 export async function listProfessores(): Promise<ProfessorRow[]> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
-  if (profile.role !== "administrativo") {
+  if (profile.role !== "administrativo" && profile.role !== "coordenação") {
     throw new Error("Sem permissão para listar professores.");
   }
 
@@ -115,4 +115,79 @@ export async function listProfessores(): Promise<ProfessorRow[]> {
     telefone: p.telefone,
     createdAt: p.created_at,
   }));
+}
+
+export async function updateProfessorProfile(input: {
+  professorId: string;
+  name?: string;
+  telefone?: string | null;
+  email?: string | null;
+}) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "administrativo" && profile.role !== "coordenação") {
+    throw new Error("Sem permissão para editar dados de professores.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: currentProfile, error: fetchError } = await supabase
+    .from("profiles")
+    .select("user_id, name, telefone, email, role")
+    .eq("user_id", input.professorId)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+  if (!currentProfile) throw new Error("Professor não encontrado.");
+  if (currentProfile.role !== "professor") {
+    throw new Error("Usuário não é um professor.");
+  }
+
+  const oldValue = {
+    name: currentProfile.name,
+    telefone: currentProfile.telefone,
+    email: currentProfile.email,
+  };
+
+  const updateData: {
+    name?: string;
+    telefone?: string | null;
+    email?: string | null;
+    updated_at: string;
+  } = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (input.name !== undefined) {
+    updateData.name = input.name.trim();
+  }
+  if (input.telefone !== undefined) {
+    updateData.telefone = input.telefone ? input.telefone.trim() : null;
+  }
+  if (input.email !== undefined) {
+    updateData.email = input.email ? input.email.trim().toLowerCase() : null;
+  }
+
+  const { error: updateError } = await supabase
+    .from("profiles")
+    .update(updateData)
+    .eq("user_id", input.professorId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  await logAudit({
+    action: "update",
+    entity: "professor",
+    entityId: input.professorId,
+    oldValue,
+    newValue: {
+      name: updateData.name ?? currentProfile.name,
+      telefone: updateData.telefone ?? currentProfile.telefone,
+      email: updateData.email ?? currentProfile.email,
+    },
+    description: `Dados pessoais do professor atualizados por ${profile.name ?? profile.email}`,
+  });
+
+  revalidatePath("/admin/professores");
+  revalidatePath("/admin");
 }

@@ -9,7 +9,7 @@ async function requireNoteEditPermission() {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
 
-  const allowedRoles = ["professor", "administrativo"];
+  const allowedRoles = ["professor", "administrativo", "coordenação"];
   const role = profile.role ?? "";
   if (!allowedRoles.includes(role)) {
     throw new Error("Sem permissão para editar notas.");
@@ -167,8 +167,10 @@ export async function deleteNota(notaId: string) {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
 
-  if (profile.role !== "administrativo") {
-    throw new Error("Apenas administrativo pode deletar notas.");
+  if (profile.role !== "administrativo" && profile.role !== "coordenação") {
+    throw new Error(
+      "Apenas administrativo ou coordenação podem deletar notas.",
+    );
   }
 
   const supabase = await createServerSupabaseClient();

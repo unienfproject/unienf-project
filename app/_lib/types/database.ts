@@ -286,12 +286,15 @@ export type AuditAction =
 export type AuditEntity =
   | "profile"
   | "aluno"
+  | "professor"
   | "turma"
   | "nota"
   | "mensalidade"
   | "pagamento"
   | "documento"
-  | "aviso";
+  | "aviso"
+  | "observacao_pedagogica"
+  | "etiqueta";
 
 export type AuditLog = {
   id: string; // uuid

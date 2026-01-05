@@ -1,7 +1,9 @@
 "use server";
 
+import { logAudit } from "@/app/_lib/actions/audit";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 export type ObservacaoPedagogica = {
   id: string;
@@ -175,4 +177,156 @@ export async function listObservacoesForTeacher(
       updated_at: obs.updated_at,
     };
   });
+}
+
+export async function createObservacaoPedagogica(input: {
+  alunoId?: string;
+  turmaId?: string;
+  content: string;
+}) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  if (profile.role !== "coordenação" && profile.role !== "administrativo") {
+    throw new Error("Sem permissão para criar observações pedagógicas.");
+  }
+
+  if (!input.alunoId && !input.turmaId) {
+    throw new Error("É necessário informar aluno ou turma.");
+  }
+
+  const content = input.content.trim();
+  if (!content) {
+    throw new Error("Conteúdo da observação é obrigatório.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: newObservacao, error: insertError } = await supabase
+    .from("observacoes_pedagogicas")
+    .insert({
+      aluno_id: input.alunoId || null,
+      turma_id: input.turmaId || null,
+      content,
+      author_id: profile.user_id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (insertError) throw new Error(insertError.message);
+
+  if (newObservacao) {
+    await logAudit({
+      action: "create",
+      entity: "observacao_pedagogica",
+      entityId: newObservacao.id,
+      newValue: {
+        aluno_id: input.alunoId,
+        turma_id: input.turmaId,
+        content,
+      },
+      description: `Observação pedagógica criada por ${profile.name ?? profile.email}`,
+    });
+  }
+
+  revalidatePath("/admin/alunos");
+  revalidatePath("/admin");
+}
+
+export async function updateObservacaoPedagogica(input: {
+  observacaoId: string;
+  content: string;
+}) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  if (profile.role !== "coordenação" && profile.role !== "administrativo") {
+    throw new Error("Sem permissão para editar observações pedagógicas.");
+  }
+
+  const content = input.content.trim();
+  if (!content) {
+    throw new Error("Conteúdo da observação é obrigatório.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: currentObs, error: fetchError } = await supabase
+    .from("observacoes_pedagogicas")
+    .select("id, content")
+    .eq("id", input.observacaoId)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+  if (!currentObs) throw new Error("Observação não encontrada.");
+
+  const oldValue = {
+    content: currentObs.content,
+  };
+
+  const { error: updateError } = await supabase
+    .from("observacoes_pedagogicas")
+    .update({
+      content,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.observacaoId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  await logAudit({
+    action: "update",
+    entity: "observacao_pedagogica",
+    entityId: input.observacaoId,
+    oldValue,
+    newValue: { content },
+    description: `Observação pedagógica atualizada por ${profile.name ?? profile.email}`,
+  });
+
+  revalidatePath("/admin/alunos");
+  revalidatePath("/admin");
+}
+
+export async function deleteObservacaoPedagogica(observacaoId: string) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  if (profile.role !== "coordenação" && profile.role !== "administrativo") {
+    throw new Error("Sem permissão para excluir observações pedagógicas.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: observacao, error: fetchError } = await supabase
+    .from("observacoes_pedagogicas")
+    .select("id, content, aluno_id, turma_id")
+    .eq("id", observacaoId)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+  if (!observacao) throw new Error("Observação não encontrada.");
+
+  const { error: deleteError } = await supabase
+    .from("observacoes_pedagogicas")
+    .delete()
+    .eq("id", observacaoId);
+
+  if (deleteError) throw new Error(deleteError.message);
+
+  await logAudit({
+    action: "delete",
+    entity: "observacao_pedagogica",
+    entityId: observacaoId,
+    oldValue: {
+      content: observacao.content,
+      aluno_id: observacao.aluno_id,
+      turma_id: observacao.turma_id,
+    },
+    description: `Observação pedagógica excluída por ${profile.name ?? profile.email}`,
+  });
+
+  revalidatePath("/admin/alunos");
+  revalidatePath("/admin");
 }

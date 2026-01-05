@@ -58,6 +58,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: "Avisos", url: "/admin/avisos", icon: Bell },
   ];
 
+  const coordenacaoMenuItems = [
+    { title: "Visão Geral", url: "/admin", icon: LayoutDashboard },
+    { title: "Alunos", url: "/admin/alunos", icon: Users },
+    { title: "Professores", url: "/admin/professores", icon: GraduationCap },
+    { title: "Turmas", url: "/admin/turmas", icon: FolderOpen },
+    { title: "Cursos", url: "/admin/cursos", icon: GraduationCap },
+    { title: "Avisos", url: "/admin/avisos", icon: Bell },
+  ];
+
   const alunoMenuItems = [
     { title: "Visão Geral", url: "/aluno", icon: LayoutDashboard },
     { title: "Meus Documentos", url: "/aluno/documentos", icon: FileText },
@@ -92,8 +101,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     const role = profile?.role;
 
-    if (role === "administrativo" || role === "coordenação") {
+    if (role === "administrativo") {
       return <NavMain items={adminMenuItems} />;
+    }
+
+    if (role === "coordenação") {
+      return <NavMain items={coordenacaoMenuItems} />;
     }
 
     if (role === "aluno") {
