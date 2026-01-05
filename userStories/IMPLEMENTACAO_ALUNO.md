@@ -6,10 +6,10 @@ Este documento descreve o status atual das implementações para atender às Use
 
 | User Story                                      | Status          | Conectado ao Banco? |
 | ----------------------------------------------- | --------------- | ------------------- |
-| US-ALU-01 — Visualizar meu perfil               | ⚠️ Parcial      | ❌ Não              |
-| US-ALU-02 — Visualizar minhas notas e resultado | ⚠️ Parcial      | ❌ Não              |
-| US-ALU-03 — Visualizar meus documentos          | ⚠️ Parcial      | ❌ Não              |
-| US-ALU-04 — Visualizar meu financeiro           | ⚠️ Parcial      | ❌ Não              |
+| US-ALU-01 — Visualizar meu perfil               | ✅ Implementado | ✅ Sim              |
+| US-ALU-02 — Visualizar minhas notas e resultado | ✅ Implementado | ✅ Sim              |
+| US-ALU-03 — Visualizar meus documentos          | ✅ Implementado | ✅ Sim              |
+| US-ALU-04 — Visualizar meu financeiro           | ✅ Implementado | ✅ Sim              |
 | US-ALU-05 — Visualizar minhas etiquetas         | ✅ Implementado | ✅ Sim              |
 
 ---
@@ -338,7 +338,19 @@ Este documento descreve o status atual das implementações para atender às Use
 
 **Resumo:**
 
-- ✅ **US-ALU-05** - Totalmente implementado e conectado ao banco
-- ⚠️ **US-ALU-01 a US-ALU-04** - Interfaces existem mas precisam ser conectadas ao banco de dados
+- ✅ **US-ALU-01 a US-ALU-05** - Todas totalmente implementadas e conectadas ao banco de dados
 
-**Próximo passo:** Implementar as funções de busca no banco e atualizar as páginas para usar dados reais ao invés de mockdata.
+**Status Final:** Todas as User Stories do aluno foram implementadas e conectadas ao banco de dados!
+
+### Funções Implementadas:
+
+1. ✅ `getMyProfile()` em `app/_lib/actions/alunos.ts` - Retorna perfil completo do aluno logado
+2. ✅ `listMyNotas()` em `app/_lib/actions/notas.ts` - Lista notas do aluno com cálculo de média
+3. ✅ `listMyDocuments()` em `app/_lib/actions/documents.ts` - Lista documentos do aluno
+4. ✅ `listMyMensalidades()` em `app/_lib/actions/mensalidades.ts` - Lista mensalidades do aluno
+
+### Páginas Atualizadas:
+
+1. ✅ `/aluno/financeiro` - Usa `listMyMensalidades()`
+2. ✅ `/aluno/notas` - Usa `listMyNotas()`
+3. ✅ `/aluno/documentos` - Usa `listMyDocuments()`

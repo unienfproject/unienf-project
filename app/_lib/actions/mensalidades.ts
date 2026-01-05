@@ -465,3 +465,79 @@ export async function deletePagamento(pagamentoId: string) {
   revalidatePath("/admin/financeiro");
   revalidatePath("/recepcao/financeiro");
 }
+
+export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  if (profile.role !== "aluno") {
+    throw new Error("Esta função é apenas para alunos.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: mensalidades, error: mensalidadesError } = await supabase
+    .from("mensalidades")
+    .select(
+      "id, aluno_id, competence_year, competence_month, status, valor_mensalidade, valor_pago, data_vencimento, data_pagamento",
+    )
+    .eq("aluno_id", profile.user_id)
+    .order("competence_year", { ascending: false })
+    .order("competence_month", { ascending: false });
+
+  if (mensalidadesError) {
+    throw new Error(mensalidadesError.message);
+  }
+
+  if (!mensalidades || mensalidades.length === 0) {
+    return [];
+  }
+
+  const mensalidadeIds = mensalidades.map((m) => m.id);
+
+  const { data: pagamentos, error: pagamentosError } = await supabase
+    .from("pagamentos")
+    .select("mensalidade_id, forma_pagamento")
+    .in("mensalidade_id", mensalidadeIds)
+    .order("created_at", { ascending: false });
+
+  if (pagamentosError) {
+    console.warn(
+      "[listMyMensalidades] Erro ao buscar pagamentos:",
+      pagamentosError.message,
+    );
+  }
+
+  const formaPagamentoMap = new Map<string, FormaPagamento | null>();
+  if (pagamentos) {
+    for (const pagamento of pagamentos) {
+      if (!formaPagamentoMap.has(pagamento.mensalidade_id)) {
+        formaPagamentoMap.set(
+          pagamento.mensalidade_id,
+          (pagamento.forma_pagamento as FormaPagamento) || null,
+        );
+      }
+    }
+  }
+
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("name")
+    .eq("user_id", profile.user_id)
+    .single();
+
+  const studentName = profileData?.name || profile.name || "Aluno";
+
+  return mensalidades.map((m) => ({
+    id: String(m.id),
+    studentId: String(m.aluno_id),
+    studentName,
+    competenceYear: Number(m.competence_year),
+    competenceMonth: Number(m.competence_month),
+    status: m.status as MensalidadeStatus,
+    valor_mensalidade: Number(m.valor_mensalidade),
+    valorPago: m.valor_pago == null ? null : Number(m.valor_pago),
+    formaPagamento: formaPagamentoMap.get(m.id) || null,
+    dataPagamento: m.data_pagamento || null,
+  }));
+}

@@ -164,3 +164,86 @@ export async function listAlunos(): Promise<AlunoRow[]> {
     };
   });
 }
+
+export type MyProfile = {
+  id: string;
+  name: string;
+  email: string;
+  telefone: string | null;
+  age: number | null;
+  dateOfBirth: string | null;
+  turmaAtual: {
+    id: string;
+    name: string;
+    tag: string;
+  } | null;
+};
+
+export async function getMyProfile(): Promise<MyProfile> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  if (profile.role !== "aluno") {
+    throw new Error("Esta função é apenas para alunos.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: profileData, error: profileError } = await supabase
+    .from("profiles")
+    .select(
+      `
+      user_id,
+      name,
+      email,
+      telefone,
+      alunos:alunos!alunos_user_id_fkey(age, date_of_birth)
+    `
+    )
+    .eq("user_id", profile.user_id)
+    .single();
+
+  if (profileError) throw new Error(profileError.message);
+  if (!profileData) throw new Error("Perfil não encontrado.");
+
+  const aluno = Array.isArray(profileData.alunos)
+    ? profileData.alunos[0]
+    : profileData.alunos;
+
+  const { data: turmaData, error: turmaError } = await supabase
+    .from("turma_alunos")
+    .select(
+      `
+      turma_id,
+      turmas:turmas!turma_alunos_turma_id_fkey(id, name, tag, status)
+    `
+    )
+    .eq("aluno_id", profile.user_id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  let turmaAtual = null;
+  if (!turmaError && turmaData) {
+    const turma = Array.isArray(turmaData.turmas)
+      ? turmaData.turmas[0]
+      : turmaData.turmas;
+    if (turma && turma.status === "ativa") {
+      turmaAtual = {
+        id: turma.id,
+        name: turma.name,
+        tag: turma.tag,
+      };
+    }
+  }
+
+  return {
+    id: profile.user_id,
+    name: profileData.name ?? "",
+    email: profileData.email ?? "",
+    telefone: profileData.telefone,
+    age: aluno?.age ?? null,
+    dateOfBirth: aluno?.date_of_birth ?? null,
+    turmaAtual,
+  };
+}
