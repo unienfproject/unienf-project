@@ -10,7 +10,8 @@ async function requireNoteEditPermission() {
   if (!profile) throw new Error("Sessão inválida.");
 
   const allowedRoles = ["professor", "administrativo"];
-  if (!allowedRoles.includes(profile.role)) {
+  const role = profile.role ?? "";
+  if (!allowedRoles.includes(role)) {
     throw new Error("Sem permissão para editar notas.");
   }
 

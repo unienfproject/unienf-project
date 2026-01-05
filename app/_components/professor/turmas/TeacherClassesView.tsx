@@ -14,6 +14,7 @@ function Kpi({ title, value }: { title: string; value: string }) {
 }
 
 import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
 import {
   Table,
   TableBody,

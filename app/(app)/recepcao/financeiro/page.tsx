@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { MensalidadeRow } from "@/app/_lib/actions/finance";
 import {
@@ -20,6 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/_components/ui/select";
+import { Input } from "@/app/_components/ui/input";
+import { Button } from "@/app/_components/ui/button";
 
 function monthLabel(month: number) {
   return (

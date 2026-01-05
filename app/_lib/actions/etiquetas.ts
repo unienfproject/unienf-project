@@ -62,21 +62,23 @@ export async function listEtiquetasDoAluno(
     throw new Error(error.message);
   }
 
-  return (data ?? [])
-    .map((ae: any) => {
-      const etiqueta = Array.isArray(ae.etiquetas)
-        ? ae.etiquetas[0]
-        : ae.etiquetas;
-      return etiqueta
-        ? {
-            id: etiqueta.id,
-            name: etiqueta.name,
-            color: etiqueta.color,
-            created_at: etiqueta.created_at,
-          }
-        : null;
-    })
-    .filter((e): e is Etiqueta => e !== null);
+  const etiquetas: Etiqueta[] = [];
+
+  for (const ae of data ?? []) {
+    const etiqueta = Array.isArray(ae.etiquetas)
+      ? ae.etiquetas[0]
+      : ae.etiquetas;
+    if (etiqueta) {
+      etiquetas.push({
+        id: etiqueta.id,
+        name: etiqueta.name,
+        color: etiqueta.color,
+        created_at: etiqueta.created_at,
+      });
+    }
+  }
+
+  return etiquetas;
 }
 
 export async function atribuirEtiquetaAoAluno(input: {
@@ -115,13 +117,11 @@ export async function atribuirEtiquetaAoAluno(input: {
     return;
   }
 
-  const { error: insertError } = await supabase
-    .from("aluno_etiquetas")
-    .insert({
-      aluno_id: input.studentId,
-      etiqueta_id: input.etiquetaId,
-      created_at: new Date().toISOString(),
-    });
+  const { error: insertError } = await supabase.from("aluno_etiquetas").insert({
+    aluno_id: input.studentId,
+    etiqueta_id: input.etiquetaId,
+    created_at: new Date().toISOString(),
+  });
 
   if (insertError) {
     if (insertError.code === "42P01") {
@@ -166,4 +166,3 @@ export async function removerEtiquetaDoAluno(input: {
   revalidatePath(`/recepcao/alunos`);
   revalidatePath(`/dashboard/alunos/${input.studentId}`);
 }
-

@@ -176,30 +176,33 @@ export async function listMensalidadesForRecepcao(params?: {
   }
 
   type SupabaseRow = {
-    id: string;
-    aluno_id: string;
-    competence_year: number;
-    competence_month: number;
-    status: string;
-    valor_mensalidade: number;
-    valor_pago: number | null;
-    data_vencimento: string | null;
-    data_pagamento: string | null;
-    profiles: { name: string } | null;
+    id: unknown;
+    aluno_id: unknown;
+    competence_year: unknown;
+    competence_month: unknown;
+    status: unknown;
+    valor_mensalidade: unknown;
+    valor_pago: unknown;
+    data_vencimento: unknown;
+    data_pagamento: unknown;
+    profiles: { name: unknown } | { name: unknown }[] | null;
   };
 
-  return (data ?? []).map((r: SupabaseRow) => ({
-    id: String(r.id),
-    studentId: String(r.aluno_id),
-    studentName: r.profiles?.name ?? "Aluno",
-    competenceYear: Number(r.competence_year),
-    competenceMonth: Number(r.competence_month),
-    status: r.status as MensalidadeStatus,
-    valor_mensalidade: Number(r.valor_mensalidade),
-    valorPago: r.valor_pago == null ? null : Number(r.valor_pago),
-    formaPagamento: null as FormaPagamento | null, // forma_pagamento está na tabela pagamentos
-    dataPagamento: (r.data_pagamento ?? null) as string | null,
-  }));
+  return ((data as unknown as SupabaseRow[]) ?? []).map((r) => {
+    const profile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+    return {
+      id: String(r.id),
+      studentId: String(r.aluno_id),
+      studentName: (profile?.name as string | undefined) ?? "Aluno",
+      competenceYear: Number(r.competence_year),
+      competenceMonth: Number(r.competence_month),
+      status: r.status as MensalidadeStatus,
+      valor_mensalidade: Number(r.valor_mensalidade),
+      valorPago: r.valor_pago == null ? null : Number(r.valor_pago),
+      formaPagamento: null as FormaPagamento | null, // forma_pagamento está na tabela pagamentos
+      dataPagamento: (r.data_pagamento ?? null) as string | null,
+    };
+  });
 }
 
 function buildMensalidadesMock(input: {
@@ -287,7 +290,7 @@ export async function updateMensalidade(input: {
   if (currentErr) throw new Error(currentErr.message);
   if (!current) throw new Error("Mensalidade não encontrada.");
 
-  const updates: Record<string, any> = {
+  const updates: Record<string, unknown> = {
     updated_at: new Date().toISOString(),
   };
 
@@ -358,7 +361,7 @@ export async function updatePagamento(input: {
   if (currentErr) throw new Error(currentErr.message);
   if (!current) throw new Error("Pagamento não encontrado.");
 
-  const updates: Record<string, any> = {};
+  const updates: Record<string, unknown> = {};
 
   if (input.valorPago !== undefined) {
     const valor = normalizeNumber(input.valorPago);
