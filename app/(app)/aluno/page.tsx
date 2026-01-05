@@ -3,6 +3,7 @@ import { Button } from "@/app/_components/ui/button";
 import {
   ArrowRight,
   Award,
+  Bell,
   BookOpen,
   CircleCheckBig,
   Clock,
