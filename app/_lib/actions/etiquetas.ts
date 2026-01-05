@@ -1,5 +1,6 @@
 "use server";
 
+import { logAudit } from "@/app/_lib/actions/audit";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -87,7 +88,11 @@ export async function atribuirEtiquetaAoAluno(input: {
 }) {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
-  if (profile.role !== "recepção" && profile.role !== "administrativo") {
+  if (
+    profile.role !== "recepção" &&
+    profile.role !== "administrativo" &&
+    profile.role !== "coordenação"
+  ) {
     throw new Error("Sem permissão para atribuir etiquetas.");
   }
 
@@ -133,6 +138,7 @@ export async function atribuirEtiquetaAoAluno(input: {
   }
 
   revalidatePath(`/recepcao/alunos`);
+  revalidatePath(`/admin/alunos`);
   revalidatePath(`/dashboard/alunos/${input.studentId}`);
 }
 
@@ -142,7 +148,11 @@ export async function removerEtiquetaDoAluno(input: {
 }) {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
-  if (profile.role !== "recepção" && profile.role !== "administrativo") {
+  if (
+    profile.role !== "recepção" &&
+    profile.role !== "administrativo" &&
+    profile.role !== "coordenação"
+  ) {
     throw new Error("Sem permissão para remover etiquetas.");
   }
 
@@ -164,5 +174,186 @@ export async function removerEtiquetaDoAluno(input: {
   }
 
   revalidatePath(`/recepcao/alunos`);
+  revalidatePath(`/admin/alunos`);
   revalidatePath(`/dashboard/alunos/${input.studentId}`);
+}
+
+export async function createEtiqueta(input: { name: string; color?: string }) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  if (profile.role !== "coordenação" && profile.role !== "administrativo") {
+    throw new Error("Sem permissão para criar etiquetas.");
+  }
+
+  const name = input.name.trim();
+  if (!name) {
+    throw new Error("Nome da etiqueta é obrigatório.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: existing, error: checkError } = await supabase
+    .from("etiquetas")
+    .select("id")
+    .eq("name", name)
+    .single();
+
+  if (checkError && checkError.code !== "PGRST116") {
+    throw new Error(checkError.message);
+  }
+
+  if (existing) {
+    throw new Error("Já existe uma etiqueta com este nome.");
+  }
+
+  const { data: newEtiqueta, error: insertError } = await supabase
+    .from("etiquetas")
+    .insert({
+      name,
+      color: input.color?.trim() || null,
+      created_by: profile.user_id,
+      created_at: new Date().toISOString(),
+    })
+    .select("id")
+    .single();
+
+  if (insertError) throw new Error(insertError.message);
+
+  if (newEtiqueta) {
+    await logAudit({
+      action: "create",
+      entity: "etiqueta",
+      entityId: newEtiqueta.id,
+      newValue: { name, color: input.color },
+      description: `Etiqueta "${name}" criada por ${profile.name ?? profile.email}`,
+    });
+  }
+
+  revalidatePath("/admin");
+  return { id: newEtiqueta.id };
+}
+
+export async function updateEtiqueta(input: {
+  etiquetaId: string;
+  name?: string;
+  color?: string | null;
+}) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  if (profile.role !== "coordenação" && profile.role !== "administrativo") {
+    throw new Error("Sem permissão para editar etiquetas.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: currentEtiqueta, error: fetchError } = await supabase
+    .from("etiquetas")
+    .select("id, name, color")
+    .eq("id", input.etiquetaId)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+  if (!currentEtiqueta) throw new Error("Etiqueta não encontrada.");
+
+  const oldValue = {
+    name: currentEtiqueta.name,
+    color: currentEtiqueta.color,
+  };
+
+  const updateData: {
+    name?: string;
+    color?: string | null;
+  } = {};
+
+  if (input.name !== undefined) {
+    const name = input.name.trim();
+    if (!name) {
+      throw new Error("Nome da etiqueta não pode ser vazio.");
+    }
+
+    const { data: existing, error: checkError } = await supabase
+      .from("etiquetas")
+      .select("id")
+      .eq("name", name)
+      .neq("id", input.etiquetaId)
+      .single();
+
+    if (checkError && checkError.code !== "PGRST116") {
+      throw new Error(checkError.message);
+    }
+
+    if (existing) {
+      throw new Error("Já existe uma etiqueta com este nome.");
+    }
+
+    updateData.name = name;
+  }
+
+  if (input.color !== undefined) {
+    updateData.color = input.color ? input.color.trim() : null;
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    return;
+  }
+
+  const { error: updateError } = await supabase
+    .from("etiquetas")
+    .update(updateData)
+    .eq("id", input.etiquetaId);
+
+  if (updateError) throw new Error(updateError.message);
+
+  await logAudit({
+    action: "update",
+    entity: "etiqueta",
+    entityId: input.etiquetaId,
+    oldValue,
+    newValue: {
+      name: updateData.name ?? currentEtiqueta.name,
+      color: updateData.color ?? currentEtiqueta.color,
+    },
+    description: `Etiqueta "${currentEtiqueta.name}" atualizada por ${profile.name ?? profile.email}`,
+  });
+
+  revalidatePath("/admin");
+}
+
+export async function deleteEtiqueta(etiquetaId: string) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  if (profile.role !== "coordenação" && profile.role !== "administrativo") {
+    throw new Error("Sem permissão para excluir etiquetas.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: etiqueta, error: fetchError } = await supabase
+    .from("etiquetas")
+    .select("id, name")
+    .eq("id", etiquetaId)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+  if (!etiqueta) throw new Error("Etiqueta não encontrada.");
+
+  const { error: deleteError } = await supabase
+    .from("etiquetas")
+    .delete()
+    .eq("id", etiquetaId);
+
+  if (deleteError) throw new Error(deleteError.message);
+
+  await logAudit({
+    action: "delete",
+    entity: "etiqueta",
+    entityId: etiquetaId,
+    oldValue: { name: etiqueta.name },
+    description: `Etiqueta "${etiqueta.name}" excluída por ${profile.name ?? profile.email}`,
+  });
+
+  revalidatePath("/admin");
 }

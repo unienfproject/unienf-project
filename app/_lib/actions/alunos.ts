@@ -127,7 +127,7 @@ export type AlunoRow = {
 export async function listAlunos(): Promise<AlunoRow[]> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
-  if (profile.role !== "administrativo") {
+  if (profile.role !== "administrativo" && profile.role !== "coordenação") {
     throw new Error("Sem permissão para listar alunos.");
   }
 
@@ -198,7 +198,7 @@ export async function getMyProfile(): Promise<MyProfile> {
       email,
       telefone,
       alunos:alunos!alunos_user_id_fkey(age, date_of_birth)
-    `
+    `,
     )
     .eq("user_id", profile.user_id)
     .single();
@@ -216,7 +216,7 @@ export async function getMyProfile(): Promise<MyProfile> {
       `
       turma_id,
       turmas:turmas!turma_alunos_turma_id_fkey(id, name, tag, status)
-    `
+    `,
     )
     .eq("aluno_id", profile.user_id)
     .order("created_at", { ascending: false })
@@ -346,35 +346,33 @@ export async function getStudentPersonalData(
           id: string;
           name: string;
           tag: string;
-          disciplinas:
-            | { name: string }
-            | { name: string }[];
+          disciplinas: { name: string } | { name: string }[];
         }
       | {
           id: string;
           name: string;
           tag: string;
-          disciplinas:
-            | { name: string }
-            | { name: string }[];
+          disciplinas: { name: string } | { name: string }[];
         }[];
   };
 
-  const turmas = (turmasAluno ?? []).map((turmaAluno: TurmaAlunoComTurmaRow) => {
-    const turma = Array.isArray(turmaAluno.turmas)
-      ? turmaAluno.turmas[0]
-      : turmaAluno.turmas;
-    const disciplina = Array.isArray(turma?.disciplinas)
-      ? turma.disciplinas[0]
-      : turma?.disciplinas;
+  const turmas = (turmasAluno ?? []).map(
+    (turmaAluno: TurmaAlunoComTurmaRow) => {
+      const turma = Array.isArray(turmaAluno.turmas)
+        ? turmaAluno.turmas[0]
+        : turmaAluno.turmas;
+      const disciplina = Array.isArray(turma?.disciplinas)
+        ? turma.disciplinas[0]
+        : turma?.disciplinas;
 
-    return {
-      id: turma?.id ?? "",
-      name: turma?.name ?? "",
-      tag: turma?.tag ?? "",
-      disciplinaName: disciplina?.name ?? null,
-    };
-  });
+      return {
+        id: turma?.id ?? "",
+        name: turma?.name ?? "",
+        tag: turma?.tag ?? "",
+        disciplinaName: disciplina?.name ?? null,
+      };
+    },
+  );
 
   return {
     id: profileData.user_id,
@@ -385,4 +383,140 @@ export async function getStudentPersonalData(
     dateOfBirth: dadosAluno?.date_of_birth ?? null,
     turmas,
   };
+}
+
+export async function updateAlunoProfile(input: {
+  alunoId: string;
+  name?: string;
+  telefone?: string | null;
+  email?: string | null;
+  dateOfBirth?: string | null;
+}) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "administrativo" && profile.role !== "coordenação") {
+    throw new Error("Sem permissão para editar dados de alunos.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: currentProfile, error: fetchError } = await supabase
+    .from("profiles")
+    .select("user_id, name, telefone, email, role")
+    .eq("user_id", input.alunoId)
+    .single();
+
+  if (fetchError) throw new Error(fetchError.message);
+  if (!currentProfile) throw new Error("Aluno não encontrado.");
+  if (currentProfile.role !== "aluno") {
+    throw new Error("Usuário não é um aluno.");
+  }
+
+  const oldValue = {
+    name: currentProfile.name,
+    telefone: currentProfile.telefone,
+    email: currentProfile.email,
+  };
+
+  const updateProfileData: {
+    name?: string;
+    telefone?: string | null;
+    email?: string | null;
+    updated_at: string;
+  } = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (input.name !== undefined) {
+    updateProfileData.name = input.name.trim();
+  }
+  if (input.telefone !== undefined) {
+    updateProfileData.telefone = input.telefone ? input.telefone.trim() : null;
+  }
+  if (input.email !== undefined) {
+    updateProfileData.email = input.email
+      ? input.email.trim().toLowerCase()
+      : null;
+  }
+
+  const { error: updateProfileError } = await supabase
+    .from("profiles")
+    .update(updateProfileData)
+    .eq("user_id", input.alunoId);
+
+  if (updateProfileError) throw new Error(updateProfileError.message);
+
+  let oldAlunoValue: { age?: number | null; date_of_birth?: string | null } =
+    {};
+  let updateAlunoData: {
+    age?: number;
+    date_of_birth?: string | null;
+    updated_at: string;
+  } | null = null;
+
+  if (input.dateOfBirth !== undefined) {
+    const { data: currentAluno } = await supabase
+      .from("alunos")
+      .select("age, date_of_birth")
+      .eq("user_id", input.alunoId)
+      .single();
+
+    if (currentAluno) {
+      oldAlunoValue = {
+        age: currentAluno.age,
+        date_of_birth: currentAluno.date_of_birth,
+      };
+    }
+
+    function calculateAge(dateOfBirth: string): number {
+      const today = new Date();
+      const birth = new Date(dateOfBirth);
+      let age = today.getFullYear() - birth.getFullYear();
+      const monthDiff = today.getMonth() - birth.getMonth();
+      if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birth.getDate())
+      ) {
+        age--;
+      }
+      return age;
+    }
+
+    const age = input.dateOfBirth ? calculateAge(input.dateOfBirth) : null;
+
+    updateAlunoData = {
+      date_of_birth: input.dateOfBirth || null,
+      age: age ?? null,
+      updated_at: new Date().toISOString(),
+    };
+
+    const { error: updateAlunoError } = await supabase
+      .from("alunos")
+      .update(updateAlunoData)
+      .eq("user_id", input.alunoId);
+
+    if (updateAlunoError) throw new Error(updateAlunoError.message);
+  }
+
+  await logAudit({
+    action: "update",
+    entity: "aluno",
+    entityId: input.alunoId,
+    oldValue: { ...oldValue, ...oldAlunoValue },
+    newValue: {
+      name: updateProfileData.name ?? currentProfile.name,
+      telefone: updateProfileData.telefone ?? currentProfile.telefone,
+      email: updateProfileData.email ?? currentProfile.email,
+      ...(updateAlunoData
+        ? {
+            date_of_birth: updateAlunoData.date_of_birth,
+            age: updateAlunoData.age,
+          }
+        : {}),
+    },
+    description: `Dados pessoais do aluno atualizados por ${profile.name ?? profile.email}`,
+  });
+
+  revalidatePath("/admin/alunos");
+  revalidatePath("/admin");
 }
