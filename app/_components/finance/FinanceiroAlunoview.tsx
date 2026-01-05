@@ -1,5 +1,5 @@
 import StatusBadge from "@/app/_components/StatusBadge";
-import { getStudentInstallments } from "../../_lib/mockdata/finance.mock";
+import { listMyMensalidades } from "@/app/_lib/actions/mensalidades";
 
 function monthLabel(month: number) {
   return (
@@ -27,8 +27,9 @@ export default async function FinanceiroAlunoView({
   studentId: string;
   studentName: string;
 }) {
-  const year = 2025;
-  const rows = await getStudentInstallments(studentId, year);
+  const year = new Date().getFullYear();
+  const allMensalidades = await listMyMensalidades();
+  const rows = allMensalidades.filter((m) => m.competenceYear === year);
 
   return (
     <div className="flex flex-col">
