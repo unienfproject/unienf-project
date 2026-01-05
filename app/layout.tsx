@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "UNIENF",
-  description: "UNIENF - Universidade Enfermagem",
+  description: "UNIENF - Universidade Enfermagem.",
 };
 
 export default function RootLayout({
