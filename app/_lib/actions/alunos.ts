@@ -339,7 +339,28 @@ export async function getStudentPersonalData(
 
   if (turmasAlunoError) throw new Error(turmasAlunoError.message);
 
-  const turmas = (turmasAluno ?? []).map((turmaAluno: any) => {
+  type TurmaAlunoComTurmaRow = {
+    turma_id: string;
+    turmas:
+      | {
+          id: string;
+          name: string;
+          tag: string;
+          disciplinas:
+            | { name: string }
+            | { name: string }[];
+        }
+      | {
+          id: string;
+          name: string;
+          tag: string;
+          disciplinas:
+            | { name: string }
+            | { name: string }[];
+        }[];
+  };
+
+  const turmas = (turmasAluno ?? []).map((turmaAluno: TurmaAlunoComTurmaRow) => {
     const turma = Array.isArray(turmaAluno.turmas)
       ? turmaAluno.turmas[0]
       : turmaAluno.turmas;

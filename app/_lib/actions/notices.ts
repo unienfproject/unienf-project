@@ -53,9 +53,22 @@ export async function listNoticesForTeacher(
     throw new Error(avisosError.message);
   }
 
+  type AvisoRow = {
+    id: string;
+    title: string;
+    message: string;
+    created_at: string;
+    scope_type: "turma" | "alunos";
+    turma_id: string | null;
+    author_id: string;
+    profiles:
+      | { name: string | null; role: string | null }
+      | { name: string | null; role: string | null }[];
+  };
+
   const avisosFormatados: NoticeRow[] = [];
 
-  for (const aviso of avisos ?? []) {
+  for (const aviso of (avisos ?? []) as AvisoRow[]) {
     const autorAviso = Array.isArray(aviso.profiles)
       ? aviso.profiles[0]
       : aviso.profiles;
@@ -72,7 +85,7 @@ export async function listNoticesForTeacher(
         title: aviso.title,
         message: aviso.message,
         created_at: aviso.created_at,
-        author_role: (autorAviso?.role as any) ?? "professor",
+        author_role: (autorAviso?.role as "professor" | "coordenação" | "administrativo") ?? "professor",
         author_name: autorAviso?.name ?? "Desconhecido",
         audience: {
           type: "turma",
@@ -91,7 +104,7 @@ export async function listNoticesForTeacher(
         title: aviso.title,
         message: aviso.message,
         created_at: aviso.created_at,
-        author_role: (autorAviso?.role as any) ?? "professor",
+        author_role: (autorAviso?.role as "professor" | "coordenação" | "administrativo") ?? "professor",
         author_name: autorAviso?.name ?? "Desconhecido",
         audience: {
           type: "alunos",
