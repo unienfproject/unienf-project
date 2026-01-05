@@ -1,11 +1,12 @@
-import Link from "next/link";
-import { getUserProfile } from "@/app/_lib/actions/profile";
-import { MensalidadeRow } from "@/app/_lib/actions/finance";
+import { Button } from "@/app/_components/ui/button";
+import { Input } from "@/app/_components/ui/input";
 import {
-  PaymentMethod,
-  listMensalidadesForRecepcao,
-  markMensalidadeAsPaid,
-} from "@/app/_lib/actions/mensalidades";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/_components/ui/select";
 import {
   Table,
   TableBody,
@@ -14,15 +15,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { Input } from "@/app/_components/ui/input";
-import { Button } from "@/app/_components/ui/button";
+import { MensalidadeRow } from "@/app/_lib/actions/finance";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/app/_components/ui/select";
+  PaymentMethod,
+  listMensalidadesForRecepcao,
+  markMensalidadeAsPaid,
+} from "@/app/_lib/actions/mensalidades";
+import { getUserProfile } from "@/app/_lib/actions/profile";
+import Link from "next/link";
 
 function monthLabel(month: number) {
   return (
