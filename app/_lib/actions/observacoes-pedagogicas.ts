@@ -28,11 +28,11 @@ export async function listObservacoesPedagogicasDoAluno(
       `
       id,
       aluno_id,
-      autor_id,
-      conteudo,
+      author_id,
+      content,
       created_at,
       updated_at,
-      autor:profiles!observacoes_pedagogicas_autor_id_fkey(name, role)
+      autor:profiles!observacoes_pedagogicas_author_id_fkey(name, role)
     `,
     )
     .eq("aluno_id", studentId)
@@ -45,15 +45,27 @@ export async function listObservacoesPedagogicasDoAluno(
     throw new Error(error.message);
   }
 
-  return (data ?? []).map((obs: any) => {
-    const autor = Array.isArray(obs.autor) ? obs.autor[0] : obs.autor;
+  type ObservacaoRow = {
+    id: string;
+    aluno_id: string;
+    author_id: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+    autor:
+      | { name: string | null; role: string | null }
+      | { name: string | null; role: string | null }[];
+  };
+
+  return (data ?? []).map((obs: ObservacaoRow) => {
+    const autorObservacao = Array.isArray(obs.autor) ? obs.autor[0] : obs.autor;
     return {
       id: obs.id,
       aluno_id: obs.aluno_id,
-      autor_id: obs.autor_id,
-      autor_name: autor?.name ?? "Desconhecido",
-      autor_role: autor?.role ?? "desconhecido",
-      conteudo: obs.conteudo,
+      autor_id: obs.author_id,
+      autor_name: autorObservacao?.name ?? "Desconhecido",
+      autor_role: autorObservacao?.role ?? "desconhecido",
+      conteudo: obs.content,
       created_at: obs.created_at,
       updated_at: obs.updated_at,
     };
@@ -64,9 +76,7 @@ export async function canEditObservacoesPedagogicas(): Promise<boolean> {
   const profile = await getUserProfile();
   if (!profile) return false;
 
-  return (
-    profile.role === "coordenação" || profile.role === "administrativo"
-  );
+  return profile.role === "coordenação" || profile.role === "administrativo";
 }
 
 export async function listObservacoesForTeacher(
@@ -113,7 +123,9 @@ export async function listObservacoesForTeacher(
     return [];
   }
 
-  const alunoIds = [...new Set(turmaAlunos.map((turmaAluno) => turmaAluno.aluno_id))];
+  const alunoIds = [
+    ...new Set(turmaAlunos.map((turmaAluno) => turmaAluno.aluno_id)),
+  ];
 
   const { data: observacoes, error } = await supabase
     .from("observacoes_pedagogicas")
@@ -121,11 +133,11 @@ export async function listObservacoesForTeacher(
       `
       id,
       aluno_id,
-      autor_id,
-      conteudo,
+      author_id,
+      content,
       created_at,
       updated_at,
-      autor:profiles!observacoes_pedagogicas_autor_id_fkey(name, role)
+      autor:profiles!observacoes_pedagogicas_author_id_fkey(name, role)
     `,
     )
     .in("aluno_id", alunoIds)
@@ -138,18 +150,29 @@ export async function listObservacoesForTeacher(
     throw new Error(error.message);
   }
 
-  return (data ?? []).map((obs: any) => {
-    const autor = Array.isArray(obs.autor) ? obs.autor[0] : obs.autor;
+  type ObservacaoRow = {
+    id: string;
+    aluno_id: string;
+    author_id: string;
+    content: string;
+    created_at: string;
+    updated_at: string;
+    autor:
+      | { name: string | null; role: string | null }
+      | { name: string | null; role: string | null }[];
+  };
+
+  return (observacoes ?? []).map((obs: ObservacaoRow) => {
+    const autorObservacao = Array.isArray(obs.autor) ? obs.autor[0] : obs.autor;
     return {
       id: obs.id,
       aluno_id: obs.aluno_id,
-      autor_id: obs.autor_id,
-      autor_name: autor?.name ?? "Desconhecido",
-      autor_role: autor?.role ?? "desconhecido",
-      conteudo: obs.conteudo,
+      autor_id: obs.author_id,
+      autor_name: autorObservacao?.name ?? "Desconhecido",
+      autor_role: autorObservacao?.role ?? "desconhecido",
+      conteudo: obs.content,
       created_at: obs.created_at,
       updated_at: obs.updated_at,
     };
   });
 }
-

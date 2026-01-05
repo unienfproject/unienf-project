@@ -349,6 +349,18 @@ export async function getClassDetails(input: {
 
   const supabase = await createServerSupabaseClient();
 
+  type TurmaComDisciplinaRow = {
+    id: string;
+    name: string;
+    tag: string;
+    start_date: string;
+    end_date: string;
+    status: string;
+    professor_id: string;
+    disciplina_id: string;
+    disciplinas: { name: string } | { name: string }[];
+  };
+
   const { data: turma, error: turmaError } = await supabase
     .from("turmas")
     .select(
@@ -368,14 +380,16 @@ export async function getClassDetails(input: {
     .single();
 
   if (turmaError) throw new Error(turmaError.message);
-  if (!turmaData) throw new Error("Turma não encontrada.");
+  if (!turma) throw new Error("Turma não encontrada.");
+
+  const turmaData = turma as TurmaComDisciplinaRow;
   if (turmaData.professor_id !== input.teacherId) {
     throw new Error("Você não tem permissão para acessar esta turma.");
   }
 
-  const disciplina = Array.isArray(turma.disciplinas)
-    ? turma.disciplinas[0]
-    : turma.disciplinas;
+  const disciplina = Array.isArray(turmaData.disciplinas)
+    ? turmaData.disciplinas[0]
+    : turmaData.disciplinas;
 
   const { data: turmaAlunos, error: alunosError } = await supabase
     .from("turma_alunos")
@@ -389,7 +403,14 @@ export async function getClassDetails(input: {
 
   if (alunosError) throw new Error(alunosError.message);
 
-  const students = (turmaAlunos ?? []).map((turmaAluno: any) => {
+  type TurmaAlunoRow = {
+    aluno_id: string;
+    profiles:
+      | { user_id: string; name: string | null; email: string | null }
+      | { user_id: string; name: string | null; email: string | null }[];
+  };
+
+  const students = (turmaAlunos ?? []).map((turmaAluno: TurmaAlunoRow) => {
     const profileAluno = Array.isArray(turmaAluno.profiles)
       ? turmaAluno.profiles[0]
       : turmaAluno.profiles;
@@ -479,9 +500,23 @@ export async function listStudentsFromMyClasses(
     throw new Error(alunosError.message);
   }
 
+  type TurmaAlunoCompletoRow = {
+    aluno_id: string;
+    turma_id: string;
+    profiles:
+      | { user_id: string; name: string | null; email: string | null; telefone: string | null }
+      | { user_id: string; name: string | null; email: string | null; telefone: string | null }[];
+    alunos:
+      | { age: number | null; date_of_birth: string | null }
+      | { age: number | null; date_of_birth: string | null }[];
+    turmas:
+      | { id: string; name: string; tag: string }
+      | { id: string; name: string; tag: string }[];
+  };
+
   const alunosAgrupados = new Map<string, StudentFromMyClasses>();
 
-  (turmaAlunos ?? []).forEach((turmaAluno: any) => {
+  (turmaAlunos ?? []).forEach((turmaAluno: TurmaAlunoCompletoRow) => {
     const alunoId = turmaAluno.aluno_id;
     const profileAluno = Array.isArray(turmaAluno.profiles)
       ? turmaAluno.profiles[0]
