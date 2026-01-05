@@ -25,7 +25,38 @@ export async function listTeacherClasses(
 
   const supabase = await createServerSupabaseClient();
 
-  return [];
+  const { data, error } = await supabase
+    .from("turmas")
+    .select(
+      `
+      id,
+      name,
+      tag,
+      start_date,
+      end_date,
+      status,
+      disciplina_id,
+      professor_id
+    `,
+    )
+    .eq("professor_id", teacherId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (error.code === "42P01") {
+      return [];
+    }
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((t) => ({
+    id: t.id,
+    name: t.name,
+    tag: t.tag,
+    start_date: t.start_date,
+    end_date: t.end_date,
+    status: t.status as "ativa" | "finalizada",
+  }));
 }
 
 export async function listSubjectsForPicker(): Promise<PickerItem[]> {
@@ -178,5 +209,313 @@ export async function finalizeClass(input: {
 
   const supabase = await createServerSupabaseClient();
 
+  const { data: turmaData, error: turmaError } = await supabase
+    .from("turmas")
+    .select("id, professor_id, status")
+    .eq("id", input.classId)
+    .single();
+
+  if (turmaError) throw new Error(turmaError.message);
+  if (!turmaData) throw new Error("Turma não encontrada.");
+  if (turmaData.professor_id !== input.teacherId) {
+    throw new Error("Você não tem permissão para finalizar esta turma.");
+  }
+
+  const { error: updateError } = await supabase
+    .from("turmas")
+    .update({
+      status: "finalizada",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.classId);
+
+  if (updateError) throw new Error(updateError.message);
+
   revalidatePath("/professores/turmas");
+}
+
+export async function addStudentToClass(input: {
+  classId: string;
+  studentId: string;
+  teacherId: string;
+}): Promise<void> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "professor") throw new Error("Sem permissão.");
+  if (profile.user_id !== input.teacherId) throw new Error("Acesso inválido.");
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: turma, error: turmaError } = await supabase
+    .from("turmas")
+    .select("id, professor_id, status")
+    .eq("id", input.classId)
+    .single();
+
+  if (turmaError) throw new Error(turmaError.message);
+  if (!turmaData) throw new Error("Turma não encontrada.");
+  if (turmaData.professor_id !== input.teacherId) {
+    throw new Error("Você não tem permissão para adicionar alunos nesta turma.");
+  }
+  if (turmaData.status === "finalizada") {
+    throw new Error("Não é possível adicionar alunos em turma finalizada.");
+  }
+
+  const { data: existingStudent } = await supabase
+    .from("turma_alunos")
+    .select("aluno_id")
+    .eq("turma_id", input.classId)
+    .eq("aluno_id", input.studentId)
+    .single();
+
+  if (existingStudent) {
+    throw new Error("Aluno já está vinculado a esta turma.");
+  }
+
+  const { error: insertError } = await supabase
+    .from("turma_alunos")
+    .insert({
+      turma_id: input.classId,
+      aluno_id: input.studentId,
+      created_at: new Date().toISOString(),
+    });
+
+  if (insertError) throw new Error(insertError.message);
+
+  revalidatePath(`/professores/turmas/${input.classId}`);
+  revalidatePath("/professores/turmas");
+}
+
+export async function removeStudentFromClass(input: {
+  classId: string;
+  studentId: string;
+  teacherId: string;
+}): Promise<void> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "professor") throw new Error("Sem permissão.");
+  if (profile.user_id !== input.teacherId) throw new Error("Acesso inválido.");
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: turma, error: turmaError } = await supabase
+    .from("turmas")
+    .select("id, professor_id, status")
+    .eq("id", input.classId)
+    .single();
+
+  if (turmaError) throw new Error(turmaError.message);
+  if (!turmaData) throw new Error("Turma não encontrada.");
+  if (turmaData.professor_id !== input.teacherId) {
+    throw new Error("Você não tem permissão para remover alunos desta turma.");
+  }
+  if (turmaData.status === "finalizada") {
+    throw new Error("Não é possível remover alunos de turma finalizada.");
+  }
+
+  const { error: deleteError } = await supabase
+    .from("turma_alunos")
+    .delete()
+    .eq("turma_id", input.classId)
+    .eq("aluno_id", input.studentId);
+
+  if (deleteError) throw new Error(deleteError.message);
+
+  revalidatePath(`/professores/turmas/${input.classId}`);
+  revalidatePath("/professores/turmas");
+}
+
+export async function getClassDetails(input: {
+  classId: string;
+  teacherId: string;
+}): Promise<{
+  id: string;
+  name: string;
+  tag: string;
+  start_date: string;
+  end_date: string;
+  status: "ativa" | "finalizada";
+  disciplinaName: string | null;
+  students: Array<{
+    id: string;
+    name: string;
+    email: string;
+  }>;
+}> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "professor") throw new Error("Sem permissão.");
+  if (profile.user_id !== input.teacherId) throw new Error("Acesso inválido.");
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: turma, error: turmaError } = await supabase
+    .from("turmas")
+    .select(
+      `
+      id,
+      name,
+      tag,
+      start_date,
+      end_date,
+      status,
+      professor_id,
+      disciplina_id,
+      disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
+    `,
+    )
+    .eq("id", input.classId)
+    .single();
+
+  if (turmaError) throw new Error(turmaError.message);
+  if (!turmaData) throw new Error("Turma não encontrada.");
+  if (turmaData.professor_id !== input.teacherId) {
+    throw new Error("Você não tem permissão para acessar esta turma.");
+  }
+
+  const disciplina = Array.isArray(turma.disciplinas)
+    ? turma.disciplinas[0]
+    : turma.disciplinas;
+
+  const { data: turmaAlunos, error: alunosError } = await supabase
+    .from("turma_alunos")
+    .select(
+      `
+      aluno_id,
+      profiles:profiles!turma_alunos_aluno_id_fkey(user_id, name, email)
+    `,
+    )
+    .eq("turma_id", input.classId);
+
+  if (alunosError) throw new Error(alunosError.message);
+
+  const students = (turmaAlunos ?? []).map((turmaAluno: any) => {
+    const profileAluno = Array.isArray(turmaAluno.profiles)
+      ? turmaAluno.profiles[0]
+      : turmaAluno.profiles;
+    return {
+      id: turmaAluno.aluno_id,
+      name: profileAluno?.name ?? "",
+      email: profileAluno?.email ?? "",
+    };
+  });
+
+  return {
+    id: turmaData.id,
+    name: turmaData.name,
+    tag: turmaData.tag,
+    start_date: turmaData.start_date,
+    end_date: turmaData.end_date,
+    status: turmaData.status as "ativa" | "finalizada",
+    disciplinaName: disciplina?.name ?? null,
+    students,
+  };
+}
+
+export type StudentFromMyClasses = {
+  id: string;
+  name: string;
+  email: string;
+  telefone: string | null;
+  age: number | null;
+  dateOfBirth: string | null;
+  turmas: Array<{
+    id: string;
+    name: string;
+    tag: string;
+  }>;
+};
+
+export async function listStudentsFromMyClasses(
+  teacherId: string,
+): Promise<StudentFromMyClasses[]> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "professor") throw new Error("Sem permissão.");
+  if (profile.user_id !== teacherId) throw new Error("Acesso inválido.");
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: turmasProfessor, error: turmasError } = await supabase
+    .from("turmas")
+    .select("id")
+    .eq("professor_id", teacherId);
+
+  if (turmasError) {
+    if (turmasError.code === "42P01") {
+      return [];
+    }
+    throw new Error(turmasError.message);
+  }
+
+  if (!turmasProfessor || turmasProfessor.length === 0) {
+    return [];
+  }
+
+  const turmaIds = turmasProfessor.map((turma) => turma.id);
+
+  const { data: turmaAlunos, error: alunosError } = await supabase
+    .from("turma_alunos")
+    .select(
+      `
+      aluno_id,
+      turma_id,
+      profiles:profiles!turma_alunos_aluno_id_fkey(
+        user_id,
+        name,
+        email,
+        telefone
+      ),
+      alunos:alunos!turma_alunos_aluno_id_fkey(age, date_of_birth),
+      turmas:turmas!turma_alunos_turma_id_fkey(id, name, tag)
+    `,
+    )
+    .in("turma_id", turmaIds);
+
+  if (alunosError) {
+    if (alunosError.code === "42P01") {
+      return [];
+    }
+    throw new Error(alunosError.message);
+  }
+
+  const alunosAgrupados = new Map<string, StudentFromMyClasses>();
+
+  (turmaAlunos ?? []).forEach((turmaAluno: any) => {
+    const alunoId = turmaAluno.aluno_id;
+    const profileAluno = Array.isArray(turmaAluno.profiles)
+      ? turmaAluno.profiles[0]
+      : turmaAluno.profiles;
+    const dadosAluno = Array.isArray(turmaAluno.alunos)
+      ? turmaAluno.alunos[0]
+      : turmaAluno.alunos;
+    const turma = Array.isArray(turmaAluno.turmas)
+      ? turmaAluno.turmas[0]
+      : turmaAluno.turmas;
+
+    if (!alunosAgrupados.has(alunoId)) {
+      alunosAgrupados.set(alunoId, {
+        id: alunoId,
+        name: profileAluno?.name ?? "",
+        email: profileAluno?.email ?? "",
+        telefone: profileAluno?.telefone ?? null,
+        age: dadosAluno?.age ?? null,
+        dateOfBirth: dadosAluno?.date_of_birth ?? null,
+        turmas: [],
+      });
+    }
+
+    const alunoAtual = alunosAgrupados.get(alunoId)!;
+    if (turma && !alunoAtual.turmas.find((t) => t.id === turma.id)) {
+      alunoAtual.turmas.push({
+        id: turma.id,
+        name: turma.name,
+        tag: turma.tag,
+      });
+    }
+  });
+
+  return Array.from(alunosAgrupados.values()).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
 }

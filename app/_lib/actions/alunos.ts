@@ -247,3 +247,121 @@ export async function getMyProfile(): Promise<MyProfile> {
     turmaAtual,
   };
 }
+
+export type StudentPersonalData = {
+  id: string;
+  name: string;
+  email: string;
+  telefone: string | null;
+  age: number | null;
+  dateOfBirth: string | null;
+  turmas: Array<{
+    id: string;
+    name: string;
+    tag: string;
+    disciplinaName: string | null;
+  }>;
+};
+
+export async function getStudentPersonalData(
+  studentId: string,
+  teacherId: string,
+): Promise<StudentPersonalData> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "professor") throw new Error("Sem permissão.");
+  if (profile.user_id !== teacherId) throw new Error("Acesso inválido.");
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: turmasProfessor, error: turmasError } = await supabase
+    .from("turmas")
+    .select("id")
+    .eq("professor_id", teacherId);
+
+  if (turmasError) throw new Error(turmasError.message);
+  if (!turmasProfessor || turmasProfessor.length === 0) {
+    throw new Error("Você não tem turmas cadastradas.");
+  }
+
+  const turmaIds = turmasProfessor.map((turma) => turma.id);
+
+  const { data: turmaAluno, error: turmaAlunoError } = await supabase
+    .from("turma_alunos")
+    .select("turma_id")
+    .eq("aluno_id", studentId)
+    .in("turma_id", turmaIds)
+    .limit(1)
+    .single();
+
+  if (turmaAlunoError || !turmaAluno) {
+    throw new Error(
+      "Você não tem permissão para visualizar dados deste aluno.",
+    );
+  }
+
+  const { data: profileData, error: profileError } = await supabase
+    .from("profiles")
+    .select(
+      `
+      user_id,
+      name,
+      email,
+      telefone,
+      alunos:alunos!alunos_user_id_fkey(age, date_of_birth)
+    `,
+    )
+    .eq("user_id", studentId)
+    .single();
+
+  if (profileError) throw new Error(profileError.message);
+  if (!profileData) throw new Error("Aluno não encontrado.");
+
+  const dadosAluno = Array.isArray(profileData.alunos)
+    ? profileData.alunos[0]
+    : profileData.alunos;
+
+  const { data: turmasAluno, error: turmasAlunoError } = await supabase
+    .from("turma_alunos")
+    .select(
+      `
+      turma_id,
+      turmas:turmas!turma_alunos_turma_id_fkey(
+        id,
+        name,
+        tag,
+        disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
+      )
+    `,
+    )
+    .eq("aluno_id", studentId)
+    .in("turma_id", turmaIds);
+
+  if (turmasAlunoError) throw new Error(turmasAlunoError.message);
+
+  const turmas = (turmasAluno ?? []).map((turmaAluno: any) => {
+    const turma = Array.isArray(turmaAluno.turmas)
+      ? turmaAluno.turmas[0]
+      : turmaAluno.turmas;
+    const disciplina = Array.isArray(turma?.disciplinas)
+      ? turma.disciplinas[0]
+      : turma?.disciplinas;
+
+    return {
+      id: turma?.id ?? "",
+      name: turma?.name ?? "",
+      tag: turma?.tag ?? "",
+      disciplinaName: disciplina?.name ?? null,
+    };
+  });
+
+  return {
+    id: profileData.user_id,
+    name: profileData.name ?? "",
+    email: profileData.email ?? "",
+    telefone: profileData.telefone,
+    age: dadosAluno?.age ?? null,
+    dateOfBirth: dadosAluno?.date_of_birth ?? null,
+    turmas,
+  };
+}

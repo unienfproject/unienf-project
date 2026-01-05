@@ -28,7 +28,80 @@ export async function listNoticesForTeacher(
 
   const supabase = await createServerSupabaseClient();
 
-  return [];
+  // Buscar avisos criados pelo professor
+  const { data: avisos, error: avisosError } = await supabase
+    .from("avisos")
+    .select(
+      `
+      id,
+      title,
+      message,
+      created_at,
+      scope_type,
+      turma_id,
+      author_id,
+      profiles:profiles!avisos_author_id_fkey(name, role)
+    `,
+    )
+    .eq("author_id", teacherId)
+    .order("created_at", { ascending: false });
+
+  if (avisosError) {
+    if (avisosError.code === "42P01") {
+      return [];
+    }
+    throw new Error(avisosError.message);
+  }
+
+  const avisosFormatados: NoticeRow[] = [];
+
+  for (const aviso of avisos ?? []) {
+    const autorAviso = Array.isArray(aviso.profiles)
+      ? aviso.profiles[0]
+      : aviso.profiles;
+
+    if (aviso.scope_type === "turma" && aviso.turma_id) {
+      const { data: turma } = await supabase
+        .from("turmas")
+        .select("id, name, tag")
+        .eq("id", aviso.turma_id)
+        .single();
+
+      avisosFormatados.push({
+        id: aviso.id,
+        title: aviso.title,
+        message: aviso.message,
+        created_at: aviso.created_at,
+        author_role: (autorAviso?.role as any) ?? "professor",
+        author_name: autorAviso?.name ?? "Desconhecido",
+        audience: {
+          type: "turma",
+          classId: aviso.turma_id,
+          classLabel: turma ? `${turma.name} (${turma.tag})` : "Turma",
+        },
+      });
+    } else if (aviso.scope_type === "alunos") {
+      const { count } = await supabase
+        .from("aviso_alunos")
+        .select("*", { count: "exact", head: true })
+        .eq("aviso_id", aviso.id);
+
+      avisosFormatados.push({
+        id: aviso.id,
+        title: aviso.title,
+        message: aviso.message,
+        created_at: aviso.created_at,
+        author_role: (autorAviso?.role as any) ?? "professor",
+        author_name: autorAviso?.name ?? "Desconhecido",
+        audience: {
+          type: "alunos",
+          studentCount: count ?? 0,
+        },
+      });
+    }
+  }
+
+  return avisosFormatados;
 }
 
 export async function listTeacherClassesForPicker(
@@ -41,13 +114,46 @@ export async function listTeacherClassesForPicker(
 
   const supabase = await createServerSupabaseClient();
 
-  return [];
+  const { data: turmas, error } = await supabase
+    .from("turmas")
+    .select("id, name, tag")
+    .eq("professor_id", teacherId)
+    .eq("status", "ativa")
+    .order("name");
+
+  if (error) {
+    if (error.code === "42P01") {
+      return [];
+    }
+    throw new Error(error.message);
+  }
+
+  return (turmas ?? []).map((turma) => ({
+    id: turma.id,
+    label: `${turma.name} (${turma.tag})`,
+  }));
 }
 
 export async function listStudentsForPicker(): Promise<PickerItem[]> {
   const supabase = await createServerSupabaseClient();
 
-  return [];
+  const { data: alunos, error } = await supabase
+    .from("profiles")
+    .select("user_id, name, email")
+    .eq("role", "aluno")
+    .order("name");
+
+  if (error) {
+    if (error.code === "42P01") {
+      return [];
+    }
+    throw new Error(error.message);
+  }
+
+  return (alunos ?? []).map((aluno) => ({
+    id: aluno.user_id,
+    label: aluno.name ?? aluno.email ?? aluno.user_id,
+  }));
 }
 
 export async function createNotice(input: {
@@ -64,6 +170,20 @@ export async function createNotice(input: {
   if (profile.user_id !== input.teacherId) throw new Error("Acesso inválido.");
 
   const supabase = await createServerSupabaseClient();
+
+  if (input.target.type === "turma") {
+    const { data: turma, error: turmaError } = await supabase
+      .from("turmas")
+      .select("id, professor_id")
+      .eq("id", input.target.classId)
+      .single();
+
+    if (turmaError) throw new Error(turmaError.message);
+    if (!turma) throw new Error("Turma não encontrada.");
+    if (turma.professor_id !== input.teacherId) {
+      throw new Error("Você não tem permissão para criar aviso para esta turma.");
+    }
+  }
 
   const { data: aviso, error: avisoError } = await supabase
     .from("avisos")
