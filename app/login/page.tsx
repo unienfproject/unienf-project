@@ -20,6 +20,7 @@ import {
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { FieldSeparator } from "../_components/ui/field";
 
 const FormSchema = z.object({
   email: z.string().email({ message: "E-mail inválido." }),
@@ -79,11 +80,8 @@ export default function Login() {
   return (
     <div className="bg-background flex min-h-screen">
       <div className="bg-primary relative hidden items-center justify-center overflow-hidden lg:flex lg:w-1/2">
-        <div className="from-primary to-primary/80 absolute inset-0 bg-gradient-to-br"></div>
-        <div className="bg-primary-foreground/10 absolute top-0 right-0 h-96 w-96 translate-x-1/2 -translate-y-1/2 transform rounded-full blur-3xl"></div>
-        <div className="bg-primary-foreground/10 absolute bottom-0 left-0 h-96 w-96 -translate-x-1/2 translate-y-1/2 transform rounded-full blur-3xl"></div>
-        <div className="relative z-10 flex flex-col justify-center px-16">
-          <Link className="mb-5 flex items-center gap-3" href="/">
+        <div className="relative z-10 flex flex-col justify-center gap-4 px-16">
+          <Link className="flex items-center gap-3" href="/">
             <Image
               src="/logo.jpg"
               alt="Logo da UNIENF"
@@ -91,7 +89,7 @@ export default function Login() {
               height={250}
             />
           </Link>
-          <h1 className="text-primary-foreground mb-4 text-4xl font-bold">
+          <h1 className="text-primary-foreground text-4xl font-bold">
             Bem-vindo de volta!
           </h1>
           <p className="text-primary-foreground/80 max-w-md text-lg">
@@ -123,7 +121,7 @@ export default function Login() {
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleSubmit)}
-              className="space-y-5"
+              className="space-y-3"
             >
               <FormField
                 control={form.control}
@@ -161,9 +159,17 @@ export default function Login() {
                   </FormItem>
                 )}
               />
+              <div className="flex-end flex justify-end">
+                <Link
+                  href="/resetpassword"
+                  className="text-muted-foreground hover:text-primary text-sm hover:underline"
+                >
+                  Esqueceu sua senha?
+                </Link>
+              </div>
               <Button
                 type="submit"
-                className="h-11 w-full"
+                className="mb-5 h-11 w-full"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -179,6 +185,22 @@ export default function Login() {
                 )}
               </Button>
             </form>
+            <FieldSeparator></FieldSeparator>
+            <div className="text-muted-foreground mt-4 space-x-4 text-center text-xs">
+              <Link
+                href="/terms"
+                className="hover:text-primary transition-colors"
+              >
+                Termos
+              </Link>
+              <span>·</span>
+              <Link
+                href="/privacy"
+                className="hover:text-primary transition-colors"
+              >
+                Privacidade
+              </Link>
+            </div>
           </Form>
         </div>
       </div>
