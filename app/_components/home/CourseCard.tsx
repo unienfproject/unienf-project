@@ -1,6 +1,7 @@
 import { ArrowRight, Award, BookOpen, Clock } from "lucide-react";
 import Image from "next/image";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 interface CourseCardProps {
   title: string;
@@ -59,8 +60,14 @@ export default function CourseCard({
           ))}
         </div>
         <Button className="ring-offset-background focus-visible:ring-ring bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0">
-          {buttonText}
-          <ArrowRight className="h-4 w-4" />
+          <Link
+            href="https://wa.me/5511987654321"
+            target="_blank"
+            className="text-primary-foreground flex items-center gap-2"
+          >
+            {buttonText}
+            <ArrowRight className="flex h-4 w-4 items-center justify-center" />
+          </Link>
         </Button>
       </div>
     </div>
