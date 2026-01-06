@@ -58,11 +58,27 @@ export function LoginForm() {
         return;
       }
       if (data.user) {
+        // Buscar o role do usuário para redirecionar corretamente
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .single();
+
+        const role = profileData?.role;
+        let redirectPath = "/";
+
+        if (role === "aluno") redirectPath = "/aluno";
+        else if (role === "professor") redirectPath = "/professores";
+        else if (role === "recepção") redirectPath = "/recepcao";
+        else if (role === "administrativo" || role === "coordenação")
+          redirectPath = "/admin";
+
         Toast({
           title: "Login realizado",
           description: "Bem vindo a Unienf",
         });
-        router.push("/admin");
+        router.push(redirectPath);
         router.refresh();
       }
     } catch (error) {
@@ -117,7 +133,8 @@ export function LoginForm() {
         />
         <div className="flex-end flex justify-end">
           <Link
-            href="/resetpassword"
+            href="/reset-password"
+            onClick={(e) => e.stopPropagation()}
             className="text-muted-foreground hover:text-primary text-sm hover:underline"
           >
             Esqueceu sua senha?
