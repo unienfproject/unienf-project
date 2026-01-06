@@ -21,7 +21,7 @@ export default function CourseCard({
   duration,
   modules,
   features,
-  buttonText = "Saiba mais",
+  buttonText = "Entre em Contato",
 }: CourseCardProps) {
   return (
     <div className="bg-card border-border/50 shadow-soft hover-lift group animate-slide-up overflow-hidden rounded-2xl border">
@@ -33,7 +33,7 @@ export default function CourseCard({
           height={50}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        <div className="from-foreground/60 absolute inset-0 bg-gradient-to-t to-transparent"></div>
+        <div className="from-foreground/60 absolute inset-0 bg-linear-to-t to-transparent"></div>
       </div>
       <div className="p-6">
         <h3 className="text-foreground mb-3 text-xl font-semibold">{title}</h3>
