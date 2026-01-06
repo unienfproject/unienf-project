@@ -85,7 +85,7 @@ export default function Login() {
         <div className="relative z-10 flex flex-col justify-center px-16">
           <Link className="mb-5 flex items-center gap-3" href="/">
             <Image
-              src="/logo.jpg"
+              src="/logo-unienf.png"
               alt="Logo da UNIENF"
               width={250}
               height={250}
