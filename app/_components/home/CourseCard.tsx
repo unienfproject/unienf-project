@@ -1,6 +1,7 @@
 import { ArrowRight, Award, BookOpen, Clock } from "lucide-react";
 import Image from "next/image";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 interface CourseCardProps {
   title: string;
@@ -21,7 +22,7 @@ export default function CourseCard({
   duration,
   modules,
   features,
-  buttonText = "Saiba mais",
+  buttonText = "Entre em Contato",
 }: CourseCardProps) {
   return (
     <div className="bg-card border-border/50 shadow-soft hover-lift group animate-slide-up overflow-hidden rounded-2xl border">
@@ -33,7 +34,7 @@ export default function CourseCard({
           height={50}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        <div className="from-foreground/60 absolute inset-0 bg-gradient-to-t to-transparent"></div>
+        <div className="from-foreground/60 absolute inset-0 bg-linear-to-t to-transparent"></div>
       </div>
       <div className="p-6">
         <h3 className="text-foreground mb-3 text-xl font-semibold">{title}</h3>
@@ -59,8 +60,14 @@ export default function CourseCard({
           ))}
         </div>
         <Button className="ring-offset-background focus-visible:ring-ring bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0">
-          {buttonText}
-          <ArrowRight className="h-4 w-4" />
+          <Link
+            href="https://wa.me/5511987654321"
+            target="_blank"
+            className="text-primary-foreground flex items-center gap-2"
+          >
+            {buttonText}
+            <ArrowRight className="flex h-4 w-4 items-center justify-center" />
+          </Link>
         </Button>
       </div>
     </div>

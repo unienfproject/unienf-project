@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import LogoParks from "./LogoParks";
@@ -81,15 +81,9 @@ export default function Footer() {
           <div>
             <h4 className="mb-4 text-lg font-semibold">Nossos Cursos</h4>
             <ul className="space-y-2">
-              <li>
-                  Técnico em Enfermagem
-              </li>
-              <li>
-                  Especializações
-              </li>
-              <li>
-                  Aulas de Campo
-              </li>
+              <li>Técnico em Enfermagem</li>
+              <li>Especializações</li>
+              <li>Aulas de Campo</li>
             </ul>
           </div>
           <div>
@@ -98,7 +92,8 @@ export default function Footer() {
               <li>
                 <Link
                   className="text-card/70 hover:text-primary text-sm transition-colors"
-                  href="https://wa.me/5511987654321" target="_blank"
+                  href="https://wa.me/5511987654321"
+                  target="_blank"
                 >
                   Dúvidas Cursos
                 </Link>
@@ -106,7 +101,8 @@ export default function Footer() {
               <li>
                 <Link
                   className="text-card/70 hover:text-primary text-sm transition-colors"
-                  href="https://wa.me/5511987654321" target="_blank"
+                  href="https://wa.me/5511987654321"
+                  target="_blank"
                 >
                   Dúvidas Matrícula
                 </Link>
@@ -114,7 +110,8 @@ export default function Footer() {
               <li>
                 <Link
                   className="text-card/70 hover:text-primary text-sm transition-colors"
-                 href="https://wa.me/5511987654321" target="_blank"
+                  href="https://wa.me/5511987654321"
+                  target="_blank"
                 >
                   Suporte Aluno
                 </Link>

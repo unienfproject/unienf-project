@@ -31,7 +31,13 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  const publicRoutes = ["/login", "/signup", "/auth", "/verify-email"];
+  const publicRoutes = [
+    "/login",
+    "/signup",
+    "/auth",
+    "/verify-email",
+    "/reset-password",
+  ];
   const isPublicRoute = publicRoutes.some((route) =>
     pathname.startsWith(route),
   );
