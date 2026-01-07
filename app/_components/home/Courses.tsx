@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import CourseCard from "./CourseCard";
 import { Button } from "@/app/_components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -16,7 +16,7 @@ const courses = [
     features: [
       "Instrutor Qualificado",
       "Material didático incluso",
-      "Certificação reconhecida pelo MEC",
+      "Certificação reconhecida pelo mercado de trabalho",
     ],
   },
   {
@@ -29,7 +29,7 @@ const courses = [
     features: [
       "Instrutor Qualificado",
       "Material didático incluso",
-      "Certificação reconhecida pelo MEC",
+      "Certificação reconhecida pelo mercado de trabalho",
     ],
   },
   {
@@ -42,7 +42,7 @@ const courses = [
     features: [
       "Instrutor Qualificado",
       "Material didático incluso",
-      "Certificação reconhecida pelo MEC",
+      "Certificação reconhecida pelo mercado de trabalho",
     ],
   },
   {
@@ -55,7 +55,7 @@ const courses = [
     features: [
       "Instrutor Qualificado",
       "Material didático incluso",
-      "Certificação reconhecida pelo MEC",
+      "Certificação reconhecida pelo mercado de trabalho",
     ],
   },
   {
@@ -68,28 +68,66 @@ const courses = [
     features: [
       "Instrutor Qualificado",
       "Material didático incluso",
-      "Certificação reconhecida pelo MEC",
+      "Certificação reconhecida pelo mercado de trabalho",
     ],
   },
 ];
 
 export default function Courses() {
-  const pageSize = 3;
-  const totalPages = Math.max(1, Math.ceil(courses.length / pageSize));
-  const [page, setPage] = useState(0);
+  const visibleCount = 3;
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const visibleCourses = useMemo(() => {
-    const start = page * pageSize;
-    return courses.slice(start, start + pageSize);
-  }, [page]);
+    return Array.from({ length: visibleCount }).map((_, i) => {
+      const index = (currentIndex + i) % courses.length;
+      return courses[index];
+    });
+  }, [currentIndex]);
 
-  function prev() {
-    setPage((p) => (p - 1 + totalPages) % totalPages);
-  }
+  const [itemsToShow, setItemsToShow] = useState(4);
 
-  function next() {
-    setPage((p) => (p + 1) % totalPages);
-  }
+  // Ajustar quantidade de logos baseado no tamanho da tela
+  useEffect(() => {
+    const updateItemsToShow = () => {
+      if (window.innerWidth < 640) {
+        setItemsToShow(1); // Mobile: 1 logo
+      } else if (window.innerWidth < 1024) {
+        setItemsToShow(2); // Tablet: 2 logos
+      } else {
+        setItemsToShow(4); // Desktop: 4 logos
+      }
+    };
+
+    updateItemsToShow();
+    window.addEventListener("resize", updateItemsToShow);
+    return () => window.removeEventListener("resize", updateItemsToShow);
+  }, []);
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev + 1) % courses.length);
+  };
+
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev - 1 + courses.length) % courses.length);
+  };
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % courses.length);
+    }, 3000);
+
+    return () => clearInterval(id);
+  }, []);
+
+  const [coursesIndex, setCoursesIndex] = useState(0);
+
+  const goToNextCourses = () => {
+    setCoursesIndex((prev) => (prev + 1) % courses.length);
+  };
+
+  const goToPreviousCourses = () => {
+    setCoursesIndex((prev) => (prev - 1 + courses.length) % courses.length);
+  };
 
   return (
     <section id="cursos" className="py-20 lg:py-32">
@@ -112,31 +150,79 @@ export default function Courses() {
             <CourseCard key={`${course.title}-${index}`} {...course} />
           ))}
         </div>
-
-        <div className="mt-4 flex items-center justify-center gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={prev}
-            className="h-10 w-10 rounded-full p-0"
-            aria-label="Cursos anteriores"
+        {/* Navegação */}
+        <div className="mt-4 flex items-center justify-center gap-3 sm:mt-6 sm:gap-4">
+          <button
+            onClick={goToPrevious}
+            className="text-muted-foreground hover:text-foreground cursor-pointer rounded-full p-2 transition-colors"
+            aria-label="Logos anteriores"
           >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 19l-7-7 7-7"
+              />
+            </svg>
+          </button>
 
-          <p className="text-muted-foreground text-sm">
-            Página {page + 1} de {totalPages}
-          </p>
+          <div className="flex gap-1.5 sm:gap-2">
+            {courses.map((_, index) => {
+              // Ajustar lógica de indicadores baseado em itemsToShow
+              let isActive = false;
+              if (itemsToShow === 1) {
+                isActive = index === currentIndex;
+              } else if (itemsToShow === 2) {
+                isActive =
+                  index === currentIndex ||
+                  (currentIndex + 1) % courses.length === index;
+              } else {
+                isActive =
+                  index === currentIndex ||
+                  (currentIndex + 1) % courses.length === index ||
+                  (currentIndex + 2) % courses.length === index ||
+                  (currentIndex + 3) % courses.length === index;
+              }
+              return (
+                <button
+                  key={index}
+                  onClick={() => setCurrentIndex(index)}
+                  className={`h-1.5 rounded-full transition-all sm:h-2 ${
+                    isActive
+                      ? "bg-primary w-6 sm:w-8"
+                      : "bg-muted-foreground/30 w-1.5 sm:w-2"
+                  }`}
+                  aria-label={`Ir para logo ${index + 1}`}
+                />
+              );
+            })}
+          </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            onClick={next}
-            className="h-10 w-10 rounded-full p-0"
-            aria-label="Próximos cursos"
+          <button
+            onClick={goToNext}
+            className="text-muted-foreground hover:text-foreground cursor-pointer rounded-full p-2 transition-colors"
+            aria-label="Próximas logos"
           >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </button>
         </div>
       </div>
     </section>
