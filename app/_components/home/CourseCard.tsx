@@ -9,7 +9,7 @@ interface CourseCardProps {
   imageSrc: string;
   imageAlt: string;
   duration: string;
-  modules: string;
+  hours?: string;
   features: string[];
   buttonText?: string;
 }
@@ -20,7 +20,7 @@ export default function CourseCard({
   imageSrc,
   imageAlt,
   duration,
-  modules,
+  hours,
   features,
   buttonText = "Entre em Contato",
 }: CourseCardProps) {
@@ -30,8 +30,8 @@ export default function CourseCard({
         <Image
           src={imageSrc}
           alt={imageAlt}
-          width={50}
-          height={50}
+          width={500}
+          height={500}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="from-foreground/60 absolute inset-0 bg-linear-to-t to-transparent"></div>
@@ -43,12 +43,12 @@ export default function CourseCard({
         </p>
         <div className="mb-4 flex items-center gap-4">
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
-            <Clock className="text-primary h-4 w-4" />
+            <BookOpen className="text-primary h-4 w-4" />
             {duration}
           </div>
           <div className="text-muted-foreground flex items-center gap-2 text-sm">
-            <BookOpen className="text-primary h-4 w-4" />
-            {modules}
+            <Clock className="text-primary h-4 w-4" />
+            {hours}
           </div>
         </div>
         <div className="mb-6 space-y-2">
