@@ -13,7 +13,7 @@ const courses = [
     hours: "480 horas",
     features: [
       "Instrutor Qualificado",
-      "Material didático incluso",
+      "Estágio em Unidade Hospitalar",
       "Certificação reconhecida pelo mercado de trabalho",
     ],
   },
@@ -26,7 +26,7 @@ const courses = [
     hours: "680 horas",
     features: [
       "Instrutor Qualificado",
-      "Material didático incluso",
+      "Estágio em Unidade Hospitalar",
       "Certificação reconhecida pelo mercado de trabalho",
     ],
   },
@@ -39,7 +39,7 @@ const courses = [
     hours: "200 horas",
     features: [
       "Instrutor Qualificado",
-      "Material didático incluso",
+      "Estágio em Unidade Laboratorial",
       "Certificação reconhecida pelo mercado de trabalho",
     ],
   },
@@ -52,7 +52,7 @@ const courses = [
     hours: "400 horas",
     features: [
       "Instrutor Qualificado",
-      "Material didático incluso",
+      "Estágio em Unidade Hospitalar",
       "Certificação reconhecida pelo mercado de trabalho",
     ],
   },
@@ -65,7 +65,7 @@ const courses = [
     hours: "300 horas",
     features: [
       "Instrutor Qualificado",
-      "Material didático incluso",
+      "Visita Técnica a UTI Real",
       "Certificação reconhecida pelo mercado de trabalho",
     ],
   },
