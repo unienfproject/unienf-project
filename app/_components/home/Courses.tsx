@@ -1,9 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import CourseCard from "./CourseCard";
+import CourseCard from "@/app/_components/home/CourseCard";
 import { Button } from "@/app/_components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const courses = [
   {
@@ -86,15 +85,14 @@ export default function Courses() {
 
   const [itemsToShow, setItemsToShow] = useState(4);
 
-  // Ajustar quantidade de logos baseado no tamanho da tela
   useEffect(() => {
     const updateItemsToShow = () => {
       if (window.innerWidth < 640) {
-        setItemsToShow(1); // Mobile: 1 logo
+        setItemsToShow(1);
       } else if (window.innerWidth < 1024) {
-        setItemsToShow(2); // Tablet: 2 logos
+        setItemsToShow(2);
       } else {
-        setItemsToShow(4); // Desktop: 4 logos
+        setItemsToShow(4);
       }
     };
 
@@ -119,16 +117,6 @@ export default function Courses() {
     return () => clearInterval(id);
   }, []);
 
-  const [coursesIndex, setCoursesIndex] = useState(0);
-
-  const goToNextCourses = () => {
-    setCoursesIndex((prev) => (prev + 1) % courses.length);
-  };
-
-  const goToPreviousCourses = () => {
-    setCoursesIndex((prev) => (prev - 1 + courses.length) % courses.length);
-  };
-
   return (
     <section id="cursos" className="py-20 lg:py-32">
       <div className="container mx-auto px-4 lg:px-8">
@@ -150,9 +138,8 @@ export default function Courses() {
             <CourseCard key={`${course.title}-${index}`} {...course} />
           ))}
         </div>
-        {/* Navegação */}
         <div className="mt-4 flex items-center justify-center gap-3 sm:mt-6 sm:gap-4">
-          <button
+          <Button
             onClick={goToPrevious}
             className="text-muted-foreground hover:text-foreground cursor-pointer rounded-full p-2 transition-colors"
             aria-label="Logos anteriores"
@@ -170,11 +157,10 @@ export default function Courses() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-          </button>
+          </Button>
 
           <div className="flex gap-1.5 sm:gap-2">
             {courses.map((_, index) => {
-              // Ajustar lógica de indicadores baseado em itemsToShow
               let isActive = false;
               if (itemsToShow === 1) {
                 isActive = index === currentIndex;
@@ -190,7 +176,7 @@ export default function Courses() {
                   (currentIndex + 3) % courses.length === index;
               }
               return (
-                <button
+                <Button
                   key={index}
                   onClick={() => setCurrentIndex(index)}
                   className={`h-1.5 rounded-full transition-all sm:h-2 ${
@@ -204,7 +190,7 @@ export default function Courses() {
             })}
           </div>
 
-          <button
+          <Button
             onClick={goToNext}
             className="text-muted-foreground hover:text-foreground cursor-pointer rounded-full p-2 transition-colors"
             aria-label="Próximas logos"
@@ -222,7 +208,7 @@ export default function Courses() {
                 d="M9 5l7 7-7 7"
               />
             </svg>
-          </button>
+          </Button>
         </div>
       </div>
     </section>
