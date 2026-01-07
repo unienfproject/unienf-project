@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import CourseCard from "@/app/_components/home/CourseCard";
-import { Button } from "@/app/_components/ui/button";
 
 const courses = [
   {
@@ -139,7 +138,7 @@ export default function Courses() {
           ))}
         </div>
         <div className="mt-4 flex items-center justify-center gap-3 sm:mt-6 sm:gap-4">
-          <Button
+          <button
             onClick={goToPrevious}
             className="text-muted-foreground hover:text-foreground cursor-pointer rounded-full p-2 transition-colors"
             aria-label="Logos anteriores"
@@ -157,7 +156,7 @@ export default function Courses() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-          </Button>
+          </button>
 
           <div className="flex gap-1.5 sm:gap-2">
             {courses.map((_, index) => {
@@ -176,7 +175,7 @@ export default function Courses() {
                   (currentIndex + 3) % courses.length === index;
               }
               return (
-                <Button
+                <button
                   key={index}
                   onClick={() => setCurrentIndex(index)}
                   className={`h-1.5 rounded-full transition-all sm:h-2 ${
@@ -190,7 +189,7 @@ export default function Courses() {
             })}
           </div>
 
-          <Button
+          <button
             onClick={goToNext}
             className="text-muted-foreground hover:text-foreground cursor-pointer rounded-full p-2 transition-colors"
             aria-label="Próximas logos"
@@ -208,7 +207,7 @@ export default function Courses() {
                 d="M9 5l7 7-7 7"
               />
             </svg>
-          </Button>
+          </button>
         </div>
       </div>
     </section>
