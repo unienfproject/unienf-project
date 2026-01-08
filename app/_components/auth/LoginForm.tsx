@@ -156,11 +156,23 @@ export function LoginForm() {
       </form>
       <FieldSeparator></FieldSeparator>
       <div className="text-muted-foreground mt-4 space-x-4 text-center text-xs">
-        <Link href="/terms" className="hover:text-primary transition-colors">
+        <Link
+          href="/termos"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          className="hover:text-primary transition-colors"
+        >
           Termos
         </Link>
         <span>·</span>
-        <Link href="/privacy" className="hover:text-primary transition-colors">
+        <Link
+          href="/privacidade"
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
+          className="hover:text-primary transition-colors"
+        >
           Privacidade
         </Link>
       </div>
