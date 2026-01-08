@@ -27,6 +27,7 @@ export default function Login() {
           </p>
         </div>
       </div>
+
       <div className="flex flex-1 flex-col justify-center px-6 lg:px-16">
         <div className="mx-auto w-full max-w-md">
           <Link

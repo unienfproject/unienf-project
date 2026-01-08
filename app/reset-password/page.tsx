@@ -7,13 +7,7 @@ export default function ForgotPassword() {
   return (
     <div className="flex min-h-screen">
       <AuthBranding
-        title={
-          <>
-            Redefinir
-            <br />
-            sua senha
-          </>
-        }
+        title={<>Redefinir sua senha</>}
         subtitle="Enviaremos um link para redefinir sua senha no email cadastrado."
       />
       <ForgotPasswordForm />
