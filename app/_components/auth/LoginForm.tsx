@@ -75,8 +75,7 @@ export function LoginForm() {
           redirectPath = "/admin";
 
         Toast({
-          title: "Login realizado",
-          description: "Bem vindo a Unienf",
+          title: "Login realizado com sucesso!",
         });
         router.push(redirectPath);
         router.refresh();

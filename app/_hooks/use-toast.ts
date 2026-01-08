@@ -14,8 +14,6 @@ export default function Toast({ title, description, variant }: toastProps) {
       description,
     });
   } else {
-    sonnerToast.success(title || "Success", {
-      description,
-    });
+    sonnerToast.success(title || "Success", {});
   }
 }
