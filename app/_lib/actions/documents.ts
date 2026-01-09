@@ -4,6 +4,7 @@ import { logAudit } from "@/app/_lib/actions/audit";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import type { DocumentoStatus } from "@/app/_lib/types/database";
 
 export type DocumentStatus = "pending" | "delivered" | "rejected";
 
@@ -58,7 +59,20 @@ export async function listMyDocuments(): Promise<DocumentItem[]> {
     return [];
   }
 
-  return documentos.map((doc: any) => {
+  type DocumentoRow = {
+    id: string;
+    documento_tipo_id: string;
+    status: string;
+    observacao: string | null;
+    rejected_reason: string | null;
+    updated_at: string;
+    documento_tipos:
+      | { name: string; required: boolean }
+      | { name: string; required: boolean }[]
+      | null;
+  };
+
+  return documentos.map((doc: DocumentoRow) => {
     const tipo = Array.isArray(doc.documento_tipos)
       ? doc.documento_tipos[0]
       : doc.documento_tipos;
@@ -125,7 +139,20 @@ export async function listStudentDocuments(
     return [];
   }
 
-  return documentos.map((doc: any) => {
+  type DocumentoRow = {
+    id: string;
+    documento_tipo_id: string;
+    status: string;
+    observacao: string | null;
+    rejected_reason: string | null;
+    updated_at: string;
+    documento_tipos:
+      | { name: string; required: boolean }
+      | { name: string; required: boolean }[]
+      | null;
+  };
+
+  return documentos.map((doc: DocumentoRow) => {
     const tipo = Array.isArray(doc.documento_tipos)
       ? doc.documento_tipos[0]
       : doc.documento_tipos;
@@ -224,4 +251,111 @@ export async function updateDocumentStatus(input: {
   revalidatePath("/admin/alunos");
   revalidatePath("/recepcao/documentos");
   revalidatePath("/recepcao/alunos");
+}
+
+export type PendingDocumentRow = {
+  documentId: string;
+  alunoId: string; // profiles.user_id (FK em documentos_aluno.aluno_id)
+  alunoName: string;
+  documentTitle: string;
+  updatedAt: string;
+};
+
+export async function listPendingDocumentsForDashboard(): Promise<
+  PendingDocumentRow[]
+> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  // Ajuste aqui para as roles que podem ver este dashboard
+  const allowedRoles = ["recepção", "coordenação", "administrativo"];
+  const role = profile.role ?? "";
+  if (!allowedRoles.includes(role)) throw new Error("Sem permissão.");
+
+  const supabase = await createServerSupabaseClient();
+
+  /**
+   * BUSCA NO SUPABASE (conforme seu schema):
+   * - documentos_aluno (aluno_id -> profiles.user_id)
+   * - documento_tipos (para pegar name do documento)
+   * - profiles (para pegar name do aluno)
+   *
+   * Aqui consideramos "pendente de check" todo documento cujo status != 'delivered'
+   * (já que você quer UX baseada em check, não em status visível).
+   */
+  const { data, error } = await supabase
+    .from("documentos_aluno")
+    .select(
+      `
+      id,
+      aluno_id,
+      status,
+      updated_at,
+      documento_tipos:documento_tipos!documentos_aluno_documento_tipo_id_fkey (
+        name
+      ),
+      profiles:profiles!documentos_aluno_aluno_id_fkey (
+        name
+      )
+    `,
+    )
+    .neq("status", "delivered")
+    .order("updated_at", { ascending: false })
+    .limit(50);
+
+  if (error) throw new Error(error.message);
+
+  return (data ?? []).map((r) => {
+    const docTipo = Array.isArray(r.documento_tipos)
+      ? r.documento_tipos[0]
+      : r.documento_tipos;
+
+    const prof = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+
+    return {
+      documentId: String(r.id),
+      alunoId: String(r.aluno_id),
+      alunoName: prof?.name ?? "Aluno",
+      documentTitle: docTipo?.name ?? "Documento",
+      updatedAt: String(r.updated_at),
+    };
+  });
+}
+
+export async function markDocumentAsDelivered(input: { documentId: string }) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  const allowedRoles = ["recepção", "coordenação", "administrativo"];
+  const role = profile.role ?? "";
+  if (!allowedRoles.includes(role)) {
+    throw new Error("Sem permissão para dar check em documentos.");
+  }
+
+  const documentId = (input.documentId ?? "").trim();
+  if (!documentId) throw new Error("documentId inválido.");
+
+  const supabase = await createServerSupabaseClient();
+
+  /**
+   * UPDATE NO SUPABASE:
+   * - marca como delivered (check)
+   * - atualiza updated_at
+   * - (opcional) limpa rejected_reason, etc. se você quiser padronizar
+   */
+  const { error } = await supabase
+    .from("documentos_aluno")
+    .update({
+      status: "delivered" as DocumentoStatus,
+      updated_at: new Date().toISOString(),
+      rejected_reason: null,
+    })
+    .eq("id", documentId);
+
+  if (error) throw new Error(error.message);
+
+  // Revalida as páginas que dependem dessa lista
+  revalidatePath("/admin");
+  revalidatePath("/recepcao");
+  revalidatePath("/recepcao/documentos");
 }

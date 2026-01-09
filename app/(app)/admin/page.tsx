@@ -1,3 +1,5 @@
+"use client";
+
 import ActivityItem from "@/app/_components/aluno/ActivityItem";
 import StatCard from "@/app/_components/StatCard";
 import { Button } from "@/app/_components/ui/button";
@@ -9,6 +11,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
+import { useState, useTransition } from "react";
+import Link from "next/link";
+import { Check } from "lucide-react";
 import {
   Calendar,
   FileText,
@@ -17,8 +22,24 @@ import {
   UserCheck,
   Users,
 } from "lucide-react";
+import type { PendingDocumentRow } from "@/app/_lib/actions/documents";
+import { markDocumentAsDelivered } from "@/app/_lib/actions/documents";
 
-export default function Overall() {
+export default function PendingDocumentsTable({
+  initialRows = [],
+}: {
+  initialRows?: PendingDocumentRow[];
+}) {
+  const [rows, setRows] = useState<PendingDocumentRow[]>(initialRows);
+  const [isPending, startTransition] = useTransition();
+
+  function handleCheck(documentId: string) {
+    startTransition(async () => {
+      await markDocumentAsDelivered({ documentId });
+
+      setRows((prev) => prev.filter((r) => r.documentId !== documentId));
+    });
+  }
   return (
     <main className="flex-1">
       <main className="p-6">
@@ -121,9 +142,6 @@ export default function Overall() {
                   Documentos que precisam de atenção
                 </p>
               </div>
-              <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border-input bg-primary hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                Ver todos
-              </Button>
             </div>
             <div className="overflow-x-auto">
               <Table className="w-full">
@@ -135,69 +153,64 @@ export default function Overall() {
                     <TableHead className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
                       Documento
                     </TableHead>
-                    <TableHead className="text-muted-foreground px-4 py-3 text-left text-sm font-medium">
-                      Status
-                    </TableHead>
                     <TableHead className="text-muted-foreground px-4 py-3 text-right text-sm font-medium">
                       Ação
                     </TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
-                  <TableRow className="border-border/50 table-row-alternate border-b last:border-0">
-                    <TableCell className="text-foreground px-4 py-3 text-sm">
-                      Carlos Oliveira
-                    </TableCell>
-                    <TableCell className="text-foreground px-4 py-3 text-sm">
-                      RG
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <span className="bg-warning/10 text-warning inline-flex rounded-full px-2 py-1 text-xs font-medium">
-                        Pendente
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right">
-                      <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                        Revisar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="border-border/50 table-row-alternate border-b last:border-0">
-                    <TableCell className="text-foreground px-4 py-3 text-sm">
-                      Fernanda Lima
-                    </TableCell>
-                    <TableCell className="text-foreground px-4 py-3 text-sm">
-                      Histórico Escolar
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <span className="bg-warning/10 text-warning inline-flex rounded-full px-2 py-1 text-xs font-medium">
-                        Pendente
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right">
-                      <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                        Revisar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                  <TableRow className="border-border/50 table-row-alternate border-b last:border-0">
-                    <TableCell className="text-foreground px-4 py-3 text-sm">
-                      Ricardo Souza
-                    </TableCell>
-                    <TableCell className="text-foreground px-4 py-3 text-sm">
-                      Comprovante de Residência
-                    </TableCell>
-                    <TableCell className="px-4 py-3">
-                      <span className="bg-destructive/10 text-destructive inline-flex rounded-full px-2 py-1 text-xs font-medium">
-                        Rejeitado
-                      </span>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 text-right">
-                      <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                        Revisar
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  {rows.map((row) => (
+                    <TableRow
+                      key={row.documentId}
+                      className="border-border/50 border-b last:border-0"
+                    >
+                      <TableCell className="text-foreground px-4 py-3 text-sm">
+                        {row.alunoName}
+                      </TableCell>
+
+                      <TableCell className="text-foreground px-4 py-3 text-sm">
+                        {row.documentTitle}
+                      </TableCell>
+
+                      <TableCell className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {/* CHECK (dar baixa sem abrir perfil) */}
+                          <Button
+                            type="button"
+                            size="sm"
+                            className="gap-2"
+                            disabled={isPending}
+                            onClick={() => handleCheck(row.documentId)}
+                            title="Marcar como entregue"
+                          >
+                            <Check className="h-4 w-4" />
+                            Check
+                          </Button>
+
+                          {/* Ver perfil */}
+                          <Button asChild size="sm" variant="outline">
+                            <Link
+                              href={`/recepcao/alunos/${row.alunoId}/documentos`}
+                            >
+                              Ver perfil
+                            </Link>
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                  {!rows.length && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={3}
+                        className="text-muted-foreground py-8 text-center text-sm"
+                      >
+                        Nenhum documento pendente de verificação.
+                      </TableCell>
+                    </TableRow>
+                  )}
                 </TableBody>
               </Table>
             </div>
