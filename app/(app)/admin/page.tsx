@@ -1,5 +1,6 @@
 "use client";
 
+import PeriodRangeButton from "@/app/_components/admin/PeriodRangeButton";
 import ActivityItem from "@/app/_components/aluno/ActivityItem";
 import StatCard from "@/app/_components/StatCard";
 import { Button } from "@/app/_components/ui/button";
@@ -13,14 +14,13 @@ import {
 } from "@/app/_components/ui/table";
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Check } from "lucide-react";
 import {
-  Calendar,
   FileText,
   FolderOpen,
   TrendingUp,
   UserCheck,
   Users,
+  Check,
 } from "lucide-react";
 import type { PendingDocumentRow } from "@/app/_lib/actions/documents";
 import { markDocumentAsDelivered } from "@/app/_lib/actions/documents";
@@ -88,10 +88,13 @@ export default function PendingDocumentsTable({
                     Últimos 6 meses
                   </p>
                 </div>
-                <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border-input bg-primary hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Período
-                </Button>
+                <PeriodRangeButton
+
+                // Aqui entra a sua chamada (Supabase / action) para buscar:
+                // - quantidade de matrículas (novos alunos) dentro do período
+                // - e agregar por mês para montar "Matrículas por Mês"
+                // Neste momento, você pediu só o modal e seleção, então deixei apenas o ponto de integração.
+                />
               </div>
               <div className="bg-muted/30 flex h-64 items-center justify-center rounded-xl">
                 <div className="text-center">
