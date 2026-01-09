@@ -253,11 +253,13 @@ export async function addStudentToClass(input: {
     .single();
 
   if (turmaError) throw new Error(turmaError.message);
-  if (!turmaData) throw new Error("Turma não encontrada.");
-  if (turmaData.professor_id !== input.teacherId) {
-    throw new Error("Você não tem permissão para adicionar alunos nesta turma.");
+  if (!turma) throw new Error("Turma não encontrada.");
+  if (turma.professor_id !== input.teacherId) {
+    throw new Error(
+      "Você não tem permissão para adicionar alunos nesta turma.",
+    );
   }
-  if (turmaData.status === "finalizada") {
+  if (turma.status === "finalizada") {
     throw new Error("Não é possível adicionar alunos em turma finalizada.");
   }
 
@@ -272,13 +274,11 @@ export async function addStudentToClass(input: {
     throw new Error("Aluno já está vinculado a esta turma.");
   }
 
-  const { error: insertError } = await supabase
-    .from("turma_alunos")
-    .insert({
-      turma_id: input.classId,
-      aluno_id: input.studentId,
-      created_at: new Date().toISOString(),
-    });
+  const { error: insertError } = await supabase.from("turma_alunos").insert({
+    turma_id: input.classId,
+    aluno_id: input.studentId,
+    created_at: new Date().toISOString(),
+  });
 
   if (insertError) throw new Error(insertError.message);
 
@@ -305,11 +305,11 @@ export async function removeStudentFromClass(input: {
     .single();
 
   if (turmaError) throw new Error(turmaError.message);
-  if (!turmaData) throw new Error("Turma não encontrada.");
-  if (turmaData.professor_id !== input.teacherId) {
+  if (!turma) throw new Error("Turma não encontrada.");
+  if (turma.professor_id !== input.teacherId) {
     throw new Error("Você não tem permissão para remover alunos desta turma.");
   }
-  if (turmaData.status === "finalizada") {
+  if (turma.status === "finalizada") {
     throw new Error("Não é possível remover alunos de turma finalizada.");
   }
 
@@ -504,8 +504,18 @@ export async function listStudentsFromMyClasses(
     aluno_id: string;
     turma_id: string;
     profiles:
-      | { user_id: string; name: string | null; email: string | null; telefone: string | null }
-      | { user_id: string; name: string | null; email: string | null; telefone: string | null }[];
+      | {
+          user_id: string;
+          name: string | null;
+          email: string | null;
+          telefone: string | null;
+        }
+      | {
+          user_id: string;
+          name: string | null;
+          email: string | null;
+          telefone: string | null;
+        }[];
     alunos:
       | { age: number | null; date_of_birth: string | null }
       | { age: number | null; date_of_birth: string | null }[];
