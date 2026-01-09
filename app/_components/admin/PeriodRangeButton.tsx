@@ -25,7 +25,6 @@ function formatBR(date: Date) {
 }
 
 function monthDiffInclusive(from: Date, to: Date) {
-  // Diferença em meses considerando ano/mês (ignora dia), mas inclui o mês inicial
   const months =
     (to.getFullYear() - from.getFullYear()) * 12 +
     (to.getMonth() - from.getMonth());
@@ -63,7 +62,6 @@ export default function PeriodRangeButton({
 }: PeriodRangeButtonProps) {
   const today = startOfDay(new Date());
 
-  // padrão: últimos 6 meses (incluindo o mês atual)
   const defaultFrom = startOfDay(addMonths(today, -(defaultLastMonths - 1)));
   const defaultTo = today;
 
@@ -75,7 +73,6 @@ export default function PeriodRangeButton({
 
   const [error, setError] = React.useState<string | null>(null);
 
-  // Range efetivo selecionado (validado)
   const canApply = Boolean(range?.from && range?.to);
 
   function validate(selected?: DateRange) {
@@ -120,7 +117,6 @@ export default function PeriodRangeButton({
 
     setOpen(false);
 
-    // Aqui você vai ligar na consulta de matrículas por mês (últimos 6 meses ou período escolhido)
     onApply?.({ from, to });
   }
 
@@ -138,7 +134,7 @@ export default function PeriodRangeButton({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
           <DialogTitle>Selecionar período</DialogTitle>
           <DialogDescription>
@@ -147,9 +143,9 @@ export default function PeriodRangeButton({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
-          <div className="rounded-lg border p-3">
-            <div className="text-muted-foreground mb-2 text-xs">
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="text-muted-foreground text-xs">
               Período selecionado
             </div>
             <div className="text-foreground text-sm font-medium">{label}</div>
@@ -175,7 +171,7 @@ export default function PeriodRangeButton({
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2 sm:gap-1">
           <Button
             type="button"
             variant="outline"
