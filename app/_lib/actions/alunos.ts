@@ -486,7 +486,7 @@ export async function updateAlunoProfile(input: {
 
     updateAlunoData = {
       date_of_birth: input.dateOfBirth || null,
-      age: age ?? null,
+      age: age ?? undefined,
       updated_at: new Date().toISOString(),
     };
 
