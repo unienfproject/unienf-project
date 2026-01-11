@@ -90,17 +90,18 @@ export async function createInternalUser(input: {
 
   const userId = created.user.id;
 
-  const { error: profileErr } = await supabase.from("profiles").upsert(
-    {
-      user_id: userId,
+  // Usa o cliente admin para fazer o update, que bypassa RLS
+  // O trigger handle_new_auth_user já criou o registro na tabela profiles
+  const { error: profileErr } = await admin
+    .from("profiles")
+    .update({
       name,
       telefone,
       email,
       role,
       updated_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id" },
-  );
+    })
+    .eq("user_id", userId);
 
   if (profileErr) throw new Error(profileErr.message);
 
