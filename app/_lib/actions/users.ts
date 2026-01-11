@@ -90,10 +90,6 @@ export async function createInternalUser(input: {
 
   const userId = created.user.id;
 
-  // Usa o cliente normal (supabase) para fazer o update
-  // O trigger handle_new_auth_user já criou o registro na tabela profiles
-  // Como estamos fazendo UPDATE (não INSERT), as políticas RLS permitem para staff
-  // O cliente normal mantém o contexto do usuário, permitindo que triggers validem permissões
   const { error: profileErr } = await supabase
     .from("profiles")
     .update({
