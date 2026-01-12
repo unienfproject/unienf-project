@@ -5,6 +5,7 @@ import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -519,4 +520,84 @@ export async function updateAlunoProfile(input: {
 
   revalidatePath("/admin/alunos");
   revalidatePath("/admin");
+}
+
+export async function listAlunosPaginated(params: {
+  page: number;
+  pageSize: number;
+  search?: string;
+}): Promise<PaginatedResult<AlunoRow>> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  const allowedRoles = ["recepção", "administrativo", "coordenação"];
+  const role = profile.role ?? "";
+  if (!allowedRoles.includes(role)) {
+    throw new Error("Sem permissão para listar alunos.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const page = Math.max(1, params.page);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const search = params.search?.trim();
+  const searchOr = search
+    ? `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`
+    : null;
+
+  // 1) COUNT
+  let countQuery = supabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .eq("role", "aluno");
+
+  if (searchOr) countQuery = countQuery.or(searchOr);
+
+  const { count, error: countError } = await countQuery;
+  if (countError) throw new Error(countError.message);
+
+  const total = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  // 2) DATA
+  let dataQuery = supabase
+    .from("profiles")
+    .select(
+      `
+        user_id,
+        name,
+        email,
+        telefone,
+        alunos:alunos!alunos_user_id_fkey (
+          age,
+          date_of_birth
+        )
+      `,
+    )
+    .eq("role", "aluno")
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (searchOr) dataQuery = dataQuery.or(searchOr);
+
+  const { data, error } = await dataQuery;
+  if (error) throw new Error(error.message);
+
+  const items: AlunoRow[] = (data ?? []).map((r: any) => {
+    const alunoMeta = Array.isArray(r.alunos) ? r.alunos[0] : r.alunos;
+
+    return {
+      id: String(r.user_id),
+      name: String(r.name ?? ""),
+      email: String(r.email ?? ""),
+      telefone: String(r.telefone ?? ""),
+      age: alunoMeta?.age ?? null,
+      dateOfBirth: alunoMeta?.date_of_birth ?? null,
+    };
+  });
+
+  return { items, total, page, pageSize, totalPages };
 }
