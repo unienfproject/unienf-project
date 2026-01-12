@@ -3,6 +3,7 @@
 import { logAudit } from "@/app/_lib/actions/audit";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
+import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 
 type Role =
   | "recepção"
@@ -209,4 +210,94 @@ export async function updateUserRole(input: { userId: string; newRole: Role }) {
   });
 
   return { success: true, userId, oldRole: targetUser.role, newRole };
+}
+
+export async function listUsersPaginated(params: {
+  page: number;
+  pageSize: number;
+  search?: string;
+}): Promise<
+  PaginatedResult<{
+    id: string;
+    name: string;
+    email: string;
+    telefone: string | null;
+    role: Role | null;
+  }>
+> {
+  const supabase = await createServerSupabaseClient();
+
+  // 0) valida sessão + permissão (igual seu listInternalUsers)
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) throw new Error("Sessão inválida.");
+
+  const { data: callerProfile, error: callerErr } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("user_id", authData.user.id)
+    .single();
+
+  if (callerErr) throw new Error(callerErr.message);
+  if (!callerProfile || callerProfile.role !== "administrativo") {
+    throw new Error("Sem permissão para listar usuários.");
+  }
+
+  const page = Math.max(1, params.page);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const search = params.search?.trim();
+
+  const internalRoles: Role[] = [
+    "recepção",
+    "coordenação",
+    "administrativo",
+    "professor",
+  ];
+
+  // 1) total (count)
+  let countQuery = supabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .in("role", internalRoles);
+
+  if (search) {
+    countQuery = countQuery.or(
+      `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`,
+    );
+  }
+
+  const { count, error: countError } = await countQuery;
+  if (countError) throw new Error(countError.message);
+
+  const total = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  // 2) data (range)
+  let dataQuery = supabase
+    .from("profiles")
+    .select("user_id, name, email, telefone, role, created_at")
+    .in("role", internalRoles)
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (search) {
+    dataQuery = dataQuery.or(
+      `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`,
+    );
+  }
+
+  const { data, error } = await dataQuery;
+  if (error) throw new Error(error.message);
+
+  const items = (data ?? []).map((r) => ({
+    id: String(r.user_id),
+    name: String(r.name ?? ""),
+    email: String(r.email ?? ""),
+    telefone: (r.telefone ?? null) as string | null,
+    role: (r.role ?? null) as Role | null,
+  }));
+
+  return { items, total, page, pageSize, totalPages };
 }

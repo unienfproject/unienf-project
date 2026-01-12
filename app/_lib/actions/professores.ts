@@ -5,6 +5,7 @@ import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -190,4 +191,71 @@ export async function updateProfessorProfile(input: {
 
   revalidatePath("/admin/professores");
   revalidatePath("/admin");
+}
+
+export async function listProfessoresPaginated(params: {
+  page: number;
+  pageSize: number;
+  search?: string;
+}): Promise<
+  PaginatedResult<{
+    id: string;
+    name: string | null;
+    email: string | null;
+    telefone: string | null;
+    cpf?: string | null;
+  }>
+> {
+  const supabase = await createServerSupabaseClient();
+
+  const page = Math.max(1, params.page);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  // 1) total (count)
+  let countQuery = supabase
+    .from("profiles")
+    .select("*", { count: "exact", head: true })
+    .eq("role", "professor");
+
+  const search = params.search?.trim();
+  if (search) {
+    // ajuste os campos conforme seu schema real
+    countQuery = countQuery.or(
+      `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`,
+    );
+  }
+
+  const { count, error: countError } = await countQuery;
+  if (countError) throw new Error(countError.message);
+
+  const total = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  // 2) data (range)
+  let dataQuery = supabase
+    .from("profiles")
+    .select("user_id, name, email, telefone")
+    .eq("role", "professor")
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (search) {
+    dataQuery = dataQuery.or(
+      `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`,
+    );
+  }
+
+  const { data, error } = await dataQuery;
+  if (error) throw new Error(error.message);
+
+  const items = (data ?? []).map((r) => ({
+    id: r.user_id,
+    name: r.name,
+    email: r.email,
+    telefone: r.telefone,
+  }));
+
+  return { items, total, page, pageSize, totalPages };
 }
