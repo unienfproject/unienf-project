@@ -21,7 +21,7 @@ export default function CreateCostModal({
       <Button
         type="button"
         onClick={() => setOpen(true)}
-        className="h-10 rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
+        className="h-10 cursor-pointer rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
       >
         Lançar custo
       </Button>
@@ -42,7 +42,7 @@ export default function CreateCostModal({
               <Button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded-md border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50"
+                className="hover:bg-primary/50 cursor-pointer rounded-md border border-slate-200 px-3 py-2 text-sm"
               >
                 Fechar
               </Button>
@@ -124,7 +124,7 @@ export default function CreateCostModal({
                 <Button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="h-10 rounded-md border border-slate-200 px-4 text-sm font-medium text-slate-900 hover:bg-slate-50"
+                  className="h-10 cursor-pointer rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 hover:bg-[#ff3333] hover:text-white"
                 >
                   Cancelar
                 </Button>
