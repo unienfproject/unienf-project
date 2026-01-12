@@ -83,7 +83,7 @@ export async function updateCurso(input: {
 
   await logAudit({
     action: "update",
-    entity: "turma",
+    entity: "curso",
     entityId: input.id,
     newValue: payload,
     description: `Curso ${name} atualizado`,
