@@ -82,37 +82,3 @@ export async function getUserProfile(): Promise<Profile | null> {
     return null;
   }
 }
-
-
-// export async function listProfilePaginated({ role: "aluno" | "professor", page, pageSize })
-// {
-//   const profile = await getUserProfile();
-//   if (!profile) throw new Error ("Sessão inválida.");
-
-//   const supabase = await createServerSupabaseClient();
-
-//   const grom = (params.page - 1) * params.pageSize;
-//   const to = from + params.pageSize - 1;
-
-//   const { data, error, count } = await supabase
-//   .from("profiles")
-//   .select (
-//     `
-//     user_id,
-//     name,
-//     email,
-//     telefone
-//     `, { count: "exact" },
-//   )
-// .eq("role", "aluno")
-// .order("created_at", { ascending: false })
-// .range(from, to);
-
-// if (error) throw new Error(error.message);
-
-// return {
-//   alunos: data ?? [],
-//   total: count ?? 0,
-// }
-// ;
-// }
