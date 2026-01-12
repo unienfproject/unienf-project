@@ -23,7 +23,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-
 import {
   EllipsisVertical,
   Eye,
@@ -209,7 +208,7 @@ export default function Cursos({ cursos = [] }: CursosProps) {
           </div>
           <div className="border-border/50 flex items-center justify-between border-t px-6 py-4">
             <p className="text-muted-foreground text-sm">
-              Mostrando {filteredCursos.length} de {cursos.length} alunos
+              Mostrando {filteredCursos.length} de {cursos.length} cursos
             </p>
             <div className="flex items-center gap-2">
               <Button variant="outline">Anterior</Button>
@@ -221,4 +220,3 @@ export default function Cursos({ cursos = [] }: CursosProps) {
     </div>
   );
 }
-

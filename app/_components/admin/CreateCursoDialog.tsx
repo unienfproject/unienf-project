@@ -11,7 +11,6 @@ import {
 } from "@/app/_components/ui/dialog";
 import { Input } from "@/app/_components/ui/input";
 import { Label } from "@/app/_components/ui/label";
-import { Textarea } from "@/app/_components/ui/textarea";
 import { createCurso } from "@/app/_lib/actions/cursos";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -31,7 +30,6 @@ export default function CreateCursoDialog({
 
   const [form, setForm] = useState({
     name: "",
-    description: "",
     durationMonths: "",
   });
 
@@ -47,7 +45,6 @@ export default function CreateCursoDialog({
       try {
         await createCurso({
           name: form.name.trim(),
-          description: form.description.trim() || null,
           durationMonths: form.durationMonths
             ? parseInt(form.durationMonths, 10)
             : null,
@@ -56,7 +53,6 @@ export default function CreateCursoDialog({
         toast.success("Curso criado com sucesso!");
         setForm({
           name: "",
-          description: "",
           durationMonths: "",
         });
         onOpenChange(false);
@@ -88,19 +84,6 @@ export default function CreateCursoDialog({
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="Ex.: Técnico em Enfermagem"
               required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Descrição (opcional)</Label>
-            <Textarea
-              id="description"
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              placeholder="Descreva o curso..."
-              rows={3}
             />
           </div>
 

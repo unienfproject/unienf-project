@@ -1,14 +1,13 @@
 "use server";
 
 import { logAudit } from "@/app/_lib/actions/audit";
+import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 
 export async function createCurso(input: {
   name: string;
-  description?: string | null;
   durationMonths?: number | null;
 }): Promise<{ cursoId: string }> {
   const profile = await getUserProfile();
@@ -26,9 +25,7 @@ export async function createCurso(input: {
     .from("cursos")
     .insert({
       name,
-      description: input.description?.trim() || null,
       duration_months: input.durationMonths || null,
-      active: true,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
@@ -40,11 +37,10 @@ export async function createCurso(input: {
 
   await logAudit({
     action: "create",
-    entity: "turma",
+    entity: "curso",
     entityId: curso.id,
     newValue: {
       name,
-      description: input.description,
       duration_months: input.durationMonths,
     },
     description: `Curso ${name} criado`,
@@ -99,9 +95,7 @@ export async function updateCurso(input: {
 export type CursoRow = {
   id: string;
   name: string;
-  description: string | null;
   durationMonths: number | null;
-  active: boolean;
   createdAt: string;
 };
 
@@ -110,7 +104,7 @@ export async function listCursos(): Promise<CursoRow[]> {
 
   const { data, error } = await supabase
     .from("cursos")
-    .select("id, name, description, duration_months, active, created_at")
+    .select("id, name, duration_months, created_at")
     .order("created_at", { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -118,9 +112,7 @@ export async function listCursos(): Promise<CursoRow[]> {
   return (data ?? []).map((c) => ({
     id: c.id,
     name: c.name,
-    description: c.description,
     durationMonths: c.duration_months,
-    active: c.active,
     createdAt: c.created_at,
   }));
 }
@@ -147,9 +139,7 @@ export async function listCursosPaginated(params: {
   const to = from + pageSize - 1;
 
   const search = params.search?.trim();
-  const orFilter = search
-    ? `name.ilike.%${search}%,description.ilike.%${search}%`
-    : null;
+  const orFilter = search ? `name.ilike.%${search}%` : null;
 
   // COUNT
   let countQuery = supabase
@@ -167,7 +157,7 @@ export async function listCursosPaginated(params: {
   // DATA
   let dataQuery = supabase
     .from("cursos")
-    .select("id, name, description, duration_months, created_at")
+    .select("id, name, duration_months, created_at")
     .order("created_at", { ascending: false })
     .range(from, to);
 
@@ -176,12 +166,19 @@ export async function listCursosPaginated(params: {
   const { data, error } = await dataQuery;
   if (error) throw new Error(error.message);
 
-  const items: CursoRow[] = (data ?? []).map((r: any) => ({
-    id: String(r.id),
-    name: r.name ?? null,
-    description: r.description ?? null,
-    durationMonths: r.duration_months ?? null,
-  }));
+  const items: CursoRow[] = (data ?? []).map(
+    (r: {
+      id: string;
+      name: string;
+      duration_months: number | null;
+      created_at: string;
+    }) => ({
+      id: String(r.id),
+      name: r.name,
+      durationMonths: r.duration_months ?? null,
+      createdAt: r.created_at,
+    }),
+  );
 
   return { items, total, page, pageSize, totalPages };
 }
