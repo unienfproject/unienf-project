@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/app/_components/ui/button";
@@ -23,35 +22,27 @@ import {
   DropdownMenuTrigger,
 } from "@/app/_components/ui/dropdown-menu";
 
-import {
-  EllipsisVertical,
-  Eye,
-  Pencil,
-  Trash2,
-  UserSearch,
-} from "lucide-react";
+import { EllipsisVertical, Eye, Pencil, UserSearch } from "lucide-react";
 
-import { AlunoRow } from "@/app/_lib/actions/alunos";
+import { usePaginatedData } from "@/app/_hooks/usePaginatedData";
+import { listAlunosPaginated } from "@/app/_lib/actions/alunos";
 
-interface AlunosTableProps {
-  alunos: AlunoRow[];
-}
+const PAGE_SIZE = 10;
 
-export default function AlunosTable({ alunos }: AlunosTableProps) {
+export default function AlunosTable() {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredAlunos = useMemo(() => {
-    if (!searchTerm.trim()) return alunos;
-
-    const term = searchTerm.toLowerCase().trim();
-    return alunos.filter((aluno) => {
-      const nome = aluno.name?.toLowerCase() ?? "";
-      const email = aluno.email?.toLowerCase() ?? "";
-      const tel = aluno.telefone?.toLowerCase() ?? "";
-      return nome.includes(term) || email.includes(term) || tel.includes(term);
-    });
-  }, [alunos, searchTerm]);
+  const {
+    items: alunos,
+    total,
+    page,
+    totalPages,
+    loading,
+    search,
+    setSearch,
+    prev,
+    next,
+  } = usePaginatedData(listAlunosPaginated, PAGE_SIZE);
 
   return (
     <>
@@ -61,8 +52,8 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
             <UserSearch className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2" />
             <Input
               type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 pl-10 text-base focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
               placeholder="Buscar por nome, email ou telefone..."
             />
@@ -91,21 +82,32 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
             </TableHeader>
 
             <TableBody>
-              {filteredAlunos.length === 0 ? (
+              {loading ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={4}
+                    className="text-muted-foreground px-6 py-6 text-center"
+                  >
+                    Carregando alunos...
+                  </TableCell>
+                </TableRow>
+              ) : alunos.length === 0 ? (
                 <TableRow>
                   <TableCell
                     colSpan={4}
                     className="text-muted-foreground px-6 py-4 text-center"
                   >
-                    {searchTerm
+                    {search
                       ? "Nenhum aluno encontrado com o termo pesquisado."
                       : "Nenhum aluno encontrado."}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredAlunos.map((aluno) => {
-                  const initials = aluno.name
+                alunos.map((aluno) => {
+                  const name = aluno.name?.trim() || "Aluno";
+                  const initials = name
                     .split(" ")
+                    .filter(Boolean)
                     .map((n) => n[0])
                     .join("")
                     .toUpperCase()
@@ -125,10 +127,10 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
                           </div>
                           <div>
                             <p className="text-foreground text-sm font-medium">
-                              {aluno.name}
+                              {name}
                             </p>
                             <p className="text-muted-foreground text-xs">
-                              {aluno.email}
+                              {aluno.email || "-"}
                             </p>
                           </div>
                         </div>
@@ -173,8 +175,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
                               <DropdownMenuItem
                                 className="cursor-pointer"
                                 onClick={() => {
-                                  // TODO: abrir modal de edição com o aluno
-                                  // openEditModal(aluno)
+                                  // TODO: abrir modal de edição
                                 }}
                               >
                                 <Pencil className="mr-2 h-4 w-4" />
@@ -194,11 +195,24 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
 
         <div className="border-border/50 flex items-center justify-between border-t px-6 py-4">
           <p className="text-muted-foreground text-sm">
-            Mostrando {filteredAlunos.length} de {alunos.length} alunos
+            Mostrando {alunos.length} de {total} alunos
           </p>
+
           <div className="flex items-center gap-2">
-            <Button variant="outline">Anterior</Button>
-            <Button variant="outline">Próximo</Button>
+            <Button
+              variant="outline"
+              onClick={prev}
+              disabled={page === 1 || loading}
+            >
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              onClick={next}
+              disabled={page === totalPages || loading}
+            >
+              Próximo
+            </Button>
           </div>
         </div>
       </div>

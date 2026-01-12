@@ -2,6 +2,7 @@
 
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
+import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 
 type PickerItem = { id: string; label: string };
 
@@ -82,4 +83,85 @@ export async function listTurmas(): Promise<TurmaRow[]> {
       createdAt: t.created_at,
     };
   });
+}
+
+export async function listTurmasPaginated(params: {
+  page: number;
+  pageSize: number;
+  search?: string;
+}): Promise<PaginatedResult<TurmaRow>> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  const allowedRoles = ["recepção", "administrativo", "coordenação"];
+  const role = profile.role ?? "";
+  if (!allowedRoles.includes(role)) {
+    throw new Error("Sem permissão para listar turmas.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const page = Math.max(1, params.page);
+  const pageSize = Math.min(50, Math.max(1, params.pageSize));
+  const from = (page - 1) * pageSize;
+  const to = from + pageSize - 1;
+
+  const search = params.search?.trim();
+  const searchOr = search
+    ? `tag.ilike.%${search}%,disciplinas.name.ilike.%${search}%,professor_profile.name.ilike.%${search}%`
+    : null;
+
+  // COUNT
+  let countQuery = supabase
+    .from("turmas")
+    .select("*", { count: "exact", head: true });
+
+  if (searchOr) countQuery = countQuery.or(searchOr);
+
+  const { count, error: countError } = await countQuery;
+  if (countError) throw new Error(countError.message);
+
+  const total = count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  // DATA
+  let dataQuery = supabase
+    .from("turmas")
+    .select(
+      `
+        id,
+        tag,
+        disciplinas:disciplinas!turmas_disciplina_id_fkey (
+          name
+        ),
+        professor_profile:profiles!turmas_professor_id_fkey (
+          name
+        )
+      `,
+    )
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (searchOr) dataQuery = dataQuery.or(searchOr);
+
+  const { data, error } = await dataQuery;
+  if (error) throw new Error(error.message);
+
+  const items: TurmaRow[] = (data ?? []).map((r: any) => {
+    const disc = Array.isArray(r.disciplinas)
+      ? r.disciplinas[0]
+      : r.disciplinas;
+    const prof = Array.isArray(r.professor_profile)
+      ? r.professor_profile[0]
+      : r.professor_profile;
+
+    return {
+      id: String(r.id),
+      tag: String(r.tag ?? ""),
+      disciplinaName: disc?.name ?? null,
+      professorName: prof?.name ?? null,
+    };
+  });
+
+  return { items, total, page, pageSize, totalPages };
 }

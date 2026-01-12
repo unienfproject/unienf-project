@@ -18,55 +18,33 @@ import {
   FolderSearch2,
   Funnel,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { usePaginatedData } from "@/app/_hooks/usePaginatedData";
+import { listCursosPaginated } from "@/app/_lib/actions/cursos";
 
-type CursoMock = {
-  id: string;
-  name: string;
-  professor: string;
-  tag: string;
-};
-
-const mockCursos: CursoMock[] = [
-  {
-    id: "1",
-    name: "Técnico Enfermagem",
-    professor: "Maria da Silva",
-    tag: "TECN2024.1",
-  },
-  {
-    id: "2",
-    name: "Instrumentação Cirúrgica",
-    professor: "João Paulo",
-    tag: "INSTRU2024.1",
-  },
-  {
-    id: "3",
-    name: "Auxiliar de Enfermagem",
-    professor: "Ana Costa",
-    tag: "AUX2024.1",
-  },
-];
+const PAGE_SIZE = 10;
 
 export default function Cursos() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
 
-  const filteredCursos = useMemo(() => {
-    if (!searchTerm.trim()) return mockCursos;
-
-    const term = searchTerm.toLowerCase().trim();
-    return mockCursos.filter(
-      (curso) =>
-        curso.name.toLowerCase().includes(term) ||
-        curso.professor.toLowerCase().includes(term) ||
-        curso.tag.toLowerCase().includes(term),
-    );
-  }, [searchTerm]);
+  const {
+    items: cursos,
+    total,
+    page,
+    totalPages,
+    loading,
+    search,
+    setSearch,
+    prev,
+    next,
+  } = usePaginatedData(listCursosPaginated, PAGE_SIZE);
 
   return (
     <div className="flex flex-col">
       <CreateCursoDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
       <main className="p-6">
         <div className="space-y-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -78,32 +56,31 @@ export default function Cursos() {
                 Gerencie os cursos realizados.
               </p>
             </div>
+
             <Button
               onClick={() => setDialogOpen(true)}
-              className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium whitespace-nowrap shadow-sm transition-all duration-200 hover:shadow-md focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all duration-200 hover:shadow-md"
             >
               <FolderPlus />
               Novo Curso
             </Button>
           </div>
+
           <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-4">
             <div className="flex flex-col gap-4 sm:flex-row">
               <div className="relative flex-1">
                 <FolderSearch2 className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2" />
                 <Input
                   type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 pl-10 text-base file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
                   placeholder="Buscar por curso..."
                 />
               </div>
-              <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border-input bg-background hover:bg-accent hover:text-accent-foreground inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                <Funnel />
-                Filtros
-              </Button>
             </div>
           </div>
+
           <div>
             <div className="overflow-x-auto">
               <Table>
@@ -113,32 +90,44 @@ export default function Cursos() {
                       Curso
                     </TableHead>
                     <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
-                      Professor
+                      Duração (meses)
                     </TableHead>
                     <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
-                      Etiqueta
+                      Descrição
                     </TableHead>
                     <TableHead className="text-muted-foreground px-6 py-4 text-right text-sm font-medium">
                       Ações
                     </TableHead>
                   </TableRow>
                 </TableHeader>
+
                 <TableBody>
-                  {filteredCursos.length === 0 ? (
+                  {loading ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-muted-foreground px-6 py-6 text-center"
+                      >
+                        Carregando cursos...
+                      </TableCell>
+                    </TableRow>
+                  ) : cursos.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={4}
                         className="text-muted-foreground px-6 py-4 text-center"
                       >
-                        {searchTerm
+                        {search
                           ? "Nenhum curso encontrado com o termo pesquisado."
                           : "Nenhum curso encontrado."}
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredCursos.map((curso) => {
-                      const initials = curso.name
+                    cursos.map((curso) => {
+                      const name = curso.name || "Curso";
+                      const initials = name
                         .split(" ")
+                        .filter(Boolean)
                         .map((n) => n[0])
                         .join("")
                         .toUpperCase()
@@ -158,25 +147,45 @@ export default function Cursos() {
                               </div>
                               <div>
                                 <p className="text-foreground text-sm font-medium">
-                                  {curso.name}
+                                  {name}
                                 </p>
                               </div>
                             </div>
                           </TableCell>
+
                           <TableCell className="text-foreground px-6 py-4 text-sm">
-                            {curso.professor}
+                            {curso.durationMonths ?? "-"}
                           </TableCell>
-                          <TableCell className="text-foreground px-6 py-4 text-sm">
-                            {curso.tag}
+
+                          <TableCell className="text-muted-foreground px-6 py-4 text-sm">
+                            {curso.description ? (
+                              <span className="line-clamp-2">
+                                {curso.description}
+                              </span>
+                            ) : (
+                              "-"
+                            )}
                           </TableCell>
+
                           <TableCell className="px-6 py-4 text-right">
                             <div className="flex items-center justify-end gap-2">
-                              <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                                <Eye />
-                                Ver Turma
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  router.push(`/admin/cursos/${curso.id}`)
+                                }
+                              >
+                                <Eye className="mr-2 h-4 w-4" />
+                                Ver curso
                               </Button>
-                              <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center gap-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
-                                <EllipsisVertical />
+
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                aria-label="Mais ações"
+                              >
+                                <EllipsisVertical className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>
@@ -187,15 +196,25 @@ export default function Cursos() {
                 </TableBody>
               </Table>
             </div>
+
             <div className="border-border/50 flex items-center justify-between border-t px-6 py-4">
               <p className="text-muted-foreground text-sm">
-                Mostrando {filteredCursos.length} de {mockCursos.length} cursos
+                Mostrando {cursos.length} de {total} cursos
               </p>
+
               <div className="flex items-center gap-2">
-                <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border-input bg-primary hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
+                <Button
+                  variant="outline"
+                  onClick={prev}
+                  disabled={page === 1 || loading}
+                >
                   Anterior
                 </Button>
-                <Button className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 border-input bg-primary hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50">
+                <Button
+                  variant="outline"
+                  onClick={next}
+                  disabled={page === totalPages || loading}
+                >
                   Próximo
                 </Button>
               </div>
