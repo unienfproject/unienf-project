@@ -1,7 +1,19 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+
 import CreateCursoDialog from "@/app/_components/admin/CreateCursoDialog";
+import EditCursoDialog from "@/app/_components/admin/EditCursoDialog";
 import { Button } from "@/app/_components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/app/_components/ui/dropdown-menu";
 import { Input } from "@/app/_components/ui/input";
 import {
   Table,
@@ -11,33 +23,51 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { usePaginatedData } from "@/app/_hooks/usePaginatedData";
-import { listCursosPaginated } from "@/app/_lib/actions/cursos";
-import { EllipsisVertical, Eye, FolderPlus, FolderSearch2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import {
+  EllipsisVertical,
+  Eye,
+  FolderPlus,
+  FolderSearch2,
+  Pencil,
+} from "lucide-react";
 
-const PAGE_SIZE = 10;
+import { CursoRow } from "@/app/_lib/actions/cursos";
 
-export default function Cursos() {
-  const [dialogOpen, setDialogOpen] = useState(false);
+interface CursosProps {
+  cursos: CursoRow[];
+}
+
+export default function Cursos({ cursos = [] }: CursosProps) {
   const router = useRouter();
 
-  const {
-    items: cursos,
-    total,
-    page,
-    totalPages,
-    loading,
-    search,
-    setSearch,
-    prev,
-    next,
-  } = usePaginatedData(listCursosPaginated, PAGE_SIZE);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedCurso, setSelectedCurso] = useState<CursoRow | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const filteredCursos = useMemo(() => {
+    if (!searchTerm.trim()) return cursos;
+
+    const term = searchTerm.toLowerCase().trim();
+    return cursos.filter((curso) => {
+      const nome = curso.name?.toLowerCase() ?? "";
+      const professor = curso.id?.toLowerCase() ?? "";
+
+      return nome.includes(term) || professor.includes(term);
+    });
+  }, [cursos, searchTerm]);
 
   return (
     <div className="flex flex-col">
       <CreateCursoDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <EditCursoDialog
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open);
+          if (!open) setSelectedCurso(null);
+        }}
+        curso={selectedCurso}
+      />
 
       <main className="p-6">
         <div className="space-y-6">
@@ -51,154 +81,138 @@ export default function Cursos() {
               </p>
             </div>
 
-            <Button
-              onClick={() => setDialogOpen(true)}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all duration-200 hover:shadow-md"
-            >
+            <Button onClick={() => setDialogOpen(true)}>
               <FolderPlus />
               Novo Curso
             </Button>
           </div>
 
           <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-4">
-            <div className="flex flex-col gap-4 sm:flex-row">
-              <div className="relative flex-1">
-                <FolderSearch2 className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2" />
-                <Input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
-                  placeholder="Buscar por curso..."
-                />
-              </div>
+            <div className="relative flex-1">
+              <FolderSearch2 className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por curso, professor ou etiqueta..."
+                className="pl-10"
+              />
             </div>
           </div>
 
-          <div>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-muted/30">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/30">
+                <TableRow>
+                  <TableHead>Curso</TableHead>
+                  <TableHead>Professor</TableHead>
+                  <TableHead>Etiqueta</TableHead>
+                  <TableHead className="text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+
+              <TableBody>
+                {filteredCursos.length === 0 ? (
                   <TableRow>
-                    <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
-                      Curso
-                    </TableHead>
-                    <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
-                      Duração (meses)
-                    </TableHead>
-                    <TableHead className="text-muted-foreground px-6 py-4 text-right text-sm font-medium">
-                      Ações
-                    </TableHead>
+                    <TableCell
+                      colSpan={4}
+                      className="text-muted-foreground px-6 py-4 text-center"
+                    >
+                      {searchTerm
+                        ? "Nenhum curso encontrado com o termo pesquisado."
+                        : "Nenhum curso encontrado."}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
+                ) : (
+                  filteredCursos.map((curso) => {
+                    const initials = curso.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                      .slice(0, 2);
 
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={3}
-                        className="text-muted-foreground px-6 py-6 text-center"
+                    return (
+                      <TableRow
+                        key={curso.id}
+                        className="border-border/50 hover:bg-muted/20 bg-background border-b transition-colors last:border-0"
                       >
-                        Carregando cursos...
-                      </TableCell>
-                    </TableRow>
-                  ) : cursos.length === 0 ? (
-                    <TableRow>
-                      <TableCell
-                        colSpan={3}
-                        className="text-muted-foreground px-6 py-4 text-center"
-                      >
-                        {search
-                          ? "Nenhum curso encontrado com o termo pesquisado."
-                          : "Nenhum curso encontrado."}
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    cursos.map((curso) => {
-                      const name = curso.name || "Curso";
-                      const initials = name
-                        .split(" ")
-                        .filter(Boolean)
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()
-                        .slice(0, 2);
-
-                      return (
-                        <TableRow
-                          key={curso.id}
-                          className="border-border/50 hover:bg-muted/20 bg-background border-b transition-colors last:border-0"
-                        >
-                          <TableCell className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                                <span className="text-primary text-sm font-semibold">
-                                  {initials}
-                                </span>
-                              </div>
-                              <div>
-                                <p className="text-foreground text-sm font-medium">
-                                  {name}
-                                </p>
-                              </div>
+                        <TableCell className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                              <span className="text-primary text-sm font-semibold">
+                                {initials}
+                              </span>
                             </div>
-                          </TableCell>
+                            <p className="text-foreground text-sm font-medium">
+                              {curso.name}
+                            </p>
+                          </div>
+                        </TableCell>
 
-                          <TableCell className="text-foreground px-6 py-4 text-sm">
-                            {curso.durationMonths ?? "-"}
-                          </TableCell>
+                        <TableCell className="text-foreground px-6 py-4 text-sm">
+                          {curso.id || "-"}
+                        </TableCell>
 
-                          <TableCell className="px-6 py-4 text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  router.push(`/admin/cursos/${curso.id}`)
-                                }
-                              >
-                                <Eye className="mr-2 h-4 w-4" />
-                                Ver curso
-                              </Button>
+                        <TableCell className="text-foreground px-6 py-4 text-sm">
+                          {curso.name || "-"}
+                        </TableCell>
 
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                aria-label="Mais ações"
-                              >
-                                <EllipsisVertical className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
+                        <TableCell className="px-6 py-4 text-right">
+                          <div className="flex items-center justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="ring-offset-background focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                                  aria-label="Ações do curso"
+                                >
+                                  <EllipsisVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
 
-            <div className="border-border/50 flex items-center justify-between border-t px-6 py-4">
-              <p className="text-muted-foreground text-sm">
-                Mostrando {cursos.length} de {total} cursos
-              </p>
+                              <DropdownMenuContent align="end" className="w-44">
+                                <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                                <DropdownMenuSeparator />
 
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  onClick={prev}
-                  disabled={page === 1 || loading}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={next}
-                  disabled={page === totalPages || loading}
-                >
-                  Próximo
-                </Button>
-              </div>
+                                <DropdownMenuItem
+                                  className="cursor-pointer"
+                                  onClick={() =>
+                                    router.push(`/admin/cursos/${curso.id}`)
+                                  }
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  Ver Curso
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  className="cursor-pointer"
+                                  onClick={() => {
+                                    setSelectedCurso(curso);
+                                    setEditDialogOpen(true);
+                                  }}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Editar
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="border-border/50 flex items-center justify-between border-t px-6 py-4">
+            <p className="text-muted-foreground text-sm">
+              Mostrando {filteredCursos.length} de {cursos.length} cursos
+            </p>
+            <div className="flex items-center gap-2">
+              <Button variant="outline">Anterior</Button>
+              <Button variant="outline">Próximo</Button>
             </div>
           </div>
         </div>

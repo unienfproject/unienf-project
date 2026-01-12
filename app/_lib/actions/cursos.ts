@@ -50,6 +50,48 @@ export async function createCurso(input: {
   return { cursoId: curso.id };
 }
 
+export async function updateCurso(input: {
+  id: string;
+  name: string;
+  description?: string | null;
+  durationMonths?: number | null;
+}): Promise<void> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessao invalida.");
+  if (profile.role !== "administrativo") {
+    throw new Error("Sem permissao para atualizar cursos.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const name = input.name.trim();
+  if (!name) throw new Error("Nome do curso e obrigatorio.");
+
+  const payload = {
+    name,
+    description: input.description?.trim() || null,
+    duration_months: input.durationMonths ?? null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase
+    .from("cursos")
+    .update(payload)
+    .eq("id", input.id);
+
+  if (error) throw new Error(error.message);
+
+  await logAudit({
+    action: "update",
+    entity: "turma",
+    entityId: input.id,
+    newValue: payload,
+    description: `Curso ${name} atualizado`,
+  });
+
+  revalidatePath("/admin/cursos");
+}
+
 export type CursoRow = {
   id: string;
   name: string;
