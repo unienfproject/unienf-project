@@ -1,16 +1,16 @@
+import type { ReactNode } from "react";
 import StatusBadge from "@/app/_components/StatusBadge";
+import CreateCostModal from "./CreateCostModal";
 import {
-  Cost,
-  MensalidadeRow,
+  type Cost,
+  type MensalidadeRow,
+  getCostsByMonth,
+  getMonthlySummary,
   getFinanceiroEntriesByMonth,
   getMensalidadesByMonth,
 } from "@/app/_lib/actions/finance";
-import CreateCostModal from "./CreateCostModal";
-
-import {
-  getCostsByMonth,
-  getMonthlySummary,
-} from "../../_lib/mockdata/finance.mock";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
 
 function monthLabel(month: number) {
   return (
@@ -417,7 +417,7 @@ function Card({
 }: {
   title: string;
   value: string;
-  badge: React.ReactNode;
+  badge: ReactNode;
   helper?: string;
 }) {
   return (
@@ -446,7 +446,7 @@ function PeriodPicker({ year, month }: { year: number; month: number }) {
     <form className="flex items-end gap-2" action="/admin/financeiro">
       <div className="flex flex-col gap-1">
         <span className="text-xs text-slate-600">Ano</span>
-        <input
+        <Input
           name="year"
           defaultValue={year}
           className="h-10 w-[110px] rounded-md border border-slate-200 bg-white px-3 text-sm"
@@ -466,12 +466,12 @@ function PeriodPicker({ year, month }: { year: number; month: number }) {
           ))}
         </select>
       </div>
-      <button
+      <Button
         type="submit"
-        className="h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 hover:bg-slate-50"
+        className="hover:bg-primary h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 hover:text-white"
       >
         Aplicar
-      </button>
+      </Button>
     </form>
   );
 }
