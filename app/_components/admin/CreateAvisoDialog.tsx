@@ -1,3 +1,4 @@
+// cspell:ignore avisos alunos Buscar Cancelar Criar Crie Destinatário Digite Erro   Início Mensagem Nenhum Salvando Selecione Turma Turmas Título aulas carregar criado encontrado específica específicas menos obrigatória obrigatório pelo práticas     selecionado selecionados sucesso
 "use client";
 
 import { Button } from "@/app/_components/ui/button";
@@ -244,6 +245,7 @@ export default function CreateAvisoDialog({
           <DialogFooter>
             <Button
               type="button"
+              className="hover:bg-red-600 hover:text-white"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={pending}
