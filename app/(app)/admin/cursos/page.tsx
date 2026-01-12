@@ -11,17 +11,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import {
-  EllipsisVertical,
-  Eye,
-  FolderPlus,
-  FolderSearch2,
-  Funnel,
-} from "lucide-react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { usePaginatedData } from "@/app/_hooks/usePaginatedData";
 import { listCursosPaginated } from "@/app/_lib/actions/cursos";
+import { EllipsisVertical, Eye, FolderPlus, FolderSearch2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 const PAGE_SIZE = 10;
 
@@ -92,9 +86,6 @@ export default function Cursos() {
                     <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
                       Duração (meses)
                     </TableHead>
-                    <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
-                      Descrição
-                    </TableHead>
                     <TableHead className="text-muted-foreground px-6 py-4 text-right text-sm font-medium">
                       Ações
                     </TableHead>
@@ -105,7 +96,7 @@ export default function Cursos() {
                   {loading ? (
                     <TableRow>
                       <TableCell
-                        colSpan={4}
+                        colSpan={3}
                         className="text-muted-foreground px-6 py-6 text-center"
                       >
                         Carregando cursos...
@@ -114,7 +105,7 @@ export default function Cursos() {
                   ) : cursos.length === 0 ? (
                     <TableRow>
                       <TableCell
-                        colSpan={4}
+                        colSpan={3}
                         className="text-muted-foreground px-6 py-4 text-center"
                       >
                         {search
@@ -155,16 +146,6 @@ export default function Cursos() {
 
                           <TableCell className="text-foreground px-6 py-4 text-sm">
                             {curso.durationMonths ?? "-"}
-                          </TableCell>
-
-                          <TableCell className="text-muted-foreground px-6 py-4 text-sm">
-                            {curso.description ? (
-                              <span className="line-clamp-2">
-                                {curso.description}
-                              </span>
-                            ) : (
-                              "-"
-                            )}
                           </TableCell>
 
                           <TableCell className="px-6 py-4 text-right">

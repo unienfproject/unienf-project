@@ -23,7 +23,8 @@ export type AuditEntity =
   | "aluno"
   | "professor"
   | "observacao_pedagogica"
-  | "etiqueta";
+  | "etiqueta"
+  | "curso";
 
 export interface AuditLog {
   id: string;
