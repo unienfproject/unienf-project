@@ -1,16 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import StatusBadge from "@/app/_components/StatusBadge";
 import {
-  getAllInstallmentsByMonth,
-  markInstallmentPaid,
-  markInstallmentPending,
-} from "../../_lib/mockdata/finance.mock";
-import type {
-  PaymentMethod,
-  TuitionInstallment,
+  listMensalidadesForRecepcao,
+  markMensalidadeAsPaid,
+  type PaymentMethod,
+  type TuitionInstallment,
 } from "@/app/_lib/actions/mensalidades";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 
 const methods: { value: PaymentMethod; label: string }[] = [
   { value: "dinheiro", label: "Dinheiro" },
@@ -39,17 +37,33 @@ function monthLabel(month: number) {
 }
 
 export default function FinanceiroRecepcaoView() {
-  const [year, setYear] = useState(2025);
-  const [month, setMonth] = useState(2);
+  const router = useRouter();
+  const [year, setYear] = useState(new Date().getFullYear());
+  const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<TuitionInstallment[]>([]);
   const [loading, setLoading] = useState(false);
 
   async function load() {
     setLoading(true);
-    const data = await getAllInstallmentsByMonth(year, month);
-    setRows(data);
-    setLoading(false);
+    try {
+      const allMensalidades = await listMensalidadesForRecepcao({
+        status: "todos",
+      });
+      const filtered = allMensalidades.filter(
+        (m) => m.competenceYear === year && m.competenceMonth === month,
+      );
+      setRows(filtered);
+    } catch (error) {
+      console.error("Erro ao carregar mensalidades:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Erro ao carregar mensalidades.",
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   const filtered = useMemo(() => {
@@ -151,12 +165,26 @@ export default function FinanceiroRecepcaoView() {
                   key={r.id}
                   row={r}
                   onPaid={async (data) => {
-                    await markInstallmentPaid(r.id, data);
-                    await load();
-                  }}
-                  onPending={async () => {
-                    await markInstallmentPending(r.id);
-                    await load();
+                    try {
+                      await markMensalidadeAsPaid({
+                        mensalidadeId: r.id,
+                        valorPago: data.paidAmount,
+                        formaPagamento: data.paymentMethod,
+                        dataPagamento: data.paidAt,
+                      });
+                      router.refresh();
+                      await load();
+                    } catch (error) {
+                      console.error(
+                        "Erro ao marcar mensalidade como paga:",
+                        error,
+                      );
+                      alert(
+                        error instanceof Error
+                          ? error.message
+                          : "Erro ao marcar mensalidade como paga.",
+                      );
+                    }
                   }}
                 />
               ))}
@@ -184,7 +212,6 @@ export default function FinanceiroRecepcaoView() {
 function Row({
   row,
   onPaid,
-  onPending,
 }: {
   row: TuitionInstallment;
   onPaid: (data: {
@@ -192,7 +219,6 @@ function Row({
     paidAt: string;
     paymentMethod: PaymentMethod;
   }) => Promise<void>;
-  onPending: () => Promise<void>;
 }) {
   const [amount, setAmount] = useState(row.valorPago ?? 350);
   const [date, setDate] = useState(
@@ -215,43 +241,62 @@ function Row({
       </td>
 
       <td className="p-3">
-        <input
-          className="w-[140px] rounded-md border px-2 py-1 text-sm"
-          value={amount}
-          onChange={(e) => setAmount(Number(e.target.value))}
-        />
+        {row.status === "pago" ? (
+          <span className="text-slate-700">
+            R$ {row.valorPago?.toFixed(2) ?? "0.00"}
+          </span>
+        ) : (
+          <input
+            className="w-[140px] rounded-md border px-2 py-1 text-sm"
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+          />
+        )}
       </td>
 
       <td className="p-3">
-        <select
-          className="w-[160px] rounded-md border px-2 py-1 text-sm"
-          value={method}
-          onChange={(e) => setMethod(e.target.value as PaymentMethod)}
-        >
-          {methods.map((m) => (
-            <option key={m.value} value={m.value}>
-              {m.label}
-            </option>
-          ))}
-        </select>
+        {row.status === "pago" ? (
+          <span className="text-slate-700">
+            {row.formaPagamento
+              ? (methods.find((m) => m.value === row.formaPagamento)?.label ??
+                row.formaPagamento)
+              : "-"}
+          </span>
+        ) : (
+          <select
+            className="w-[160px] rounded-md border px-2 py-1 text-sm"
+            value={method}
+            onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+          >
+            {methods.map((m) => (
+              <option key={m.value} value={m.value}>
+                {m.label}
+              </option>
+            ))}
+          </select>
+        )}
       </td>
 
       <td className="p-3">
-        <input
-          className="w-[160px] rounded-md border px-2 py-1 text-sm"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-        />
+        {row.status === "pago" ? (
+          <span className="text-slate-700">
+            {row.dataPagamento
+              ? new Date(row.dataPagamento).toLocaleDateString("pt-BR")
+              : "-"}
+          </span>
+        ) : (
+          <input
+            type="date"
+            className="w-[160px] rounded-md border px-2 py-1 text-sm"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+          />
+        )}
       </td>
 
       <td className="flex flex-wrap gap-2 p-3">
         {row.status === "pago" ? (
-          <button
-            onClick={onPending}
-            className="rounded-md border px-3 py-2 text-sm hover:bg-slate-50"
-          >
-            Voltar p/ pendente
-          </button>
+          <span className="text-sm text-slate-600">Pagamento registrado</span>
         ) : (
           <button
             onClick={() =>
@@ -267,12 +312,14 @@ function Row({
           </button>
         )}
 
-        <button
-          onClick={() => window.print()}
-          className="rounded-md border px-3 py-2 text-sm hover:bg-slate-50"
-        >
-          Imprimir recibo
-        </button>
+        {row.status === "pago" && (
+          <button
+            onClick={() => window.print()}
+            className="rounded-md border px-3 py-2 text-sm hover:bg-slate-50"
+          >
+            Imprimir recibo
+          </button>
+        )}
       </td>
     </tr>
   );
