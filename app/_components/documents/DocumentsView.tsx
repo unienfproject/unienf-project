@@ -1,14 +1,16 @@
 "use client";
 
-import { DocumentItem } from "../../_lib/actions/documents";
-import { updateStudentDocument } from "../../_lib/mockdata/docs.mock";
+import { useRouter } from "next/navigation";
+import {
+  DocumentItem,
+  updateDocumentStatus,
+} from "../../_lib/actions/documents";
 import DocumentCard from "./DocumentCard";
 
 type Props = {
   title: string;
   subtitle: string;
   canEdit: boolean;
-  studentId: string;
   docs: DocumentItem[];
 };
 
@@ -16,14 +18,72 @@ export default function DocumentsView({
   title,
   subtitle,
   canEdit,
-  studentId,
   docs,
 }: Props) {
+  const router = useRouter();
   const total = docs.filter((d) => d.required).length;
   const delivered = docs.filter(
     (d) => d.required && d.status === "delivered",
   ).length;
   const pct = total > 0 ? Math.round((delivered / total) * 100) : 0;
+
+  async function handleMarkDelivered(documentId: string, delivered: boolean) {
+    try {
+      await updateDocumentStatus({
+        documentId,
+        status: delivered ? "delivered" : "pending",
+      });
+      router.refresh();
+    } catch (error) {
+      console.error("Erro ao atualizar status do documento:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Erro ao atualizar status do documento.",
+      );
+    }
+  }
+
+  async function handleMarkRejected(
+    documentId: string,
+    rejected: boolean,
+    notes?: string,
+  ) {
+    try {
+      await updateDocumentStatus({
+        documentId,
+        status: rejected ? "rejected" : "pending",
+        rejectedReason: rejected ? notes || null : null,
+      });
+      router.refresh();
+    } catch (error) {
+      console.error("Erro ao atualizar status do documento:", error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Erro ao atualizar status do documento.",
+      );
+    }
+  }
+
+  async function handleSaveNotes(documentId: string, notes: string) {
+    try {
+      const currentDoc = docs.find((d) => d.id === documentId);
+      if (!currentDoc) return;
+
+      await updateDocumentStatus({
+        documentId,
+        status: currentDoc.status,
+        observacao: notes || null,
+      });
+      router.refresh();
+    } catch (error) {
+      console.error("Erro ao salvar observação:", error);
+      alert(
+        error instanceof Error ? error.message : "Erro ao salvar observação.",
+      );
+    }
+  }
 
   return (
     <div className="bg-background flex min-h-screen flex-col">
@@ -59,18 +119,13 @@ export default function DocumentsView({
             doc={doc}
             canEdit={canEdit}
             onMarkDelivered={async (delivered) => {
-              await updateStudentDocument(studentId, doc.id, {
-                status: delivered ? "delivered" : "pending",
-              });
+              await handleMarkDelivered(doc.id, delivered);
             }}
             onMarkRejected={async (rejected, notes) => {
-              await updateStudentDocument(studentId, doc.id, {
-                status: rejected ? "rejected" : "pending",
-                notes: rejected ? notes : doc.notes,
-              });
+              await handleMarkRejected(doc.id, rejected, notes);
             }}
             onSaveNotes={async (notes) => {
-              await updateStudentDocument(studentId, doc.id, { notes });
+              await handleSaveNotes(doc.id, notes);
             }}
           />
         ))}
