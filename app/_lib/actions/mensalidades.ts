@@ -174,6 +174,29 @@ export async function listMensalidadesForRecepcao(params?: {
     return buildMensalidadesMock({ status, studentId });
   }
 
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  const mensalidadeIds = data.map((r: { id: unknown }) => String(r.id));
+  const { data: pagamentos } = await supabase
+    .from("pagamentos")
+    .select("mensalidade_id, forma_pagamento")
+    .in("mensalidade_id", mensalidadeIds)
+    .order("created_at", { ascending: false });
+
+  const formaPagamentoMap = new Map<string, FormaPagamento | null>();
+  if (pagamentos) {
+    for (const pagamento of pagamentos) {
+      if (!formaPagamentoMap.has(pagamento.mensalidade_id)) {
+        formaPagamentoMap.set(
+          pagamento.mensalidade_id,
+          (pagamento.forma_pagamento as FormaPagamento) || null,
+        );
+      }
+    }
+  }
+
   type SupabaseRow = {
     id: unknown;
     aluno_id: unknown;
@@ -198,7 +221,7 @@ export async function listMensalidadesForRecepcao(params?: {
       status: r.status as MensalidadeStatus,
       valor_mensalidade: Number(r.valor_mensalidade),
       valorPago: r.valor_pago == null ? null : Number(r.valor_pago),
-      formaPagamento: null as FormaPagamento | null,
+      formaPagamento: formaPagamentoMap.get(String(r.id)) || null,
       dataPagamento: (r.data_pagamento ?? null) as string | null,
     };
   });
