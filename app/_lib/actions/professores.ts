@@ -1,11 +1,11 @@
 "use server";
 
 import { logAudit } from "@/app/_lib/actions/audit";
+import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -71,6 +71,19 @@ export async function createProfessor(input: {
   if (!created.user) throw new Error("Falha ao criar usuário.");
 
   const userId = created.user.id;
+
+  const { error: profileErr } = await supabase
+    .from("profiles")
+    .update({
+      name,
+      telefone,
+      email,
+      role: "professor",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+
+  if (profileErr) throw new Error(profileErr.message);
 
   await logAudit({
     action: "create",
