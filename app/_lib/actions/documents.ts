@@ -3,17 +3,15 @@
 import { logAudit } from "@/app/_lib/actions/audit";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
-import { revalidatePath } from "next/cache";
 import type { DocumentoStatus } from "@/app/_lib/types/database";
-
-export type DocumentStatus = "pending" | "delivered" | "rejected";
+import { revalidatePath } from "next/cache";
 
 export type DocumentItem = {
   id: string;
   documentTypeId: string;
-  title: string;
+  documentTypeName: string;
   required: boolean;
-  status: DocumentStatus;
+  status: DocumentoStatus;
   notes?: string | null;
   updatedAt: string; // ISO
 };
@@ -60,15 +58,15 @@ export async function listMyDocuments(): Promise<DocumentItem[]> {
   }
 
   type DocumentoRow = {
-    id: string;
-    document_type_id: string;
-    status: string;
-    observation: string | null;
-    rejected_reason: string | null;
-    updated_at: string;
+    id: unknown;
+    document_type_id: unknown;
+    status: unknown;
+    observation: unknown;
+    rejected_reason: unknown;
+    updated_at: unknown;
     documento_tipos:
-      | { name: string; required: boolean }
-      | { name: string; required: boolean }[]
+      | { id: unknown; name: unknown; required: unknown }
+      | { id: unknown; name: unknown; required: unknown }[]
       | null;
   };
 
@@ -79,17 +77,19 @@ export async function listMyDocuments(): Promise<DocumentItem[]> {
 
     const notes =
       doc.status === "rejected" && doc.rejected_reason
-        ? doc.rejected_reason
-        : doc.observation || null;
+        ? String(doc.rejected_reason)
+        : doc.observation
+          ? String(doc.observation)
+          : null;
 
     return {
       id: String(doc.id),
       documentTypeId: String(doc.document_type_id),
-      title: tipo?.name || "Documento",
-      required: tipo?.required ?? false,
-      status: doc.status as DocumentStatus,
+      documentTypeName: tipo?.name ? String(tipo.name) : "Documento",
+      required: tipo?.required ? Boolean(tipo.required) : false,
+      status: doc.status as DocumentoStatus,
       notes,
-      updatedAt: doc.updated_at,
+      updatedAt: String(doc.updated_at),
     };
   });
 }
@@ -140,15 +140,15 @@ export async function listStudentDocuments(
   }
 
   type DocumentoRow = {
-    id: string;
-    document_type_id: string;
-    status: string;
-    observation: string | null;
-    rejected_reason: string | null;
-    updated_at: string;
+    id: unknown;
+    document_type_id: unknown;
+    status: unknown;
+    observation: unknown;
+    rejected_reason: unknown;
+    updated_at: unknown;
     documento_tipos:
-      | { name: string; required: boolean }
-      | { name: string; required: boolean }[]
+      | { id: unknown; name: unknown; required: unknown }
+      | { id: unknown; name: unknown; required: unknown }[]
       | null;
   };
 
@@ -159,25 +159,27 @@ export async function listStudentDocuments(
 
     const notes =
       doc.status === "rejected" && doc.rejected_reason
-        ? doc.rejected_reason
-        : doc.observation || null;
+        ? String(doc.rejected_reason)
+        : doc.observation
+          ? String(doc.observation)
+          : null;
 
     return {
       id: String(doc.id),
       documentTypeId: String(doc.document_type_id),
-      title: tipo?.name || "Documento",
-      required: tipo?.required ?? false,
-      status: doc.status as DocumentStatus,
+      documentTypeName: tipo?.name ? String(tipo.name) : "Documento",
+      required: tipo?.required ? Boolean(tipo.required) : false,
+      status: doc.status as DocumentoStatus,
       notes,
-      updatedAt: doc.updated_at,
+      updatedAt: String(doc.updated_at),
     };
   });
 }
 
 export async function updateDocumentStatus(input: {
   documentId: string;
-  status: DocumentStatus;
-  observacao?: string | null;
+  status: DocumentoStatus;
+  observation?: string | null;
   rejectedReason?: string | null;
 }) {
   const profile = await getUserProfile();
@@ -207,7 +209,7 @@ export async function updateDocumentStatus(input: {
   };
 
   const updateData: {
-    status: DocumentStatus;
+    status: DocumentoStatus;
     observation?: string | null;
     rejected_reason?: string | null;
     updated_at: string;
@@ -225,8 +227,10 @@ export async function updateDocumentStatus(input: {
     }
   } else {
     updateData.rejected_reason = null;
-    if (input.observacao !== undefined) {
-      updateData.observation = input.observacao ? input.observacao.trim() : null;
+    if (input.observation !== undefined) {
+      updateData.observation = input.observation
+        ? input.observation.trim()
+        : null;
     } else {
       updateData.observation = currentDoc.observation;
     }
@@ -257,7 +261,7 @@ export type PendingDocumentRow = {
   documentId: string;
   alunoId: string; // profiles.user_id (FK em documentos_aluno.aluno_id)
   alunoName: string;
-  documentTitle: string;
+  documentTypeName: string;
   updatedAt: string;
 };
 
@@ -316,7 +320,7 @@ export async function listPendingDocumentsForDashboard(): Promise<
       documentId: String(r.id),
       alunoId: String(r.aluno_id),
       alunoName: prof?.name ?? "Aluno",
-      documentTitle: docTipo?.name ?? "Documento",
+      documentTypeName: docTipo?.name ?? "Documento",
       updatedAt: String(r.updated_at),
     };
   });

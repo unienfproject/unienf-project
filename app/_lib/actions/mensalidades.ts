@@ -7,13 +7,13 @@ import { revalidatePath } from "next/cache";
 
 import type {
   FormaPagamento,
-  MensalidadeRow,
   MensalidadeStatus,
 } from "@/app/_lib/actions/finance";
+import type { Mensalidade } from "@/app/_lib/types/database";
 
 export type PaymentStatus = MensalidadeStatus;
 export type PaymentMethod = FormaPagamento;
-export type TuitionInstallment = MensalidadeRow;
+export type TuitionInstallment = Mensalidade;
 
 const ALLOWED_FORMS: readonly FormaPagamento[] = [
   "dinheiro",
@@ -134,7 +134,7 @@ export async function markMensalidadeAsPaid(input: {
 export async function listMensalidadesForRecepcao(params?: {
   status?: "pendente" | "pago" | "todos";
   studentId?: string | null;
-}): Promise<MensalidadeRow[]> {
+}): Promise<Mensalidade[]> {
   await requireUserRole(["recepção", "administrativo"]);
 
   const supabase = await createServerSupabaseClient();
@@ -166,7 +166,7 @@ export async function listMensalidadesForRecepcao(params?: {
 
   if (error) {
     console.warn("[listMensalidadesForRecepcao] fallback mock:", error.message);
-    return buildMensalidadesMock({ status, studentId });
+    return buildMensalidadesMock({ status, studentId }) as Mensalidade[];
   }
 
   if (!data || data.length === 0) {
@@ -213,7 +213,7 @@ export async function listMensalidadesForRecepcao(params?: {
     profiles: { name: unknown } | { name: unknown }[] | null;
   };
 
-  return ((data as unknown as SupabaseRow[]) ?? []).map((r) => {
+  return ((data as unknown as SupabaseRow[]) ?? []).map((r: SupabaseRow) => {
     const profile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
     const pagamento = pagamentoMap.get(String(r.id));
     const paidAtDate = pagamento?.paid_at
@@ -239,8 +239,8 @@ export async function listMensalidadesForRecepcao(params?: {
 function buildMensalidadesMock(input: {
   status: "pendente" | "pago" | "todos";
   studentId?: string;
-}): MensalidadeRow[] {
-  const base: MensalidadeRow[] = [
+}): Mensalidade[] {
+  const base: Mensalidade[] = [
     {
       id: "m1",
       studentId: input.studentId || "student-1",
@@ -499,7 +499,7 @@ export async function deletePagamento(pagamentoId: string) {
 
 export async function listMensalidadesByStudent(
   studentId: string,
-): Promise<MensalidadeRow[]> {
+): Promise<Mensalidade[]> {
   const id = String(studentId ?? "").trim();
   if (!id || id === "undefined" || id === "null") {
     throw new Error("ID do aluno inválido.");
@@ -532,7 +532,9 @@ export async function listMensalidadesByStudent(
     return [];
   }
 
-  const mensalidadeIds = mensalidades.map((m) => m.id);
+  const mensalidadeIds = mensalidades.map((m: { id: unknown }) =>
+    String(m.id),
+  ) as string[];
 
   const { data: pagamentos, error: pagamentosError } = await supabase
     .from("pagamentos")
@@ -599,7 +601,7 @@ export async function listMensalidadesByStudent(
   });
 }
 
-export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
+export async function listMyMensalidades(): Promise<Mensalidade[]> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
 
@@ -626,7 +628,9 @@ export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
     return [];
   }
 
-  const mensalidadeIds = mensalidades.map((m) => m.id);
+  const mensalidadeIds = mensalidades.map((m: { id: unknown }) =>
+    String(m.id),
+  ) as string[];
 
   const { data: pagamentos, error: pagamentosError } = await supabase
     .from("pagamentos")
@@ -672,7 +676,7 @@ export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
   const studentName = profileData?.name || profile.name || "Aluno";
 
   return mensalidades.map((m) => {
-    const pagamento = pagamentoMap.get(m.id);
+    const pagamento = pagamentoMap.get(String(m.id));
     const paidAtDate = pagamento?.paid_at
       ? new Date(pagamento.paid_at).toISOString().split("T")[0]
       : null;

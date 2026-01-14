@@ -1,6 +1,12 @@
 "use client";
 
 import { Button } from "@/app/_components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/app/_components/ui/dropdown-menu";
 import { Input } from "@/app/_components/ui/input";
 import {
   Table,
@@ -15,7 +21,7 @@ import {
   updateStudentProfile,
   type StudentRowForRecepcao,
 } from "@/app/_lib/actions/recepcao";
-import { Search } from "lucide-react";
+import { Edit, Eye, MoreVertical, Search } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
@@ -139,71 +145,51 @@ export default function RecepcaoAlunosPage() {
                 filteredStudents.map((s) => (
                   <TableRow key={s.id} className="border-b last:border-b-0">
                     <TableCell className="p-3">
-                      <form
-                        action={handleUpdate}
-                        className="flex items-center gap-2"
-                      >
-                        <Input type="hidden" name="studentId" value={s.id} />
-                        <Input
-                          name="name"
-                          defaultValue={s.name}
-                          className="h-9 w-[320px] rounded-md border border-slate-200 px-3 text-sm"
-                        />
-                        <Button
-                          type="submit"
-                          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium hover:bg-slate-50"
-                        >
-                          Salvar
-                        </Button>
-                      </form>
+                      <p className="text-sm font-medium text-slate-900">
+                        {s.name}
+                      </p>
                     </TableCell>
 
                     <TableCell className="p-3 text-slate-700">
                       {s.email}
                     </TableCell>
 
-                    <TableCell className="p-3">
-                      <form
-                        action={handleUpdate}
-                        className="flex items-center gap-2"
-                      >
-                        <Input type="hidden" name="studentId" value={s.id} />
-                        <Input type="hidden" name="name" value={s.name} />
-                        <Input
-                          name="telefone"
-                          defaultValue={s.telefone ?? ""}
-                          className="h-9 w-[220px] rounded-md border border-slate-200 px-3 text-sm"
-                        />
-                        <Button
-                          type="submit"
-                          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-xs font-medium hover:bg-slate-50"
-                        >
-                          Salvar
-                        </Button>
-                      </form>
+                    <TableCell className="p-3 text-slate-700">
+                      {s.telefone || "-"}
                     </TableCell>
 
                     <TableCell className="p-3">
-                      <div className="flex flex-wrap gap-2">
-                        <Link
-                          href={`/recepcao/alunos/${s.id}`}
-                          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
-                        >
-                          Ver perfil
-                        </Link>
-                        <Link
-                          href={`/recepcao/alunos/${s.id}/documentos`}
-                          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
-                        >
-                          Documentos
-                        </Link>
-                        <Link
-                          href={`/recepcao/financeiro?studentId=${s.id}`}
-                          className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
-                        >
-                          Financeiro
-                        </Link>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={`/recepcao/alunos/${s.id}`}
+                              className="flex items-center gap-2"
+                            >
+                              <Eye className="h-4 w-4" />
+                              Ver perfil
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              href={`/recepcao/alunos/${s.id}?edit=true`}
+                              className="flex items-center gap-2"
+                            >
+                              <Edit className="h-4 w-4" />
+                              Editar
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))
