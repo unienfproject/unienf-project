@@ -186,13 +186,13 @@ export default function RecepcaoAlunosPage() {
                     <TableCell className="p-3">
                       <div className="flex flex-wrap gap-2">
                         <Link
-                          href={`/dashboard/alunos/${s.id}`}
+                          href={`/recepcao/alunos/${s.id}`}
                           className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
                         >
                           Ver perfil
                         </Link>
                         <Link
-                          href={`/dashboard/alunos/${s.id}/documentos`}
+                          href={`/recepcao/alunos/${s.id}/documentos`}
                           className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium hover:bg-slate-50"
                         >
                           Documentos

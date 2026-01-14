@@ -139,7 +139,8 @@ export async function atribuirEtiquetaAoAluno(input: {
 
   revalidatePath(`/recepcao/alunos`);
   revalidatePath(`/admin/alunos`);
-  revalidatePath(`/dashboard/alunos/${input.studentId}`);
+  revalidatePath(`/recepcao/alunos/${input.studentId}`);
+  revalidatePath(`/admin/alunos/${input.studentId}`);
 }
 
 export async function removerEtiquetaDoAluno(input: {
@@ -175,7 +176,8 @@ export async function removerEtiquetaDoAluno(input: {
 
   revalidatePath(`/recepcao/alunos`);
   revalidatePath(`/admin/alunos`);
-  revalidatePath(`/dashboard/alunos/${input.studentId}`);
+  revalidatePath(`/recepcao/alunos/${input.studentId}`);
+  revalidatePath(`/admin/alunos/${input.studentId}`);
 }
 
 export async function createEtiqueta(input: { name: string; color?: string }) {

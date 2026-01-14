@@ -12,20 +12,20 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-import { useState, useTransition } from "react";
-import Link from "next/link";
 import {
+  Check,
   FileText,
   FolderOpen,
   TrendingUp,
   UserCheck,
   Users,
-  Check,
 } from "lucide-react";
+import Link from "next/link";
+import { useState, useTransition } from "react";
 
+import type { DashboardStats } from "@/app/_lib/actions/dashboard";
 import type { PendingDocumentRow } from "@/app/_lib/actions/documents";
 import { markDocumentAsDelivered } from "@/app/_lib/actions/documents";
-import type { DashboardStats } from "@/app/_lib/actions/dashboard";
 
 export default function PendingDocumentsClient({
   initialRows = [],
@@ -197,7 +197,7 @@ export default function PendingDocumentsClient({
                             <Link
                               href={`/recepcao/alunos/${row.alunoId}/documentos`}
                             >
-                              Ver perfil
+                              Ver documentos
                             </Link>
                           </Button>
                         </div>

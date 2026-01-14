@@ -79,13 +79,13 @@ export async function listAvisos(): Promise<AvisoListRow[]> {
     .select(
       `
       id,
-      titulo,
-      mensagem,
-      status,
+      title,
+      message,
       created_at,
-      target_label,
-      created_by,
-      profiles:profiles!avisos_created_by_fkey ( name )
+      scope_type,
+      turma_id,
+      author_id,
+      profiles:profiles!avisos_author_id_fkey ( name )
     `,
     )
     .order("created_at", { ascending: false });
@@ -95,48 +95,62 @@ export async function listAvisos(): Promise<AvisoListRow[]> {
     return [];
   }
 
-  const rows = (data ?? []) as any[];
+  type AvisoRow = {
+    id: unknown;
+    title: unknown;
+    message: unknown;
+    created_at: unknown;
+    scope_type: unknown;
+    turma_id: unknown;
+    author_id: unknown;
+    profiles: { name: unknown } | { name: unknown }[] | null;
+  };
 
-  // Contagem de entregas por aviso (se você não tiver a tabela, deixe sempre 0/0 ou ajuste para outro método)
-  const avisoIds = rows.map((r) => String(r.id));
-  const deliveredMap = new Map<string, number>();
+  const rows = (data ?? []) as AvisoRow[];
 
-  if (avisoIds.length) {
-    const { data: entregas, error: entregasErr } = await supabase
-      .from("aviso_entregas")
-      .select("aviso_id", { count: "exact" })
-      .in("aviso_id", avisoIds);
+  const targetCountMap = new Map<string, number>();
 
-    // Se o select acima não funcionar no seu schema, a alternativa é:
-    // .select("aviso_id") e depois contar em memória.
-    if (entregasErr) {
-      console.warn("[listAvisos] entregas erro:", entregasErr.message);
+  for (const aviso of rows) {
+    const id = String(aviso.id);
+    if (aviso.scope_type === "turma" && aviso.turma_id) {
+      const { count } = await supabase
+        .from("turma_alunos")
+        .select("*", { count: "exact", head: true })
+        .eq("turma_id", aviso.turma_id);
+      targetCountMap.set(id, count ?? 0);
+    } else if (aviso.scope_type === "alunos") {
+      const { count } = await supabase
+        .from("aviso_alunos")
+        .select("*", { count: "exact", head: true })
+        .eq("aviso_id", id);
+      targetCountMap.set(id, count ?? 0);
     } else {
-      // Quando o PostgREST não retorna "count" por grupo, contamos manualmente
-      for (const e of (entregas ?? []) as any[]) {
-        const id = String(e.aviso_id);
-        deliveredMap.set(id, (deliveredMap.get(id) ?? 0) + 1);
-      }
+      targetCountMap.set(id, 0);
     }
   }
 
-  // Total de destinatários: se você tiver uma tabela de targets (ex: aviso_targets), você calcula aqui.
-  // Por enquanto deixo totalTargets como deliveredCount para não “inventar” números.
   return rows.map((r) => {
     const profile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
     const id = String(r.id);
-    const deliveredCount = deliveredMap.get(id) ?? 0;
+    const totalTargets = targetCountMap.get(id) ?? 0;
+
+    let targetLabel: string | null = null;
+    if (r.scope_type === "turma" && r.turma_id) {
+      targetLabel = `Turma: ${String(r.turma_id)}`;
+    } else if (r.scope_type === "alunos") {
+      targetLabel = "Todos os alunos";
+    }
 
     return {
       id,
-      titulo: String(r.titulo ?? ""),
-      mensagem: String(r.mensagem ?? ""),
-      status: (r.status as AvisoStatus) ?? "enviado",
+      titulo: String(r.title ?? ""),
+      mensagem: String(r.message ?? ""),
+      status: "enviado" as AvisoStatus,
       createdAt: String(r.created_at ?? ""),
       createdByName: profile?.name ? String(profile.name) : null,
-      targetLabel: r.target_label ? String(r.target_label) : null,
-      deliveredCount,
-      totalTargets: deliveredCount, // ajuste quando você tiver a fonte real do total
+      targetLabel,
+      deliveredCount: totalTargets,
+      totalTargets,
     };
   });
 }

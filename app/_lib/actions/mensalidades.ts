@@ -89,18 +89,14 @@ export async function markMensalidadeAsPaid(input: {
     throw new Error("Esta mensalidade já está marcada como paga.");
   }
 
-  const { data: pagamento, error: pagamentoErr } = await supabase
-    .from("pagamentos")
-    .insert({
-      mensalidade_id: mensalidadeId,
-      valor_pago: valorPago,
-      forma_pagamento: formaPagamento,
-      data_pagamento: dataPagamento,
-      created_by: (await getUserProfile())?.user_id ?? null,
-      created_at: new Date().toISOString(),
-    })
-    .select("id")
-    .single();
+  const { error: pagamentoErr } = await supabase.from("pagamentos").insert({
+    mensalidade_id: mensalidadeId,
+    valor_pago: valorPago,
+    forma_pagamento: formaPagamento,
+    data_pagamento: dataPagamento,
+    created_by: (await getUserProfile())?.user_id ?? null,
+    created_at: new Date().toISOString(),
+  });
 
   if (pagamentoErr) throw new Error(pagamentoErr.message);
 
@@ -222,6 +218,7 @@ export async function listMensalidadesForRecepcao(params?: {
       valor_mensalidade: Number(r.valor_mensalidade),
       valorPago: r.valor_pago == null ? null : Number(r.valor_pago),
       formaPagamento: formaPagamentoMap.get(String(r.id)) || null,
+      dataVencimento: (r.data_vencimento ?? null) as string | null,
       dataPagamento: (r.data_pagamento ?? null) as string | null,
     };
   });
@@ -242,6 +239,7 @@ function buildMensalidadesMock(input: {
       valor_mensalidade: 450,
       valorPago: null,
       formaPagamento: null,
+      dataVencimento: "2025-02-10",
       dataPagamento: null,
     },
     {
@@ -254,6 +252,7 @@ function buildMensalidadesMock(input: {
       valor_mensalidade: 450,
       valorPago: 450,
       formaPagamento: "pix",
+      dataVencimento: "2025-01-10",
       dataPagamento: "2025-01-10",
     },
     {
@@ -266,6 +265,7 @@ function buildMensalidadesMock(input: {
       valor_mensalidade: 450,
       valorPago: 450,
       formaPagamento: "credito",
+      dataVencimento: "2025-02-10",
       dataPagamento: "2025-02-05",
     },
     {
@@ -278,6 +278,7 @@ function buildMensalidadesMock(input: {
       valor_mensalidade: 450,
       valorPago: null,
       formaPagamento: null,
+      dataVencimento: "2025-02-10",
       dataPagamento: null,
     },
   ];
@@ -292,7 +293,7 @@ export async function updateMensalidade(input: {
   dataVencimento?: string; // yyyy-mm-dd
   status?: "pendente" | "pago";
 }) {
-  const profile = await requireUserRole(["administrativo"]);
+  await requireUserRole(["administrativo"]);
 
   const mensalidadeId = String(input.mensalidadeId ?? "").trim();
   if (!mensalidadeId) throw new Error("mensalidadeId inválido.");
@@ -358,7 +359,7 @@ export async function updatePagamento(input: {
   dataPagamento?: string; // yyyy-mm-dd
   observacao?: string | null;
 }) {
-  const profile = await requireUserRole(["administrativo"]);
+  await requireUserRole(["administrativo"]);
 
   const pagamentoId = String(input.pagamentoId ?? "").trim();
   if (!pagamentoId) throw new Error("pagamentoId inválido.");
@@ -441,7 +442,7 @@ export async function updatePagamento(input: {
 }
 
 export async function deletePagamento(pagamentoId: string) {
-  const profile = await requireUserRole(["administrativo"]);
+  await requireUserRole(["administrativo"]);
 
   const supabase = await createServerSupabaseClient();
 
@@ -487,6 +488,91 @@ export async function deletePagamento(pagamentoId: string) {
 
   revalidatePath("/admin/financeiro");
   revalidatePath("/recepcao/financeiro");
+}
+
+export async function listMensalidadesByStudent(
+  studentId: string,
+): Promise<MensalidadeRow[]> {
+  const id = String(studentId ?? "").trim();
+  if (!id || id === "undefined" || id === "null") {
+    throw new Error("ID do aluno inválido.");
+  }
+
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  const allowedRoles = ["recepção", "administrativo", "coordenação"];
+  if (!allowedRoles.includes(profile.role ?? "")) {
+    throw new Error("Sem permissão para listar mensalidades.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: mensalidades, error: mensalidadesError } = await supabase
+    .from("mensalidades")
+    .select(
+      "id, aluno_id, competence_year, competence_month, status, valor_mensalidade, valor_pago, data_vencimento, data_pagamento",
+    )
+    .eq("aluno_id", id)
+    .order("competence_year", { ascending: false })
+    .order("competence_month", { ascending: false });
+
+  if (mensalidadesError) {
+    throw new Error(mensalidadesError.message);
+  }
+
+  if (!mensalidades || mensalidades.length === 0) {
+    return [];
+  }
+
+  const mensalidadeIds = mensalidades.map((m) => m.id);
+
+  const { data: pagamentos, error: pagamentosError } = await supabase
+    .from("pagamentos")
+    .select("mensalidade_id, forma_pagamento")
+    .in("mensalidade_id", mensalidadeIds)
+    .order("created_at", { ascending: false });
+
+  if (pagamentosError) {
+    console.warn(
+      "[listMensalidadesByStudent] Erro ao buscar pagamentos:",
+      pagamentosError.message,
+    );
+  }
+
+  const formaPagamentoMap = new Map<string, FormaPagamento | null>();
+  if (pagamentos) {
+    for (const pagamento of pagamentos) {
+      if (!formaPagamentoMap.has(pagamento.mensalidade_id)) {
+        formaPagamentoMap.set(
+          pagamento.mensalidade_id,
+          (pagamento.forma_pagamento as FormaPagamento) || null,
+        );
+      }
+    }
+  }
+
+  const { data: profileData } = await supabase
+    .from("profiles")
+    .select("name")
+    .eq("user_id", id)
+    .single();
+
+  const studentName = profileData?.name || "Aluno";
+
+  return mensalidades.map((m) => ({
+    id: String(m.id),
+    studentId: String(m.aluno_id),
+    studentName,
+    competenceYear: Number(m.competence_year),
+    competenceMonth: Number(m.competence_month),
+    status: m.status as MensalidadeStatus,
+    valor_mensalidade: Number(m.valor_mensalidade),
+    valorPago: m.valor_pago == null ? null : Number(m.valor_pago),
+    formaPagamento: formaPagamentoMap.get(m.id) || null,
+    dataVencimento: m.data_vencimento || null,
+    dataPagamento: m.data_pagamento || null,
+  }));
 }
 
 export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
@@ -561,6 +647,7 @@ export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
     valor_mensalidade: Number(m.valor_mensalidade),
     valorPago: m.valor_pago == null ? null : Number(m.valor_pago),
     formaPagamento: formaPagamentoMap.get(m.id) || null,
+    dataVencimento: m.data_vencimento || null,
     dataPagamento: m.data_pagamento || null,
   }));
 }

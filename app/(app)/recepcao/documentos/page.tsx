@@ -1,6 +1,6 @@
+import type { StudentRow } from "@/app/_lib/actions/profile";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { listStudentsForRecepcao } from "@/app/_lib/actions/recepcao";
-import type { StudentRow } from "@/app/_lib/actions/profile";
 import Link from "next/link";
 
 export default async function RecepcaoDocumentosPage() {
@@ -36,7 +36,7 @@ export default async function RecepcaoDocumentosPage() {
           {students.map((s: StudentRow) => (
             <Link
               key={s.id}
-              href={`/dashboard/alunos/${s.id}/documentos`}
+              href={`/recepcao/alunos/${s.id}/documentos`}
               className="rounded-2xl border border-slate-200 bg-white p-4 hover:bg-slate-50"
             >
               <div className="text-sm font-semibold text-slate-900">

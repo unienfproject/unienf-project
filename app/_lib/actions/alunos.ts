@@ -1,11 +1,11 @@
 "use server";
 
 import { logAudit } from "@/app/_lib/actions/audit";
+import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
-import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 
 function getAdminSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -88,17 +88,13 @@ export async function createAluno(input: {
 
   const userId = created.user.id;
 
-  const { data: aluno, error: alunoError } = await supabase
-    .from("alunos")
-    .insert({
-      user_id: userId,
-      age,
-      date_of_birth: dateOfBirth,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .select("user_id")
-    .single();
+  const { error: alunoError } = await supabase.from("alunos").insert({
+    user_id: userId,
+    age,
+    date_of_birth: dateOfBirth,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  });
 
   if (alunoError) throw new Error(alunoError.message);
 
@@ -264,6 +260,24 @@ export type StudentPersonalData = {
   }>;
 };
 
+export type AlunoProfileData = {
+  id: string;
+  name: string;
+  email: string;
+  telefone: string | null;
+  age: number | null;
+  dateOfBirth: string | null;
+  turmas: Array<{
+    id: string;
+    name: string;
+    tag: string;
+    disciplinaName: string | null;
+    status: string | null;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export async function getStudentPersonalData(
   studentId: string,
   teacherId: string,
@@ -383,6 +397,121 @@ export async function getStudentPersonalData(
     age: dadosAluno?.age ?? null,
     dateOfBirth: dadosAluno?.date_of_birth ?? null,
     turmas,
+  };
+}
+
+export async function getAlunoProfile(
+  studentId: string,
+): Promise<AlunoProfileData> {
+  // Validar studentId
+  const id = String(studentId ?? "").trim();
+  if (!id || id === "undefined" || id === "null") {
+    throw new Error("ID do aluno inválido.");
+  }
+
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  // Permitir admin, coordenação e recepção
+  const allowedRoles = ["administrativo", "coordenação", "recepção"];
+  if (!allowedRoles.includes(profile.role ?? "")) {
+    throw new Error("Sem permissão para visualizar perfil de aluno.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  // Buscar dados do profile e aluno
+  const { data: profileData, error: profileError } = await supabase
+    .from("profiles")
+    .select(
+      `
+      user_id,
+      name,
+      email,
+      telefone,
+      created_at,
+      updated_at,
+      alunos:alunos!alunos_user_id_fkey(age, date_of_birth)
+    `,
+    )
+    .eq("user_id", id)
+    .eq("role", "aluno")
+    .single();
+
+  if (profileError) throw new Error(profileError.message);
+  if (!profileData) throw new Error("Aluno não encontrado.");
+
+  const dadosAluno = Array.isArray(profileData.alunos)
+    ? profileData.alunos[0]
+    : profileData.alunos;
+
+  // Buscar turmas do aluno
+  const { data: turmasAluno, error: turmasAlunoError } = await supabase
+    .from("turma_alunos")
+    .select(
+      `
+      turma_id,
+      turmas:turmas!turma_alunos_turma_id_fkey(
+        id,
+        name,
+        tag,
+        status,
+        disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
+      )
+    `,
+    )
+    .eq("aluno_id", id);
+
+  if (turmasAlunoError) throw new Error(turmasAlunoError.message);
+
+  type TurmaAlunoComTurmaRow = {
+    turma_id: string;
+    turmas:
+      | {
+          id: string;
+          name: string;
+          tag: string;
+          status: string | null;
+          disciplinas: { name: string } | { name: string }[];
+        }
+      | {
+          id: string;
+          name: string;
+          tag: string;
+          status: string | null;
+          disciplinas: { name: string } | { name: string }[];
+        }[];
+  };
+
+  const turmas = (turmasAluno ?? []).map(
+    (turmaAluno: TurmaAlunoComTurmaRow) => {
+      const turma = Array.isArray(turmaAluno.turmas)
+        ? turmaAluno.turmas[0]
+        : turmaAluno.turmas;
+      const disciplina = Array.isArray(turma?.disciplinas)
+        ? turma.disciplinas[0]
+        : turma?.disciplinas;
+
+      return {
+        id: turma?.id ?? "",
+        name: turma?.name ?? "",
+        tag: turma?.tag ?? "",
+        disciplinaName: disciplina?.name ?? null,
+        status: turma?.status ?? null,
+      };
+    },
+  );
+
+  return {
+    id: profileData.user_id,
+    name: profileData.name ?? "",
+    email: profileData.email ?? "",
+    telefone: profileData.telefone,
+    age: dadosAluno?.age ?? null,
+    dateOfBirth: dadosAluno?.date_of_birth ?? null,
+    turmas,
+    createdAt: profileData.created_at,
+    updatedAt: profileData.updated_at,
   };
 }
 
@@ -571,6 +700,7 @@ export async function listAlunosPaginated(params: {
         name,
         email,
         telefone,
+        created_at,
         alunos:alunos!alunos_user_id_fkey (
           age,
           date_of_birth
@@ -586,16 +716,31 @@ export async function listAlunosPaginated(params: {
   const { data, error } = await dataQuery;
   if (error) throw new Error(error.message);
 
-  const items: AlunoRow[] = (data ?? []).map((r: any) => {
+  type SupabaseAlunoRow = {
+    user_id: unknown;
+    name: unknown;
+    email: unknown;
+    telefone: unknown;
+    created_at: unknown;
+    alunos:
+      | { age: unknown; date_of_birth: unknown }
+      | { age: unknown; date_of_birth: unknown }[]
+      | null;
+  };
+
+  const items: AlunoRow[] = (data ?? []).map((r: SupabaseAlunoRow) => {
     const alunoMeta = Array.isArray(r.alunos) ? r.alunos[0] : r.alunos;
 
     return {
       id: String(r.user_id),
       name: String(r.name ?? ""),
       email: String(r.email ?? ""),
-      telefone: String(r.telefone ?? ""),
-      age: alunoMeta?.age ?? null,
-      dateOfBirth: alunoMeta?.date_of_birth ?? null,
+      telefone: r.telefone ? String(r.telefone) : null,
+      age: alunoMeta?.age != null ? Number(alunoMeta.age) : null,
+      dateOfBirth: alunoMeta?.date_of_birth
+        ? String(alunoMeta.date_of_birth)
+        : null,
+      createdAt: String(r.created_at),
     };
   });
 

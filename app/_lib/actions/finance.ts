@@ -21,6 +21,7 @@ export type MensalidadeRow = {
   valorPago: number | null;
   formaPagamento: FormaPagamento | null;
 
+  dataVencimento: string | null;
   dataPagamento: string | null;
 };
 
@@ -120,48 +121,14 @@ export async function getMonthlySummary(
   };
 }
 
-/**
- * CUSTOS INTERNOS: aqui estou assumindo uma tabela chamada "costs".
- * Se no seu banco o nome for "custos" (muito provável), troque .from("costs") para .from("custos")
- * e ajuste os nomes de colunas conforme seu schema.
- */
 export async function getCostsByMonth(
   year: number,
   month: number,
 ): Promise<Cost[]> {
   await requireAdmin();
-  const supabase = await createServerSupabaseClient();
-
-  // Ajuste aqui o nome da tabela se necessário: "custos" / "finance_costs" etc.
-  const { data, error } = await supabase
-    .from("custos")
-    .select(
-      "id, competence_year, competence_month, category, description, amount, incurred_at",
-    )
-    .eq("competence_year", year)
-    .eq("competence_month", month)
-    .order("incurred_at", { ascending: false });
-
-  if (error) {
-    if (error.code === "42P01") return []; // tabela não existe
-    console.warn("[getCostsByMonth] erro:", error.message);
-    return [];
-  }
-
-  return (data ?? []).map((c: any) => ({
-    id: String(c.id),
-    category: String(c.category ?? ""),
-    description: String(c.description ?? ""),
-    amount: safeNumber(c.amount, 0),
-    incurredAt: String(c.incurred_at ?? ""),
-  }));
+  return [];
 }
 
-/**
- * MENSALIDADES DO MÊS: lista + nome do aluno. Aqui assumo mensalidades.aluno_id
- * e join em profiles para pegar name.
- * Se seu FK/relationship tiver outro nome, ajuste o select.
- */
 export async function getMensalidadesByMonth(
   year: number,
   month: number,
@@ -180,6 +147,7 @@ export async function getMensalidadesByMonth(
       status,
       valor_mensalidade,
       valor_pago,
+      data_vencimento,
       data_pagamento,
       profiles:profiles!mensalidades_aluno_id_fkey ( name )
     `,
@@ -193,9 +161,8 @@ export async function getMensalidadesByMonth(
     return [];
   }
 
-  // Para formaPagamento: buscamos a forma mais recente em pagamentos por mensalidade_id
-  const mensalidadeIds = (data ?? []).map((m: any) => String(m.id));
-  let formaMap = new Map<string, FormaPagamento | null>();
+  const mensalidadeIds = (data ?? []).map((m: { id: unknown }) => String(m.id));
+  const formaMap = new Map<string, FormaPagamento | null>();
 
   if (mensalidadeIds.length) {
     const { data: pagamentos, error: payErr } = await supabase
@@ -205,7 +172,10 @@ export async function getMensalidadesByMonth(
       .order("created_at", { ascending: false });
 
     if (!payErr && pagamentos) {
-      for (const p of pagamentos as any[]) {
+      for (const p of pagamentos as {
+        mensalidade_id: unknown;
+        forma_pagamento: unknown;
+      }[]) {
         const mid = String(p.mensalidade_id);
         if (!formaMap.has(mid)) {
           formaMap.set(mid, (p.forma_pagamento as FormaPagamento) ?? null);
@@ -214,54 +184,41 @@ export async function getMensalidadesByMonth(
     }
   }
 
-  return (data ?? []).map((m: any) => {
-    const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
-    return {
-      id: String(m.id),
-      studentId: String(m.aluno_id),
-      studentName: String(profile?.name ?? "Aluno"),
-      competenceYear: safeNumber(m.competence_year),
-      competenceMonth: safeNumber(m.competence_month),
-      status: (m.status as MensalidadeStatus) ?? "pendente",
-      valor_mensalidade: safeNumber(m.valor_mensalidade),
-      valorPago: m.valor_pago == null ? null : safeNumber(m.valor_pago),
-      formaPagamento: formaMap.get(String(m.id)) ?? null,
-      dataPagamento: (m.data_pagamento ?? null) as string | null,
-    };
-  });
+  return (data ?? []).map(
+    (m: {
+      id: unknown;
+      aluno_id: unknown;
+      competence_year: unknown;
+      competence_month: unknown;
+      status: unknown;
+      valor_mensalidade: unknown;
+      valor_pago: unknown;
+      data_vencimento: unknown;
+      data_pagamento: unknown;
+      profiles: { name: unknown } | { name: unknown }[] | null;
+    }) => {
+      const profile = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
+      return {
+        id: String(m.id),
+        studentId: String(m.aluno_id),
+        studentName: String(profile?.name ?? "Aluno"),
+        competenceYear: safeNumber(m.competence_year),
+        competenceMonth: safeNumber(m.competence_month),
+        status: (m.status as MensalidadeStatus) ?? "pendente",
+        valor_mensalidade: safeNumber(m.valor_mensalidade),
+        valorPago: m.valor_pago == null ? null : safeNumber(m.valor_pago),
+        formaPagamento: formaMap.get(String(m.id)) ?? null,
+        dataVencimento: (m.data_vencimento ?? null) as string | null,
+        dataPagamento: (m.data_pagamento ?? null) as string | null,
+      };
+    },
+  );
 }
 
-/**
- * OUTRAS MOVIMENTAÇÕES (opcional): se você tem uma tabela "financeiro" para outras receitas/despesas.
- * Se não tiver, pode manter retornando [] sem problema.
- */
 export async function getFinanceiroEntriesByMonth(
   year: number,
   month: number,
 ): Promise<FinanceiroEntry[]> {
   await requireAdmin();
-  const supabase = await createServerSupabaseClient();
-
-  const { data, error } = await supabase
-    .from("financeiro")
-    .select(
-      "id, competence_year, competence_month, type, description, amount, occurred_at",
-    )
-    .eq("competence_year", year)
-    .eq("competence_month", month)
-    .order("occurred_at", { ascending: false });
-
-  if (error) {
-    if (error.code === "42P01") return [];
-    console.warn("[getFinanceiroEntriesByMonth] erro:", error.message);
-    return [];
-  }
-
-  return (data ?? []).map((r: any) => ({
-    id: String(r.id),
-    type: (r.type as "entrada" | "saida") ?? "entrada",
-    description: String(r.description ?? ""),
-    amount: safeNumber(r.amount, 0),
-    occurredAt: String(r.occurred_at ?? ""),
-  }));
+  return [];
 }
