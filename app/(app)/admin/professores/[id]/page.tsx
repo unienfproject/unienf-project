@@ -1,26 +1,23 @@
-import AdminAlunoProfileTabs from "@/app/_components/admin/AdminAlunoProfileTabs";
+import AdminProfessorProfileTabs from "@/app/_components/admin/AdminProfessorProfileTabs";
 import { Button } from "@/app/_components/ui/button";
-import { getAlunoProfile } from "@/app/_lib/actions/alunos";
-import { listStudentDocuments } from "@/app/_lib/actions/documents";
-import { listMensalidadesByStudent } from "@/app/_lib/actions/mensalidades";
-import { listNotasByStudent } from "@/app/_lib/actions/notas";
+import { getProfessorProfile } from "@/app/_lib/actions/professores";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
-export default async function AdminAlunoProfilePage({
+export default async function AdminProfessorProfilePage({
   params,
 }: {
   params: Promise<{ id: string }> | { id: string };
 }) {
   const resolvedParams = await Promise.resolve(params);
-  const studentId = (resolvedParams as { id: string }).id?.trim();
+  const professorId = (resolvedParams as { id: string }).id?.trim();
 
-  if (!studentId || studentId === "undefined" || studentId === "null") {
+  if (!professorId || professorId === "undefined" || professorId === "null") {
     return (
       <div className="p-6">
-        <p className="text-red-600">ID do aluno inválido.</p>
-        <Link href="/admin/alunos" className="mt-4 inline-block">
+        <p className="text-red-600">ID do professor inválido.</p>
+        <Link href="/admin/professores" className="mt-4 inline-block">
           <Button variant="outline">Voltar</Button>
         </Link>
       </div>
@@ -41,52 +38,44 @@ export default async function AdminAlunoProfilePage({
     );
   }
 
-  let alunoData;
+  let professorData;
   try {
-    alunoData = await getAlunoProfile(studentId);
+    professorData = await getProfessorProfile(professorId);
   } catch (error) {
     return (
       <div className="p-6">
         <p className="text-red-600">
-          {error instanceof Error ? error.message : "Erro ao carregar aluno."}
+          {error instanceof Error
+            ? error.message
+            : "Erro ao carregar professor."}
         </p>
-        <Link href="/admin/alunos" className="mt-4 inline-block">
+        <Link href="/admin/professores" className="mt-4 inline-block">
           <Button variant="outline">Voltar</Button>
         </Link>
       </div>
     );
   }
 
-  const docs = await listStudentDocuments(studentId);
-  const mensalidades = await listMensalidadesByStudent(studentId);
-  const notas = await listNotasByStudent(studentId);
-
   return (
     <div className="flex flex-col">
       <div className="flex flex-col gap-3 p-6">
         <div className="flex items-center gap-3">
-          <Link href="/admin/alunos">
+          <Link href="/admin/professores">
             <Button variant="ghost" size="icon" className="h-10 w-10">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-slate-900">
-              {alunoData.name}
+              {professorData.name}
             </h1>
-            <p className="text-slate-600">Perfil completo do aluno</p>
+            <p className="text-slate-600">Perfil completo do professor</p>
           </div>
         </div>
       </div>
 
       <div className="p-6">
-        <AdminAlunoProfileTabs
-          alunoData={alunoData}
-          docs={docs}
-          mensalidades={mensalidades}
-          notas={notas}
-          studentId={studentId}
-        />
+        <AdminProfessorProfileTabs professorData={professorData} />
       </div>
     </div>
   );
