@@ -30,7 +30,6 @@ export async function listTeacherClasses(
     .select(
       `
       id,
-      name,
       tag,
       start_date,
       end_date,
@@ -51,7 +50,6 @@ export async function listTeacherClasses(
 
   return (data ?? []).map((t) => ({
     id: t.id,
-    name: t.name,
     tag: t.tag,
     start_date: t.start_date,
     end_date: t.end_date,
@@ -144,7 +142,7 @@ export async function createClass(input: {
 }
 
 export async function createTurmaAdmin(input: {
-  name: string;
+  nome: string;
   tag: string;
   startDate: string;
   endDate: string;
@@ -163,7 +161,7 @@ export async function createTurmaAdmin(input: {
   const { data: turma, error: turmaError } = await supabase
     .from("turmas")
     .insert({
-      name: input.name.trim(),
+      name: input.nome.trim(),
       tag: input.tag.trim(),
       start_date: input.startDate,
       end_date: input.endDate,
@@ -330,7 +328,7 @@ export async function getClassDetails(input: {
   teacherId: string;
 }): Promise<{
   id: string;
-  name: string;
+  nome: string;
   tag: string;
   start_date: string;
   end_date: string;
@@ -423,7 +421,7 @@ export async function getClassDetails(input: {
 
   return {
     id: turmaData.id,
-    name: turmaData.name,
+    nome: turmaData.name,
     tag: turmaData.tag,
     start_date: turmaData.start_date,
     end_date: turmaData.end_date,
@@ -435,7 +433,7 @@ export async function getClassDetails(input: {
 
 export type StudentFromMyClasses = {
   id: string;
-  name: string;
+  nome: string;
   email: string;
   telefone: string | null;
   age: number | null;
@@ -541,7 +539,7 @@ export async function listStudentsFromMyClasses(
     if (!alunosAgrupados.has(alunoId)) {
       alunosAgrupados.set(alunoId, {
         id: alunoId,
-        name: profileAluno?.name ?? "",
+        nome: profileAluno?.name ?? "",
         email: profileAluno?.email ?? "",
         telefone: profileAluno?.telefone ?? null,
         age: dadosAluno?.age ?? null,
@@ -561,6 +559,6 @@ export async function listStudentsFromMyClasses(
   });
 
   return Array.from(alunosAgrupados.values()).sort((a, b) =>
-    a.name.localeCompare(b.name),
+    a.nome.localeCompare(b.nome),
   );
 }
