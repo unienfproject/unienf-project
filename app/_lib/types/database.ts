@@ -3,7 +3,14 @@
  *
  * Este arquivo contém os tipos que refletem exatamente a estrutura
  * das tabelas no banco de dados.
+ *
+ * Obs: colunas numeric no Postgres podem vir como string dependendo do client/config.
+ * Aqui mantive como number porque é o que vocês vinham usando no projeto.
  */
+
+export type UUID = string;
+export type Timestamp = string; // timestamptz
+export type DateString = string; // date (YYYY-MM-DD)
 
 // ============================================================================
 // PROFILES
@@ -17,14 +24,14 @@ export type ProfileRole =
   | "administrativo";
 
 export type Profile = {
-  user_id: string; // uuid
+  user_id: UUID; // uuid (PK, FK -> auth.users.id)
   name: string | null; // text
   telefone: string | null; // text
   email: string | null; // text
   avatar_url: string | null; // text
-  role: ProfileRole | null; // text (aluno|professor|coordenação|recepção|administrativo)
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  role: ProfileRole; // text NOT NULL (default 'aluno')
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 // ============================================================================
@@ -32,11 +39,14 @@ export type Profile = {
 // ============================================================================
 
 export type Aluno = {
-  user_id: string; // uuid (FK → profiles.user_id)
+  user_id: UUID; // uuid (PK, FK -> profiles.user_id)
+  full_name: string | null; // text
+  date_of_birth: DateString | null; // date
   age: number | null; // int4
-  date_of_birth: string | null; // date (YYYY-MM-DD)
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  cpf: string | null; // text
+  rg: string | null; // text
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 // ============================================================================
@@ -44,20 +54,23 @@ export type Aluno = {
 // ============================================================================
 
 export type Responsavel = {
-  id: string; // uuid
-  name: string; // text
+  id: UUID; // uuid
+  name: string; // text NOT NULL
+  cpf: string | null; // text
   telefone: string | null; // text
   email: string | null; // text
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  parentesco: string | null; // text
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 export type AlunoResponsavel = {
-  aluno_id: string; // uuid (FK → profiles.user_id)
-  responsavel_id: string; // uuid (FK → responsaveis.id)
-  relationship: string | null; // text
-  is_primary: boolean; // bool
-  created_at: string; // timestamptz
+  id: UUID; // uuid
+  aluno_id: UUID; // uuid (FK -> alunos.user_id)
+  responsavel_id: UUID; // uuid (FK -> responsaveis.id)
+  is_primary: boolean; // bool NOT NULL default false
+  financial_responsible: boolean; // bool NOT NULL default true
+  created_at: Timestamp; // timestamptz
 };
 
 // ============================================================================
@@ -65,22 +78,22 @@ export type AlunoResponsavel = {
 // ============================================================================
 
 export type Curso = {
-  id: string; // uuid
-  name: string; // text
-  description: string | null; // text
-  duration_months: number | null; // int4
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  id: UUID; // uuid
+  name: string; // text NOT NULL
+  duration_months: number; // int4 NOT NULL
+  modules_count: number | null; // int4 nullable
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 export type Disciplina = {
-  id: string; // uuid
-  curso_id: string; // uuid (FK → cursos.id)
-  name: string; // text
-  module: number | null; // int4
-  workload_hours: number | null; // int4
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  id: UUID; // uuid
+  curso_id: UUID | null; // uuid nullable (FK -> cursos.id)
+  name: string; // text NOT NULL
+  slug: string; // text NOT NULL UNIQUE
+  workload_hours: number | null; // int4 nullable
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 // ============================================================================
@@ -90,105 +103,121 @@ export type Disciplina = {
 export type TurmaStatus = "ativa" | "finalizada";
 
 export type Turma = {
-  id: string; // uuid
-  name: string; // text
-  tag: string; // text
-  start_date: string; // date (YYYY-MM-DD)
-  end_date: string; // date (YYYY-MM-DD)
-  status: TurmaStatus; // text (ativa|finalizada)
-  professor_id: string; // uuid (FK → profiles.user_id)
-  disciplina_id: string; // uuid (FK → disciplinas.id)
-  created_by: string; // uuid (FK → profiles.user_id)
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  id: UUID; // uuid
+  disciplina_id: UUID; // uuid (FK -> disciplinas.id)
+  professor_id: UUID; // uuid (FK -> profiles.user_id)
+  tag: string; // text NOT NULL UNIQUE (ex: Primeiros_Socorros_2026.2)
+  period: string; // text NOT NULL
+  media_minima: number; // numeric NOT NULL default 7.0
+  start_date: DateString | null; // date nullable
+  end_date: DateString | null; // date nullable
+  status: TurmaStatus; // text NOT NULL default 'ativa'
+  created_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
+export type TurmaAlunoStatus =
+  | "ativo"
+  | "trancado"
+  | "transferido"
+  | "concluido";
+
 export type TurmaAluno = {
-  turma_id: string; // uuid (FK → turmas.id)
-  aluno_id: string; // uuid (FK → profiles.user_id)
-  created_at: string; // timestamptz
+  id: UUID; // uuid
+  turma_id: UUID; // uuid (FK -> turmas.id)
+  aluno_id: UUID; // uuid (FK -> profiles.user_id)
+  status: TurmaAlunoStatus; // text NOT NULL default 'ativo'
+  joined_at: Timestamp; // timestamptz
 };
 
 // ============================================================================
 // AVALIAÇÕES E NOTAS
 // ============================================================================
 
-export type AvaliacaoType = "A1" | "A2" | "A3" | "REC";
+export type AvaliacaoTipo = "A1" | "A2" | "A3" | "REC";
 
 export type Avaliacao = {
-  id: string; // uuid
-  turma_id: string; // uuid (FK → turmas.id)
-  type: AvaliacaoType; // text (A1|A2|A3|REC)
-  title: string; // text
-  date: string | null; // date (YYYY-MM-DD)
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  id: UUID; // uuid
+  turma_id: UUID; // uuid (FK -> turmas.id)
+  tipo: AvaliacaoTipo; // text NOT NULL
+  title: string | null; // text
+  nota_max: number; // numeric NOT NULL default 10
+  data_avaliacao: DateString | null; // date nullable
+  created_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 export type Nota = {
-  id: string; // uuid
-  avaliacao_id: string; // uuid (FK → avaliacoes.id)
-  aluno_id: string; // uuid (FK → profiles.user_id)
-  value: number | null; // numeric
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  id: UUID; // uuid
+  avaliacao_id: UUID; // uuid (FK -> avaliacoes.id)
+  aluno_id: UUID; // uuid (FK -> profiles.user_id)
+  nota: number; // numeric NOT NULL
+  observacao: string | null; // text
+  lancado_por: UUID | null; // uuid nullable (FK -> profiles.user_id)
+  lancado_em: Timestamp; // timestamptz NOT NULL default now()
+  updated_at: Timestamp; // timestamptz
 };
 
+export type ResultadoStatus = "incompleto" | "aprovado" | "reprovado";
+
 export type TurmaAlunoResultado = {
-  turma_id: string; // uuid (FK → turmas.id)
-  aluno_id: string; // uuid (FK → profiles.user_id)
-  media: number | null; // numeric
+  id: UUID; // uuid
+  turma_id: UUID; // uuid (FK -> turmas.id)
+  aluno_id: UUID; // uuid (FK -> profiles.user_id)
+  a1: number | null; // numeric
+  a2: number | null; // numeric
+  a3: number | null; // numeric
+  x: number | null; // numeric
   rec: number | null; // numeric
   final: number | null; // numeric
-  status: "aprovado" | "reprovado"; // text
-  updated_at: string; // timestamptz
+  status: ResultadoStatus; // text NOT NULL default 'incompleto'
+  updated_at: Timestamp; // timestamptz
 };
 
 // ============================================================================
 // FINANCEIRO
 // ============================================================================
 
-export type MensalidadeStatus = "pendente" | "pago";
+export type MensalidadeStatus = "pendente" | "pago" | "atrasado" | "cancelado";
 
 export type Mensalidade = {
-  id: string; // uuid
-  aluno_id: string; // uuid (FK → profiles.user_id)
+  id: UUID; // uuid
+  aluno_id: UUID; // uuid (FK -> profiles.user_id)
   competence_year: number; // int4
   competence_month: number; // int4 (1-12)
-  status: MensalidadeStatus; // text (pendente|pago)
-  valor_mensalidade: number; // numeric
-  valor_pago: number | null; // numeric
-  data_vencimento: string | null; // date (YYYY-MM-DD)
-  data_pagamento: string | null; // date (YYYY-MM-DD)
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  due_date: DateString | null; // date nullable
+  status: MensalidadeStatus; // text NOT NULL default 'pendente'
+  valor_previsto: number; // numeric NOT NULL
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 export type FormaPagamento = "dinheiro" | "pix" | "debito" | "credito";
 
 export type Pagamento = {
-  id: string; // uuid
-  mensalidade_id: string; // uuid (FK → mensalidades.id)
-  valor_pago: number; // numeric
-  forma_pagamento: FormaPagamento | null; // text (dinheiro|pix|debito|credito)
-  data_pagamento: string; // date (YYYY-MM-DD)
+  id: UUID; // uuid
+  mensalidade_id: UUID; // uuid (FK -> mensalidades.id)
+  valor_pago: number; // numeric NOT NULL
+  forma_pagamento: FormaPagamento; // text NOT NULL
+  pago_em: Timestamp; // timestamptz NOT NULL default now()
+  recebido_por: UUID | null; // uuid nullable (FK -> profiles.user_id)
   observacao: string | null; // text
-  created_by: string; // uuid (FK → profiles.user_id)
-  created_at: string; // timestamptz
+  created_at: Timestamp; // timestamptz
 };
 
 export type ReceiptCounter = {
-  year: number; // int4
-  last_number: number; // int4
-  updated_at: string; // timestamptz
+  year: number; // int4 (PK)
+  last_number: number; // int4 NOT NULL default 0
 };
 
 export type Recibo = {
-  id: string; // uuid
-  pagamento_id: string; // uuid (FK → pagamentos.id)
-  receipt_number: string; // text (formato: UNF-2026-000123)
-  issued_by: string; // uuid (FK → profiles.user_id)
-  issued_at: string; // timestamptz
+  id: UUID; // uuid
+  pagamento_id: UUID; // uuid NOT NULL UNIQUE (FK -> pagamentos.id)
+  receipt_number: string; // text NOT NULL UNIQUE (ex: UNF-2026-000123)
+  issued_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
+  issued_at: Timestamp; // timestamptz NOT NULL default now()
   notes: string | null; // text
 };
 
@@ -197,24 +226,27 @@ export type Recibo = {
 // ============================================================================
 
 export type DocumentoTipo = {
-  id: string; // uuid
-  name: string; // text
-  required: boolean; // bool
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  id: UUID; // uuid
+  name: string; // text NOT NULL
+  required: boolean; // bool NOT NULL default true
+  active: boolean; // bool NOT NULL default true
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 export type DocumentoStatus = "pending" | "delivered" | "rejected";
 
 export type DocumentoAluno = {
-  id: string; // uuid
-  aluno_id: string; // uuid (FK → profiles.user_id)
-  documento_tipo_id: string; // uuid (FK → documento_tipos.id)
-  status: DocumentoStatus; // text (pending|delivered|rejected)
-  observacao: string | null; // text
-  rejected_reason: string | null; // text
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  id: UUID; // uuid
+  aluno_id: UUID; // uuid (FK -> profiles.user_id)
+  documento_tipo_id: UUID; // uuid (FK -> documento_tipos.id)
+  status: DocumentoStatus; // text NOT NULL default 'pending'
+  reviewed_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
+  reviewed_at: Timestamp | null; // timestamptz nullable
+  observation: string | null; // text nullable
+  rejected_reason: string | null; // text nullable
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 // ============================================================================
@@ -224,18 +256,21 @@ export type DocumentoAluno = {
 export type AvisoScopeType = "turma" | "alunos";
 
 export type Aviso = {
-  id: string; // uuid
-  title: string; // text
-  message: string; // text
-  author_id: string; // uuid (FK → profiles.user_id)
-  created_at: string; // timestamptz
-  scope_type: AvisoScopeType; // text (turma|alunos)
-  turma_id: string | null; // uuid (FK → turmas.id, nullable)
+  id: UUID; // uuid
+  title: string; // text NOT NULL
+  message: string; // text NOT NULL
+  author_id: UUID; // uuid NOT NULL (FK -> profiles.user_id)
+  scope_type: AvisoScopeType; // text NOT NULL
+  turma_id: UUID | null; // uuid nullable (FK -> turmas.id)
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 export type AvisoAluno = {
-  aviso_id: string; // uuid (FK → avisos.id)
-  aluno_id: string; // uuid (FK → profiles.user_id)
+  id: UUID; // uuid
+  aviso_id: UUID; // uuid (FK -> avisos.id)
+  aluno_id: UUID; // uuid (FK -> profiles.user_id)
+  created_at: Timestamp; // timestamptz
 };
 
 // ============================================================================
@@ -243,17 +278,19 @@ export type AvisoAluno = {
 // ============================================================================
 
 export type Etiqueta = {
-  id: string; // uuid
-  name: string; // text
+  id: UUID; // uuid
+  name: string; // text NOT NULL UNIQUE
   color: string | null; // text
-  created_by: string; // uuid (FK → profiles.user_id)
-  created_at: string; // timestamptz
+  created_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 export type AlunoEtiqueta = {
-  aluno_id: string; // uuid (FK → profiles.user_id)
-  etiqueta_id: string; // uuid (FK → etiquetas.id)
-  created_at: string; // timestamptz
+  id: UUID; // uuid
+  aluno_id: UUID; // uuid (FK -> profiles.user_id)
+  etiqueta_id: UUID; // uuid (FK -> etiquetas.id)
+  created_at: Timestamp; // timestamptz
 };
 
 // ============================================================================
@@ -261,53 +298,30 @@ export type AlunoEtiqueta = {
 // ============================================================================
 
 export type ObservacaoPedagogica = {
-  id: string; // uuid
-  aluno_id: string | null; // uuid (FK → profiles.user_id, nullable)
-  turma_id: string | null; // uuid (FK → turmas.id, nullable)
-  content: string; // text
-  author_id: string; // uuid (FK → profiles.user_id)
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  id: UUID; // uuid
+  aluno_id: UUID | null; // uuid nullable (FK -> profiles.user_id)
+  turma_id: UUID | null; // uuid nullable (FK -> turmas.id)
+  author_id: UUID; // uuid NOT NULL (FK -> profiles.user_id)
+  content: string; // text NOT NULL
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
 };
 
 // ============================================================================
-// AUDITORIA
+// AUDITORIA (nova estrutura real do banco)
 // ============================================================================
 
-export type AuditAction =
-  | "create"
-  | "update"
-  | "delete"
-  | "login"
-  | "logout"
-  | "payment"
-  | "document_change";
-
-export type AuditEntity =
-  | "profile"
-  | "aluno"
-  | "professor"
-  | "turma"
-  | "nota"
-  | "mensalidade"
-  | "pagamento"
-  | "documento"
-  | "aviso"
-  | "observacao_pedagogica"
-  | "etiqueta";
+export type AuditActionDB = "INSERT" | "UPDATE" | "DELETE";
 
 export type AuditLog = {
-  id: string; // uuid
-  user_id: string | null; // uuid (FK → profiles.user_id, nullable)
-  action: AuditAction; // text
-  entity: AuditEntity; // text
-  entity_id: string; // uuid
-  old_value: unknown | null; // jsonb
-  new_value: unknown | null; // jsonb
-  description: string; // text
-  ip_address: string | null; // text
-  user_agent: string | null; // text
-  created_at: string; // timestamptz
+  id: number; // bigint identity
+  table_name: string; // text NOT NULL
+  action: AuditActionDB; // text NOT NULL
+  record_id: string | null; // text
+  actor_id: UUID | null; // uuid
+  acted_at: Timestamp; // timestamptz NOT NULL default now()
+  old_data: unknown | null; // jsonb
+  new_data: unknown | null; // jsonb
 };
 
 // ============================================================================
@@ -315,11 +329,14 @@ export type AuditLog = {
 // ============================================================================
 
 export type VwAlunosLive = {
-  user_id: string; // uuid
+  user_id: UUID; // uuid
+  full_name: string | null; // text
+  date_of_birth: DateString | null; // date
   age: number | null; // int4
-  date_of_birth: string | null; // date
-  created_at: string; // timestamptz
-  updated_at: string; // timestamptz
+  cpf: string | null; // text
+  rg: string | null; // text
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
   age_live: number | null; // int4 (calculado)
   is_minor: boolean | null; // bool (calculado)
 };
