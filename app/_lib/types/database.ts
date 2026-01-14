@@ -135,12 +135,12 @@ export type TurmaAluno = {
 // AVALIAÇÕES E NOTAS
 // ============================================================================
 
-export type AvaliacaoType = "A1" | "A2" | "A3" | "REC";
+export type AvaliacaoTipo = "A1" | "A2" | "A3" | "REC";
 
 export type Avaliacao = {
   id: UUID; // uuid
   turma_id: UUID; // uuid (FK -> turmas.id)
-  type: AvaliacaoType; // text NOT NULL
+  tipo: AvaliacaoTipo; // text NOT NULL
   title: string | null; // text
   nota_max: number; // numeric NOT NULL default 10
   data_avaliacao: DateString | null; // date nullable
@@ -308,7 +308,7 @@ export type ObservacaoPedagogica = {
 };
 
 // ============================================================================
-// AUDITORIA
+// AUDITORIA (nova estrutura real do banco)
 // ============================================================================
 
 export type AuditActionDB = "INSERT" | "UPDATE" | "DELETE";

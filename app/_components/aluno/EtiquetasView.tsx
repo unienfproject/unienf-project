@@ -150,7 +150,7 @@ export default function EtiquetasView({ studentId, canEdit = false }: Props) {
       <div className="mt-4">
         {etiquetasDoAluno.length === 0 ? (
           <p className="text-sm text-slate-500">
-            Nenhuma etiqueta atribuída a este aluno.
+            Não existem dados para serem mostrados ainda.
           </p>
         ) : (
           <div className="flex flex-wrap gap-2">
