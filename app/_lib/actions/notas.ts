@@ -45,8 +45,8 @@ export async function listNotasByAvaliacao(avaliacaoId: string) {
       id,
       avaliacao_id,
       aluno_id,
-      value,
-      created_at,
+      nota,
+      released_at,
       updated_at,
       profiles!notas_aluno_id_fkey(name, email)
     `,
@@ -60,10 +60,10 @@ export async function listNotasByAvaliacao(avaliacaoId: string) {
     id: n.id,
     avaliacaoId: n.avaliacao_id,
     alunoId: n.aluno_id,
-    value: Number(n.value),
+    value: Number(n.nota),
     alunoName: (n.profiles as unknown as { name: string })?.name ?? "",
     alunoEmail: (n.profiles as unknown as { email: string })?.email ?? "",
-    createdAt: n.created_at,
+    createdAt: n.released_at,
     updatedAt: n.updated_at,
   }));
 }
@@ -107,14 +107,14 @@ export async function upsertNota(input: {
   if (existingNota) {
     const { data: oldNota } = await supabase
       .from("notas")
-      .select("value")
+      .select("nota")
       .eq("id", existingNota.id)
       .single();
 
     const { error: updateErr } = await supabase
       .from("notas")
       .update({
-        value: value,
+        nota: value,
         updated_at: new Date().toISOString(),
       })
       .eq("id", existingNota.id);
@@ -125,9 +125,9 @@ export async function upsertNota(input: {
       action: "update",
       entity: "nota",
       entityId: existingNota.id,
-      oldValue: oldNota ? { value: oldNota.value } : null,
-      newValue: { value: value },
-      description: `Nota atualizada de ${oldNota?.value ?? "N/A"} para ${value}`,
+      oldValue: oldNota ? { nota: oldNota.nota } : null,
+      newValue: { nota: value },
+      description: `Nota atualizada de ${oldNota?.nota ?? "N/A"} para ${value}`,
     });
   } else {
     const { data: newNota, error: insertErr } = await supabase
@@ -135,8 +135,9 @@ export async function upsertNota(input: {
       .insert({
         avaliacao_id: input.avaliacaoId,
         aluno_id: input.alunoId,
-        value: value,
-        created_at: new Date().toISOString(),
+        nota: value,
+        released_by: profile.user_id,
+        released_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .select("id")
@@ -150,7 +151,7 @@ export async function upsertNota(input: {
         entity: "nota",
         entityId: newNota.id,
         newValue: {
-          value: value,
+          nota: value,
           avaliacao_id: input.avaliacaoId,
           aluno_id: input.alunoId,
         },
@@ -177,7 +178,7 @@ export async function deleteNota(notaId: string) {
 
   const { data: nota } = await supabase
     .from("notas")
-    .select("id, value, aluno_id, avaliacao_id")
+    .select("id, nota, aluno_id, avaliacao_id")
     .eq("id", notaId)
     .single();
 
@@ -191,11 +192,11 @@ export async function deleteNota(notaId: string) {
       entity: "nota",
       entityId: notaId,
       oldValue: {
-        value: nota.value,
+        nota: nota.nota,
         aluno_id: nota.aluno_id,
         avaliacao_id: nota.avaliacao_id,
       },
-      description: `Nota ${nota.value} deletada`,
+      description: `Nota ${nota.nota} deletada`,
     });
   }
 
@@ -232,7 +233,7 @@ export async function listMyNotas(): Promise<MyNotasByTurma[]> {
       turma_id,
       turmas:turmas!turma_alunos_turma_id_fkey(
         id,
-        name,
+        tag,
         disciplinas:disciplinas!turmas_disciplina_id_fkey(id, name)
       )
     `,
@@ -277,7 +278,7 @@ export async function listMyNotas(): Promise<MyNotasByTurma[]> {
     if (!avaliacoes || avaliacoes.length === 0) {
       resultados.push({
         turmaId: turma.id,
-        turmaName: turma.name,
+        turmaName: turma.tag,
         disciplinaName: disciplina?.name || "Disciplina",
         a1: null,
         a2: null,
@@ -292,7 +293,7 @@ export async function listMyNotas(): Promise<MyNotasByTurma[]> {
     const avaliacaoIds = avaliacoes.map((a) => a.id);
     const { data: notas, error: notasError } = await supabase
       .from("notas")
-      .select("avaliacao_id, value")
+      .select("avaliacao_id, nota")
       .eq("aluno_id", profile.user_id)
       .in("avaliacao_id", avaliacaoIds);
 
@@ -308,8 +309,8 @@ export async function listMyNotas(): Promise<MyNotasByTurma[]> {
     if (notas) {
       for (const avaliacao of avaliacoes) {
         const nota = notas.find((n) => n.avaliacao_id === avaliacao.id);
-        if (nota && nota.value !== null) {
-          notasMap.set(avaliacao.type, Number(nota.value));
+        if (nota && nota.nota !== null) {
+          notasMap.set(avaliacao.type, Number(nota.nota));
         }
       }
     }
@@ -338,7 +339,7 @@ export async function listMyNotas(): Promise<MyNotasByTurma[]> {
 
     resultados.push({
       turmaId: turma.id,
-      turmaName: turma.name,
+      turmaName: turma.tag,
       disciplinaName: disciplina?.name || "Disciplina",
       a1,
       a2,

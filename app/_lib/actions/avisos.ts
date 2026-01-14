@@ -13,15 +13,15 @@ export async function listTurmasForAvisoPicker(): Promise<PickerItem[]> {
 
   const { data, error } = await supabase
     .from("turmas")
-    .select("id, name, tag")
+    .select("id, tag")
     .eq("status", "ativa")
-    .order("name");
+    .order("tag");
 
   if (error) throw new Error(error.message);
 
   return (data ?? []).map((t) => ({
     id: t.id,
-    label: `${t.name} (${t.tag})`,
+    label: `${t.tag}`,
   }));
 }
 

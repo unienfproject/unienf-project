@@ -33,12 +33,12 @@ export async function listMyDocuments(): Promise<DocumentItem[]> {
     .select(
       `
       id,
-      documento_tipo_id,
+      document_type_id,
       status,
-      observacao,
+      observation,
       rejected_reason,
       updated_at,
-      documento_tipos:documento_tipos!documentos_aluno_documento_tipo_id_fkey (
+      documento_tipos:documento_tipos!documentos_aluno_document_type_id_fkey (
         id,
         name,
         required
@@ -61,9 +61,9 @@ export async function listMyDocuments(): Promise<DocumentItem[]> {
 
   type DocumentoRow = {
     id: string;
-    documento_tipo_id: string;
+    document_type_id: string;
     status: string;
-    observacao: string | null;
+    observation: string | null;
     rejected_reason: string | null;
     updated_at: string;
     documento_tipos:
@@ -80,11 +80,11 @@ export async function listMyDocuments(): Promise<DocumentItem[]> {
     const notes =
       doc.status === "rejected" && doc.rejected_reason
         ? doc.rejected_reason
-        : doc.observacao || null;
+        : doc.observation || null;
 
     return {
       id: String(doc.id),
-      documentTypeId: String(doc.documento_tipo_id),
+      documentTypeId: String(doc.document_type_id),
       title: tipo?.name || "Documento",
       required: tipo?.required ?? false,
       status: doc.status as DocumentStatus,
@@ -113,12 +113,12 @@ export async function listStudentDocuments(
     .select(
       `
       id,
-      documento_tipo_id,
+      document_type_id,
       status,
-      observacao,
+      observation,
       rejected_reason,
       updated_at,
-      documento_tipos:documento_tipos!documentos_aluno_documento_tipo_id_fkey (
+      documento_tipos:documento_tipos!documentos_aluno_document_type_id_fkey (
         id,
         name,
         required
@@ -141,9 +141,9 @@ export async function listStudentDocuments(
 
   type DocumentoRow = {
     id: string;
-    documento_tipo_id: string;
+    document_type_id: string;
     status: string;
-    observacao: string | null;
+    observation: string | null;
     rejected_reason: string | null;
     updated_at: string;
     documento_tipos:
@@ -160,11 +160,11 @@ export async function listStudentDocuments(
     const notes =
       doc.status === "rejected" && doc.rejected_reason
         ? doc.rejected_reason
-        : doc.observacao || null;
+        : doc.observation || null;
 
     return {
       id: String(doc.id),
-      documentTypeId: String(doc.documento_tipo_id),
+      documentTypeId: String(doc.document_type_id),
       title: tipo?.name || "Documento",
       required: tipo?.required ?? false,
       status: doc.status as DocumentStatus,
@@ -193,7 +193,7 @@ export async function updateDocumentStatus(input: {
 
   const { data: currentDoc, error: fetchError } = await supabase
     .from("documentos_aluno")
-    .select("id, aluno_id, status, observacao, rejected_reason")
+    .select("id, aluno_id, status, observation, rejected_reason")
     .eq("id", input.documentId)
     .single();
 
@@ -202,13 +202,13 @@ export async function updateDocumentStatus(input: {
 
   const oldValue = {
     status: currentDoc.status,
-    observacao: currentDoc.observacao,
+    observation: currentDoc.observation,
     rejected_reason: currentDoc.rejected_reason,
   };
 
   const updateData: {
     status: DocumentStatus;
-    observacao?: string | null;
+    observation?: string | null;
     rejected_reason?: string | null;
     updated_at: string;
   } = {
@@ -219,16 +219,16 @@ export async function updateDocumentStatus(input: {
   if (input.status === "rejected") {
     if (input.rejectedReason) {
       updateData.rejected_reason = input.rejectedReason.trim();
-      updateData.observacao = null;
+      updateData.observation = null;
     } else {
       updateData.rejected_reason = currentDoc.rejected_reason;
     }
   } else {
     updateData.rejected_reason = null;
     if (input.observacao !== undefined) {
-      updateData.observacao = input.observacao ? input.observacao.trim() : null;
+      updateData.observation = input.observacao ? input.observacao.trim() : null;
     } else {
-      updateData.observacao = currentDoc.observacao;
+      updateData.observation = currentDoc.observation;
     }
   }
 
@@ -291,7 +291,7 @@ export async function listPendingDocumentsForDashboard(): Promise<
       aluno_id,
       status,
       updated_at,
-      documento_tipos:documento_tipos!documentos_aluno_documento_tipo_id_fkey (
+      documento_tipos:documento_tipos!documentos_aluno_document_type_id_fkey (
         name
       ),
       profiles:profiles!documentos_aluno_aluno_id_fkey (
