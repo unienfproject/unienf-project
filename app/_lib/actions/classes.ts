@@ -104,8 +104,6 @@ export async function createClass(input: {
 
   const supabase = await createServerSupabaseClient();
 
-  // Extrair período do tag (ex: "Primeiros_Socorros_2026.2" -> "2026.2")
-  // Se não houver padrão no tag, usar ano atual + semestre
   const tagTrimmed = input.tag.trim();
   const periodMatch = tagTrimmed.match(/\d{4}\.\d$/);
   const period = periodMatch
@@ -115,6 +113,7 @@ export async function createClass(input: {
   const { data: turma, error: turmaError } = await supabase
     .from("turmas")
     .insert({
+      name: input.name.trim(),
       tag: tagTrimmed,
       period: period,
       start_date: input.startDate,
@@ -178,6 +177,7 @@ export async function createTurmaAdmin(input: {
   const { data: turma, error: turmaError } = await supabase
     .from("turmas")
     .insert({
+      name: input.name.trim(),
       tag: tagTrimmed,
       period: period,
       start_date: input.startDate,
@@ -345,7 +345,6 @@ export async function getClassDetails(input: {
   teacherId: string;
 }): Promise<{
   id: string;
-  name: string;
   tag: string;
   start_date: string;
   end_date: string;
@@ -436,7 +435,6 @@ export async function getClassDetails(input: {
 
   return {
     id: turmaData.id,
-    name: turmaData.tag,
     tag: turmaData.tag,
     start_date: turmaData.start_date,
     end_date: turmaData.end_date,
@@ -532,9 +530,7 @@ export async function listStudentsFromMyClasses(
     alunos:
       | { age: number | null; date_of_birth: string | null }
       | { age: number | null; date_of_birth: string | null }[];
-    turmas:
-      | { id: string; tag: string }
-      | { id: string; tag: string }[];
+    turmas: { id: string; tag: string } | { id: string; tag: string }[];
   };
 
   const alunosAgrupados = new Map<string, StudentFromMyClasses>();
