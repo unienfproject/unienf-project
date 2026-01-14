@@ -13,15 +13,15 @@ export async function listTurmasForAvisoPicker(): Promise<PickerItem[]> {
 
   const { data, error } = await supabase
     .from("turmas")
-    .select("id, name, tag")
+    .select("id, tag")
     .eq("status", "ativa")
-    .order("name");
+    .order("tag");
 
   if (error) throw new Error(error.message);
 
   return (data ?? []).map((t) => ({
     id: t.id,
-    label: `${t.name} (${t.tag})`,
+    label: `${t.tag}`,
   }));
 }
 
@@ -199,11 +199,11 @@ export async function listAvisosForStudent(
         if (aviso.turma_id) {
           const { data: turma } = await supabase
             .from("turmas")
-            .select("name, tag")
+            .select("tag")
             .eq("id", aviso.turma_id)
             .single();
           if (turma) {
-            turmaName = `${turma.name} (${turma.tag})`;
+            turmaName = turma.tag;
           }
         }
 

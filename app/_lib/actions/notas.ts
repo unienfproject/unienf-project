@@ -44,8 +44,8 @@ export async function listNotasByAvaliacao(avaliacaoId: string) {
       id,
       avaliacao_id,
       aluno_id,
-      value,
-      created_at,
+      nota,
+      released_at,
       updated_at,
       profiles!notas_aluno_id_fkey(name, email)
     `,
@@ -59,10 +59,10 @@ export async function listNotasByAvaliacao(avaliacaoId: string) {
     id: n.id,
     avaliacaoId: n.avaliacao_id,
     alunoId: n.aluno_id,
-    value: Number(n.value),
+    value: Number(n.nota),
     alunoName: (n.profiles as unknown as { name: string })?.name ?? "",
     alunoEmail: (n.profiles as unknown as { email: string })?.email ?? "",
-    createdAt: n.created_at,
+    createdAt: n.released_at,
     updatedAt: n.updated_at,
   }));
 }
@@ -102,14 +102,14 @@ export async function upsertNota(input: {
     }
   }
 
+  const now = new Date().toISOString();
+
   const { data: existing, error: existingErr } = await supabase
     .from("notas")
-    .select("id, value")
+    .select("id, nota")
     .eq("avaliacao_id", avaliacaoId)
     .eq("aluno_id", alunoId)
     .single();
-
-  const now = new Date().toISOString();
 
   if (existingErr && existingErr.code !== "PGRST116") {
     throw new Error(existingErr.message);
@@ -120,7 +120,7 @@ export async function upsertNota(input: {
     const { error: updateErr } = await supabase
       .from("notas")
       .update({
-        value,
+        nota: value,
         updated_at: now,
       })
       .eq("id", existing.id);
@@ -131,13 +131,42 @@ export async function upsertNota(input: {
     const { error: insertErr } = await supabase.from("notas").insert({
       avaliacao_id: avaliacaoId,
       aluno_id: alunoId,
-      value,
-      created_at: now,
+      nota: value,
+      released_by: profile.user_id,
+      released_at: now,
       updated_at: now,
     });
 
     if (insertErr) throw new Error(insertErr.message);
   }
+
+  revalidatePath("/professores/notas");
+  revalidatePath("/admin");
+}
+
+export async function deleteNota(notaId: string) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  if (profile.role !== "administrativo" && profile.role !== "coordenação") {
+    throw new Error(
+      "Apenas administrativo ou coordenação podem deletar notas.",
+    );
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: nota } = await supabase
+    .from("notas")
+    .select("id, nota, aluno_id, avaliacao_id")
+    .eq("id", notaId)
+    .single();
+
+  const { error } = await supabase.from("notas").delete().eq("id", notaId);
+
+  if (error) throw new Error(error.message);
+
+  // Nota deletada com sucesso
 
   revalidatePath("/professores/notas");
   revalidatePath("/admin");
@@ -203,7 +232,7 @@ export async function listNotasByStudent(
     .select(
       `
       id,
-      name,
+      tag,
       disciplina_id,
       disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
     `,
@@ -243,7 +272,7 @@ export async function listNotasByStudent(
     if (!avaliacoes || avaliacoes.length === 0) {
       resultados.push({
         turmaId: turma.id,
-        turmaName: turma.name,
+        turmaName: turma.tag,
         disciplinaName: disciplina?.name || "Disciplina",
         a1: null,
         a2: null,
@@ -258,7 +287,7 @@ export async function listNotasByStudent(
     const avaliacaoIds = avaliacoes.map((a) => a.id);
     const { data: notas, error: notasError } = await supabase
       .from("notas")
-      .select("avaliacao_id, value")
+      .select("avaliacao_id, nota")
       .eq("aluno_id", studentId)
       .in("avaliacao_id", avaliacaoIds);
 
@@ -274,8 +303,8 @@ export async function listNotasByStudent(
     if (notas) {
       for (const avaliacao of avaliacoes) {
         const nota = notas.find((n) => n.avaliacao_id === avaliacao.id);
-        if (nota && nota.value !== null) {
-          notasMap.set(avaliacao.type, Number(nota.value));
+        if (nota && nota.nota !== null) {
+          notasMap.set(avaliacao.type, Number(nota.nota));
         }
       }
     }
@@ -302,7 +331,7 @@ export async function listNotasByStudent(
 
     resultados.push({
       turmaId: turma.id,
-      turmaName: turma.name,
+      turmaName: turma.tag,
       disciplinaName: disciplina?.name || "Disciplina",
       a1,
       a2,
@@ -351,7 +380,7 @@ export async function listMyNotas(): Promise<MyNotasByTurma[]> {
     .select(
       `
       id,
-      name,
+      tag,
       disciplina_id,
       disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
     `,
@@ -390,7 +419,7 @@ export async function listMyNotas(): Promise<MyNotasByTurma[]> {
     if (!avaliacoes || avaliacoes.length === 0) {
       resultados.push({
         turmaId: turma.id,
-        turmaName: turma.name,
+        turmaName: turma.tag,
         disciplinaName: disciplina?.name || "Disciplina",
         a1: null,
         a2: null,
@@ -405,7 +434,7 @@ export async function listMyNotas(): Promise<MyNotasByTurma[]> {
     const avaliacaoIds = avaliacoes.map((a) => a.id);
     const { data: notas, error: notasError } = await supabase
       .from("notas")
-      .select("avaliacao_id, value")
+      .select("avaliacao_id, nota")
       .eq("aluno_id", profile.user_id)
       .in("avaliacao_id", avaliacaoIds);
 
@@ -421,8 +450,8 @@ export async function listMyNotas(): Promise<MyNotasByTurma[]> {
     if (notas) {
       for (const avaliacao of avaliacoes) {
         const nota = notas.find((n) => n.avaliacao_id === avaliacao.id);
-        if (nota && nota.value !== null) {
-          notasMap.set(avaliacao.type, Number(nota.value));
+        if (nota && nota.nota !== null) {
+          notasMap.set(avaliacao.type, Number(nota.nota));
         }
       }
     }
@@ -449,7 +478,7 @@ export async function listMyNotas(): Promise<MyNotasByTurma[]> {
 
     resultados.push({
       turmaId: turma.id,
-      turmaName: turma.name,
+      turmaName: turma.tag,
       disciplinaName: disciplina?.name || "Disciplina",
       a1,
       a2,

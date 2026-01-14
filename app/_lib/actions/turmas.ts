@@ -49,7 +49,6 @@ export async function listTurmas(): Promise<TurmaRow[]> {
     .select(
       `
       id,
-      name,
       tag,
       start_date,
       end_date,
@@ -73,7 +72,7 @@ export async function listTurmas(): Promise<TurmaRow[]> {
 
     return {
       id: t.id,
-      name: t.name,
+      name: t.tag,
       tag: t.tag,
       startDate: t.start_date,
       endDate: t.end_date,
@@ -131,6 +130,10 @@ export async function listTurmasPaginated(params: {
       `
         id,
         tag,
+        start_date,
+        end_date,
+        status,
+        created_at,
         disciplinas:disciplinas!turmas_disciplina_id_fkey (
           name
         ),
@@ -157,9 +160,14 @@ export async function listTurmasPaginated(params: {
 
     return {
       id: String(r.id),
+      name: String(r.tag ?? ""),
       tag: String(r.tag ?? ""),
+      startDate: String(r.start_date ?? ""),
+      endDate: String(r.end_date ?? ""),
+      status: String(r.status ?? ""),
       disciplinaName: disc?.name ?? null,
       professorName: prof?.name ?? null,
+      createdAt: String(r.created_at ?? ""),
     };
   });
 

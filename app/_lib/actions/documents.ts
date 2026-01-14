@@ -31,12 +31,12 @@ export async function listMyDocuments(): Promise<DocumentItem[]> {
     .select(
       `
       id,
-      documento_tipo_id,
+      document_type_id,
       status,
       observation,
       rejected_reason,
       updated_at,
-      documento_tipos:documento_tipos!documentos_aluno_documento_tipo_id_fkey (
+      documento_tipos:documento_tipos!documentos_aluno_document_type_id_fkey (
         id,
         name,
         required
@@ -59,7 +59,7 @@ export async function listMyDocuments(): Promise<DocumentItem[]> {
 
   type DocumentoRow = {
     id: unknown;
-    documento_tipo_id: unknown;
+    document_type_id: unknown;
     status: unknown;
     observation: unknown;
     rejected_reason: unknown;
@@ -84,7 +84,7 @@ export async function listMyDocuments(): Promise<DocumentItem[]> {
 
     return {
       id: String(doc.id),
-      documentTypeId: String(doc.documento_tipo_id),
+      documentTypeId: String(doc.document_type_id),
       documentTypeName: tipo?.name ? String(tipo.name) : "Documento",
       required: tipo?.required ? Boolean(tipo.required) : false,
       status: doc.status as DocumentoStatus,
@@ -113,12 +113,12 @@ export async function listStudentDocuments(
     .select(
       `
       id,
-      documento_tipo_id,
+      document_type_id,
       status,
       observation,
       rejected_reason,
       updated_at,
-      documento_tipos:documento_tipos!documentos_aluno_documento_tipo_id_fkey (
+      documento_tipos:documento_tipos!documentos_aluno_document_type_id_fkey (
         id,
         name,
         required
@@ -141,7 +141,7 @@ export async function listStudentDocuments(
 
   type DocumentoRow = {
     id: unknown;
-    documento_tipo_id: unknown;
+    document_type_id: unknown;
     status: unknown;
     observation: unknown;
     rejected_reason: unknown;
@@ -166,7 +166,7 @@ export async function listStudentDocuments(
 
     return {
       id: String(doc.id),
-      documentTypeId: String(doc.documento_tipo_id),
+      documentTypeId: String(doc.document_type_id),
       documentTypeName: tipo?.name ? String(tipo.name) : "Documento",
       required: tipo?.required ? Boolean(tipo.required) : false,
       status: doc.status as DocumentoStatus,
@@ -295,7 +295,7 @@ export async function listPendingDocumentsForDashboard(): Promise<
       aluno_id,
       status,
       updated_at,
-      documento_tipos:documento_tipos!documentos_aluno_documento_tipo_id_fkey (
+      documento_tipos:documento_tipos!documentos_aluno_document_type_id_fkey (
         name
       ),
       profiles:profiles!documentos_aluno_aluno_id_fkey (

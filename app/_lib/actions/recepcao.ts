@@ -30,7 +30,7 @@ export async function listStudentsForRecepcao(
       user_id,
       name,
       email,
-      telefone,
+      phone,
       created_at,
       alunos:alunos!alunos_user_id_fkey(age, date_of_birth)
     `,
@@ -41,7 +41,7 @@ export async function listStudentsForRecepcao(
   if (searchTerm && searchTerm.trim()) {
     const term = searchTerm.trim().toLowerCase();
     query = query.or(
-      `name.ilike.%${term}%,email.ilike.%${term}%,telefone.ilike.%${term}%`,
+      `name.ilike.%${term}%,email.ilike.%${term}%,phone.ilike.%${term}%`,
     );
   }
 
@@ -65,18 +65,16 @@ export async function listStudentsForRecepcao(
 
       const { data: turmas, error: turmasError } = await supabase
         .from("turmas")
-        .select("id, name, tag, status")
+        .select("id, tag, status")
         .in("id", turmaIds)
         .eq("status", "ativa");
 
       if (!turmasError && turmas) {
-        const turmaMap = new Map(
-          turmas.map((t) => [t.id, t.name || t.tag || ""]),
-        );
+        const turmaMap = new Map(turmas.map((t) => [t.id, t.tag || ""]));
         turmaAlunos.forEach((ta) => {
-          const turmaName = turmaMap.get(ta.turma_id);
-          if (turmaName && !turmasData[ta.aluno_id]) {
-            turmasData[ta.aluno_id] = turmaName;
+          const turmaTag = turmaMap.get(ta.turma_id);
+          if (turmaTag && !turmasData[ta.aluno_id]) {
+            turmasData[ta.aluno_id] = turmaTag;
           }
         });
       }
@@ -90,7 +88,7 @@ export async function listStudentsForRecepcao(
       id: p.user_id,
       name: p.name ?? "",
       email: p.email ?? "",
-      telefone: p.telefone,
+      telefone: p.phone,
       turmaAtual: turmasData[p.user_id] || null,
       matricula: p.user_id.slice(0, 8).toUpperCase(),
     };
@@ -157,7 +155,7 @@ export async function updateStudentProfile(input: {
 
   const { data: currentData, error: fetchError } = await supabase
     .from("profiles")
-    .select("name, telefone")
+    .select("name, phone")
     .eq("user_id", input.studentId)
     .single();
 
@@ -166,12 +164,12 @@ export async function updateStudentProfile(input: {
 
   const oldValue = {
     name: currentData.name,
-    telefone: currentData.telefone,
+    telefone: currentData.phone,
   };
 
   const updateData: {
     name?: string;
-    telefone?: string | null;
+    phone?: string | null;
     updated_at: string;
   } = {
     updated_at: new Date().toISOString(),
@@ -182,7 +180,7 @@ export async function updateStudentProfile(input: {
   }
 
   if (input.telefone !== undefined) {
-    updateData.telefone = input.telefone ? input.telefone.trim() : null;
+    updateData.phone = input.telefone ? input.telefone.trim() : null;
   }
 
   const { error: updateError } = await supabase
@@ -199,7 +197,7 @@ export async function updateStudentProfile(input: {
     oldValue,
     newValue: {
       name: updateData.name ?? currentData.name,
-      telefone: updateData.telefone ?? currentData.telefone,
+      telefone: updateData.phone ?? currentData.phone,
     },
     description: `Dados pessoais do aluno atualizados por ${profile.name ?? profile.email}`,
   });

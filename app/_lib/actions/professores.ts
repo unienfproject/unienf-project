@@ -59,7 +59,7 @@ export async function createProfessor(input: {
       email_confirm: true,
       user_metadata: {
         name,
-        telefone,
+        phone: telefone,
       },
       app_metadata: {
         role: "professor",
@@ -76,7 +76,7 @@ export async function createProfessor(input: {
     .from("profiles")
     .update({
       name,
-      telefone,
+      phone: telefone,
       email,
       role: "professor",
       updated_at: new Date().toISOString(),
@@ -116,7 +116,7 @@ export async function listProfessores(): Promise<ProfessorRow[]> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("user_id, name, email, telefone, created_at")
+    .select("user_id, name, email, phone, created_at")
     .eq("role", "professor")
     .order("created_at", { ascending: false });
 
@@ -126,7 +126,7 @@ export async function listProfessores(): Promise<ProfessorRow[]> {
     id: p.user_id,
     name: p.name ?? "",
     email: p.email ?? "",
-    telefone: p.telefone,
+    telefone: p.phone,
     createdAt: p.created_at,
   }));
 }
@@ -147,7 +147,7 @@ export async function updateProfessorProfile(input: {
 
   const { data: currentProfile, error: fetchError } = await supabase
     .from("profiles")
-    .select("user_id, name, telefone, email, role")
+    .select("user_id, name, phone, email, role")
     .eq("user_id", input.professorId)
     .single();
 
@@ -159,13 +159,13 @@ export async function updateProfessorProfile(input: {
 
   const oldValue = {
     name: currentProfile.name,
-    telefone: currentProfile.telefone,
+    telefone: currentProfile.phone,
     email: currentProfile.email,
   };
 
   const updateData: {
     name?: string;
-    telefone?: string | null;
+    phone?: string | null;
     email?: string | null;
     updated_at: string;
   } = {
@@ -176,7 +176,7 @@ export async function updateProfessorProfile(input: {
     updateData.name = input.name.trim();
   }
   if (input.telefone !== undefined) {
-    updateData.telefone = input.telefone ? input.telefone.trim() : null;
+    updateData.phone = input.telefone ? input.telefone.trim() : null;
   }
   if (input.email !== undefined) {
     updateData.email = input.email ? input.email.trim().toLowerCase() : null;
@@ -196,7 +196,7 @@ export async function updateProfessorProfile(input: {
     oldValue,
     newValue: {
       name: updateData.name ?? currentProfile.name,
-      telefone: updateData.telefone ?? currentProfile.telefone,
+      telefone: updateData.phone ?? currentProfile.phone,
       email: updateData.email ?? currentProfile.email,
     },
     description: `Dados pessoais do professor atualizados por ${profile.name ?? profile.email}`,
@@ -236,7 +236,7 @@ export async function listProfessoresPaginated(params: {
   if (search) {
     // ajuste os campos conforme seu schema real
     countQuery = countQuery.or(
-      `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`,
+      `name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`,
     );
   }
 
@@ -249,14 +249,14 @@ export async function listProfessoresPaginated(params: {
   // 2) data (range)
   let dataQuery = supabase
     .from("profiles")
-    .select("user_id, name, email, telefone")
+    .select("user_id, name, email, phone")
     .eq("role", "professor")
     .order("created_at", { ascending: false })
     .range(from, to);
 
   if (search) {
     dataQuery = dataQuery.or(
-      `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`,
+      `name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`,
     );
   }
 
@@ -267,7 +267,7 @@ export async function listProfessoresPaginated(params: {
     id: r.user_id,
     name: r.name,
     email: r.email,
-    telefone: r.telefone,
+    telefone: r.phone,
   }));
 
   return { items, total, page, pageSize, totalPages };

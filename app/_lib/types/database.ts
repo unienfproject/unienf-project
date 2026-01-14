@@ -4,8 +4,8 @@
  * Este arquivo contém os tipos que refletem exatamente a estrutura
  * das tabelas no banco de dados.
  *
- * Obs: colunas numeric no Postgres podem vir como string dependendo do client/config.
- * Aqui mantive como number porque é o que vocês vinham usando no projeto.
+ * Nota prática: colunas `numeric` do Postgres às vezes vêm como string dependendo do client/config.
+ * Aqui mantive como number porque é o padrão que vocês estavam usando no front.
  */
 
 export type UUID = string;
@@ -26,7 +26,7 @@ export type ProfileRole =
 export type Profile = {
   user_id: UUID; // uuid (PK, FK -> auth.users.id)
   name: string | null; // text
-  telefone: string | null; // text
+  phone: string | null; // text
   email: string | null; // text
   avatar_url: string | null; // text
   role: ProfileRole; // text NOT NULL (default 'aluno')
@@ -59,7 +59,7 @@ export type Responsavel = {
   cpf: string | null; // text
   telefone: string | null; // text
   email: string | null; // text
-  parentesco: string | null; // text
+  kinship: string | null; // text
   created_at: Timestamp; // timestamptz
   updated_at: Timestamp; // timestamptz
 };
@@ -140,7 +140,7 @@ export type AvaliacaoTipo = "A1" | "A2" | "A3" | "REC";
 export type Avaliacao = {
   id: UUID; // uuid
   turma_id: UUID; // uuid (FK -> turmas.id)
-  tipo: AvaliacaoTipo; // text NOT NULL
+  type: AvaliacaoTipo; // text NOT NULL
   title: string | null; // text
   nota_max: number; // numeric NOT NULL default 10
   data_avaliacao: DateString | null; // date nullable
@@ -154,9 +154,9 @@ export type Nota = {
   avaliacao_id: UUID; // uuid (FK -> avaliacoes.id)
   aluno_id: UUID; // uuid (FK -> profiles.user_id)
   nota: number; // numeric NOT NULL
-  observacao: string | null; // text
-  lancado_por: UUID | null; // uuid nullable (FK -> profiles.user_id)
-  lancado_em: Timestamp; // timestamptz NOT NULL default now()
+  observation: string | null; // text
+  released_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
+  released_at: Timestamp; // timestamptz NOT NULL default now()
   updated_at: Timestamp; // timestamptz
 };
 
@@ -189,21 +189,21 @@ export type Mensalidade = {
   competence_month: number; // int4 (1-12)
   due_date: DateString | null; // date nullable
   status: MensalidadeStatus; // text NOT NULL default 'pendente'
-  valor_previsto: number; // numeric NOT NULL
+  predicted_value: number; // numeric NOT NULL
   created_at: Timestamp; // timestamptz
   updated_at: Timestamp; // timestamptz
 };
 
-export type FormaPagamento = "dinheiro" | "pix" | "debito" | "credito";
+export type PaymentMethod = "dinheiro" | "pix" | "debito" | "credito";
 
 export type Pagamento = {
   id: UUID; // uuid
   mensalidade_id: UUID; // uuid (FK -> mensalidades.id)
-  valor_pago: number; // numeric NOT NULL
-  forma_pagamento: FormaPagamento; // text NOT NULL
-  pago_em: Timestamp; // timestamptz NOT NULL default now()
-  recebido_por: UUID | null; // uuid nullable (FK -> profiles.user_id)
-  observacao: string | null; // text
+  amount_paid: number; // numeric NOT NULL
+  payment_method: PaymentMethod; // text NOT NULL
+  paid_at: Timestamp; // timestamptz NOT NULL default now()
+  received_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
+  observation: string | null; // text
   created_at: Timestamp; // timestamptz
 };
 
@@ -215,7 +215,7 @@ export type ReceiptCounter = {
 export type Recibo = {
   id: UUID; // uuid
   pagamento_id: UUID; // uuid NOT NULL UNIQUE (FK -> pagamentos.id)
-  receipt_number: string; // text NOT NULL UNIQUE (ex: UNF-2026-000123)
+  receipt_number: string; // text NOT NULL UNIQUE
   issued_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
   issued_at: Timestamp; // timestamptz NOT NULL default now()
   notes: string | null; // text
@@ -239,7 +239,7 @@ export type DocumentoStatus = "pending" | "delivered" | "rejected";
 export type DocumentoAluno = {
   id: UUID; // uuid
   aluno_id: UUID; // uuid (FK -> profiles.user_id)
-  documento_tipo_id: UUID; // uuid (FK -> documento_tipos.id)
+  document_type_id: UUID; // uuid (FK -> documento_tipos.id)
   status: DocumentoStatus; // text NOT NULL default 'pending'
   reviewed_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
   reviewed_at: Timestamp | null; // timestamptz nullable
@@ -317,8 +317,8 @@ export type AuditLog = {
   id: number; // bigint identity
   table_name: string; // text NOT NULL
   action: AuditActionDB; // text NOT NULL
-  record_id: string | null; // text
-  actor_id: UUID | null; // uuid
+  record_id: string | null; // text nullable
+  actor_id: UUID | null; // uuid nullable
   acted_at: Timestamp; // timestamptz NOT NULL default now()
   old_data: unknown | null; // jsonb
   new_data: unknown | null; // jsonb
@@ -327,6 +327,8 @@ export type AuditLog = {
 // ============================================================================
 // VIEWS
 // ============================================================================
+// (se o Supabase continuar mostrando vw_alunos_live, você pode tipar assim.
+// Se ela não existir no banco, pode remover esse tipo sem medo.)
 
 export type VwAlunosLive = {
   user_id: UUID; // uuid
