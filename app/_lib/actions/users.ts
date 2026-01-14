@@ -78,7 +78,7 @@ export async function createInternalUser(input: {
       email_confirm: true,
       user_metadata: {
         name,
-        telefone,
+        phone: telefone,
       },
       app_metadata: {
         role,
@@ -95,7 +95,7 @@ export async function createInternalUser(input: {
     .from("profiles")
     .update({
       name,
-      telefone,
+      phone: telefone,
       email,
       role,
       updated_at: new Date().toISOString(),
@@ -125,7 +125,7 @@ export async function listInternalUsers() {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("user_id, name, email, telefone, role, created_at")
+    .select("user_id, name, email, phone, role, created_at")
     .in("role", ["recepção", "coordenação", "administrativo", "professor"])
     .order("created_at", { ascending: false });
 
@@ -135,7 +135,7 @@ export async function listInternalUsers() {
     id: u.user_id as string,
     name: (u.name ?? "") as string,
     email: (u.email ?? "") as string,
-    telefone: (u.telefone ?? "") as string,
+    telefone: (u.phone ?? "") as string,
     role: (u.role ?? "") as string,
   }));
 }
@@ -264,7 +264,7 @@ export async function listUsersPaginated(params: {
 
   if (search) {
     countQuery = countQuery.or(
-      `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`,
+      `name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`,
     );
   }
 
@@ -277,14 +277,14 @@ export async function listUsersPaginated(params: {
   // 2) data (range)
   let dataQuery = supabase
     .from("profiles")
-    .select("user_id, name, email, telefone, role, created_at")
+    .select("user_id, name, email, phone, role, created_at")
     .in("role", internalRoles)
     .order("created_at", { ascending: false })
     .range(from, to);
 
   if (search) {
     dataQuery = dataQuery.or(
-      `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`,
+      `name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`,
     );
   }
 
@@ -295,7 +295,7 @@ export async function listUsersPaginated(params: {
     id: String(r.user_id),
     name: String(r.name ?? ""),
     email: String(r.email ?? ""),
-    telefone: (r.telefone ?? null) as string | null,
+    telefone: (r.phone ?? null) as string | null,
     role: (r.role ?? null) as Role | null,
   }));
 

@@ -7,13 +7,13 @@ import { revalidatePath } from "next/cache";
 
 import type {
   FormaPagamento,
-  MensalidadeRow,
   MensalidadeStatus,
 } from "@/app/_lib/actions/finance";
+import type { Mensalidade } from "@/app/_lib/types/database";
 
 export type PaymentStatus = MensalidadeStatus;
 export type PaymentMethod = FormaPagamento;
-export type TuitionInstallment = MensalidadeRow;
+export type TuitionInstallment = Mensalidade;
 
 const ALLOWED_FORMS: readonly FormaPagamento[] = [
   "dinheiro",
@@ -89,12 +89,15 @@ export async function markMensalidadeAsPaid(input: {
     throw new Error("Esta mensalidade já está marcada como paga.");
   }
 
+  const profile = await getUserProfile();
+  const paidAtTimestamp = new Date(dataPagamento + "T00:00:00Z").toISOString();
+
   const { error: pagamentoErr } = await supabase.from("pagamentos").insert({
     mensalidade_id: mensalidadeId,
-    valor_pago: valorPago,
-    forma_pagamento: formaPagamento,
-    data_pagamento: dataPagamento,
-    created_by: (await getUserProfile())?.user_id ?? null,
+    amount_paid: valorPago,
+    payment_method: formaPagamento,
+    paid_at: paidAtTimestamp,
+    received_by: profile?.user_id ?? null,
     created_at: new Date().toISOString(),
   });
 
@@ -104,8 +107,6 @@ export async function markMensalidadeAsPaid(input: {
     .from("mensalidades")
     .update({
       status: "pago",
-      valor_pago: valorPago,
-      data_pagamento: dataPagamento,
       updated_at: new Date().toISOString(),
     })
     .eq("id", mensalidadeId);
@@ -118,9 +119,9 @@ export async function markMensalidadeAsPaid(input: {
     entityId: mensalidadeId,
     newValue: {
       status: "pago",
-      valor_pago: valorPago,
-      forma_pagamento: formaPagamento,
-      data_pagamento: dataPagamento,
+      amount_paid: valorPago,
+      payment_method: formaPagamento,
+      paid_at: paidAtTimestamp,
     },
     description: `Pagamento de R$ ${valorPago.toFixed(2)} registrado (${formaPagamento})`,
   });
@@ -133,7 +134,7 @@ export async function markMensalidadeAsPaid(input: {
 export async function listMensalidadesForRecepcao(params?: {
   status?: "pendente" | "pago" | "todos";
   studentId?: string | null;
-}): Promise<MensalidadeRow[]> {
+}): Promise<Mensalidade[]> {
   await requireUserRole(["recepção", "administrativo"]);
 
   const supabase = await createServerSupabaseClient();
@@ -147,10 +148,8 @@ export async function listMensalidadesForRecepcao(params?: {
         competence_year,
         competence_month,
         status,
-        valor_mensalidade,
-        valor_pago,
-        data_vencimento,
-        data_pagamento,
+        predicted_value,
+        due_date,
         profiles:profiles!mensalidades_aluno_id_fkey ( name )
       `,
     )
@@ -167,7 +166,7 @@ export async function listMensalidadesForRecepcao(params?: {
 
   if (error) {
     console.warn("[listMensalidadesForRecepcao] fallback mock:", error.message);
-    return buildMensalidadesMock({ status, studentId });
+    return buildMensalidadesMock({ status, studentId }) as Mensalidade[];
   }
 
   if (!data || data.length === 0) {
@@ -177,18 +176,28 @@ export async function listMensalidadesForRecepcao(params?: {
   const mensalidadeIds = data.map((r: { id: unknown }) => String(r.id));
   const { data: pagamentos } = await supabase
     .from("pagamentos")
-    .select("mensalidade_id, forma_pagamento")
+    .select("mensalidade_id, amount_paid, payment_method, paid_at")
     .in("mensalidade_id", mensalidadeIds)
-    .order("created_at", { ascending: false });
+    .order("paid_at", { ascending: false });
 
-  const formaPagamentoMap = new Map<string, FormaPagamento | null>();
+  const pagamentoMap = new Map<
+    string,
+    {
+      amount_paid: number;
+      payment_method: FormaPagamento;
+      paid_at: string;
+    } | null
+  >();
+
   if (pagamentos) {
     for (const pagamento of pagamentos) {
-      if (!formaPagamentoMap.has(pagamento.mensalidade_id)) {
-        formaPagamentoMap.set(
-          pagamento.mensalidade_id,
-          (pagamento.forma_pagamento as FormaPagamento) || null,
-        );
+      const mid = String(pagamento.mensalidade_id);
+      if (!pagamentoMap.has(mid)) {
+        pagamentoMap.set(mid, {
+          amount_paid: Number(pagamento.amount_paid),
+          payment_method: pagamento.payment_method as FormaPagamento,
+          paid_at: String(pagamento.paid_at),
+        });
       }
     }
   }
@@ -199,15 +208,18 @@ export async function listMensalidadesForRecepcao(params?: {
     competence_year: unknown;
     competence_month: unknown;
     status: unknown;
-    valor_mensalidade: unknown;
-    valor_pago: unknown;
-    data_vencimento: unknown;
-    data_pagamento: unknown;
+    predicted_value: unknown;
+    due_date: unknown;
     profiles: { name: unknown } | { name: unknown }[] | null;
   };
 
-  return ((data as unknown as SupabaseRow[]) ?? []).map((r) => {
+  return ((data as unknown as SupabaseRow[]) ?? []).map((r: SupabaseRow) => {
     const profile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+    const pagamento = pagamentoMap.get(String(r.id));
+    const paidAtDate = pagamento?.paid_at
+      ? new Date(pagamento.paid_at).toISOString().split("T")[0]
+      : null;
+
     return {
       id: String(r.id),
       studentId: String(r.aluno_id),
@@ -215,11 +227,11 @@ export async function listMensalidadesForRecepcao(params?: {
       competenceYear: Number(r.competence_year),
       competenceMonth: Number(r.competence_month),
       status: r.status as MensalidadeStatus,
-      valor_mensalidade: Number(r.valor_mensalidade),
-      valorPago: r.valor_pago == null ? null : Number(r.valor_pago),
-      formaPagamento: formaPagamentoMap.get(String(r.id)) || null,
-      dataVencimento: (r.data_vencimento ?? null) as string | null,
-      dataPagamento: (r.data_pagamento ?? null) as string | null,
+      valor_mensalidade: Number(r.predicted_value),
+      valorPago: pagamento?.amount_paid ?? null,
+      formaPagamento: pagamento?.payment_method ?? null,
+      dataVencimento: (r.due_date ?? null) as string | null,
+      dataPagamento: paidAtDate,
     };
   });
 }
@@ -227,8 +239,8 @@ export async function listMensalidadesForRecepcao(params?: {
 function buildMensalidadesMock(input: {
   status: "pendente" | "pago" | "todos";
   studentId?: string;
-}): MensalidadeRow[] {
-  const base: MensalidadeRow[] = [
+}): Mensalidade[] {
+  const base: Mensalidade[] = [
     {
       id: "m1",
       studentId: input.studentId || "student-1",
@@ -318,7 +330,7 @@ export async function updateMensalidade(input: {
     if (valor === null || valor <= 0) {
       throw new Error("Valor da mensalidade deve ser maior que zero.");
     }
-    updates.valor_mensalidade = valor;
+    updates.predicted_value = valor;
   }
 
   if (input.dataVencimento !== undefined) {
@@ -326,7 +338,7 @@ export async function updateMensalidade(input: {
     if (!isValidYYYYMMDD(data)) {
       throw new Error("Data de vencimento inválida (formato: YYYY-MM-DD).");
     }
-    updates.data_vencimento = data;
+    updates.due_date = data;
   }
 
   if (input.status !== undefined) {
@@ -382,12 +394,12 @@ export async function updatePagamento(input: {
     if (valor === null || valor <= 0) {
       throw new Error("Valor pago deve ser maior que zero.");
     }
-    updates.valor_pago = valor;
+    updates.amount_paid = valor;
   }
 
   if (input.formaPagamento !== undefined) {
     assertFormaPagamento(input.formaPagamento);
-    updates.forma_pagamento = input.formaPagamento;
+    updates.payment_method = input.formaPagamento;
   }
 
   if (input.dataPagamento !== undefined) {
@@ -395,11 +407,11 @@ export async function updatePagamento(input: {
     if (!isValidYYYYMMDD(data)) {
       throw new Error("Data de pagamento inválida (formato: YYYY-MM-DD).");
     }
-    updates.data_pagamento = data;
+    updates.paid_at = new Date(data + "T00:00:00Z").toISOString();
   }
 
   if (input.observacao !== undefined) {
-    updates.observacao = input.observacao;
+    updates.observation = input.observacao;
   }
 
   const { error } = await supabase
@@ -417,24 +429,21 @@ export async function updatePagamento(input: {
     description: `Pagamento atualizado: ${Object.keys(updates).join(", ")}`,
   });
 
-  if (input.valorPago !== undefined || input.dataPagamento !== undefined) {
-    const { data: pagamento } = await supabase
-      .from("pagamentos")
-      .select("valor_pago, data_pagamento")
-      .eq("id", pagamentoId)
-      .single();
+  // Verificar se há pagamentos para atualizar status da mensalidade
+  const { data: pagamentos } = await supabase
+    .from("pagamentos")
+    .select("id")
+    .eq("mensalidade_id", current.mensalidade_id)
+    .limit(1);
 
-    if (pagamento) {
-      await supabase
-        .from("mensalidades")
-        .update({
-          valor_pago: pagamento.valor_pago,
-          data_pagamento: pagamento.data_pagamento,
-          status: "pago",
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", current.mensalidade_id);
-    }
+  if (pagamentos && pagamentos.length > 0) {
+    await supabase
+      .from("mensalidades")
+      .update({
+        status: "pago",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", current.mensalidade_id);
   }
 
   revalidatePath("/admin/financeiro");
@@ -479,8 +488,6 @@ export async function deletePagamento(pagamentoId: string) {
       .from("mensalidades")
       .update({
         status: "pendente",
-        valor_pago: null,
-        data_pagamento: null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", pagamento.mensalidade_id);
@@ -492,7 +499,7 @@ export async function deletePagamento(pagamentoId: string) {
 
 export async function listMensalidadesByStudent(
   studentId: string,
-): Promise<MensalidadeRow[]> {
+): Promise<Mensalidade[]> {
   const id = String(studentId ?? "").trim();
   if (!id || id === "undefined" || id === "null") {
     throw new Error("ID do aluno inválido.");
@@ -511,7 +518,7 @@ export async function listMensalidadesByStudent(
   const { data: mensalidades, error: mensalidadesError } = await supabase
     .from("mensalidades")
     .select(
-      "id, aluno_id, competence_year, competence_month, status, valor_mensalidade, valor_pago, data_vencimento, data_pagamento",
+      "id, aluno_id, competence_year, competence_month, status, predicted_value, due_date",
     )
     .eq("aluno_id", id)
     .order("competence_year", { ascending: false })
@@ -525,13 +532,15 @@ export async function listMensalidadesByStudent(
     return [];
   }
 
-  const mensalidadeIds = mensalidades.map((m) => m.id);
+  const mensalidadeIds = mensalidades.map((m: { id: unknown }) =>
+    String(m.id),
+  ) as string[];
 
   const { data: pagamentos, error: pagamentosError } = await supabase
     .from("pagamentos")
-    .select("mensalidade_id, forma_pagamento")
+    .select("mensalidade_id, amount_paid, payment_method, paid_at")
     .in("mensalidade_id", mensalidadeIds)
-    .order("created_at", { ascending: false });
+    .order("paid_at", { ascending: false });
 
   if (pagamentosError) {
     console.warn(
@@ -540,14 +549,24 @@ export async function listMensalidadesByStudent(
     );
   }
 
-  const formaPagamentoMap = new Map<string, FormaPagamento | null>();
+  const pagamentoMap = new Map<
+    string,
+    {
+      amount_paid: number;
+      payment_method: FormaPagamento;
+      paid_at: string;
+    }
+  >();
+
   if (pagamentos) {
     for (const pagamento of pagamentos) {
-      if (!formaPagamentoMap.has(pagamento.mensalidade_id)) {
-        formaPagamentoMap.set(
-          pagamento.mensalidade_id,
-          (pagamento.forma_pagamento as FormaPagamento) || null,
-        );
+      const mid = String(pagamento.mensalidade_id);
+      if (!pagamentoMap.has(mid)) {
+        pagamentoMap.set(mid, {
+          amount_paid: Number(pagamento.amount_paid),
+          payment_method: pagamento.payment_method as FormaPagamento,
+          paid_at: String(pagamento.paid_at),
+        });
       }
     }
   }
@@ -560,22 +579,29 @@ export async function listMensalidadesByStudent(
 
   const studentName = profileData?.name || "Aluno";
 
-  return mensalidades.map((m) => ({
-    id: String(m.id),
-    studentId: String(m.aluno_id),
-    studentName,
-    competenceYear: Number(m.competence_year),
-    competenceMonth: Number(m.competence_month),
-    status: m.status as MensalidadeStatus,
-    valor_mensalidade: Number(m.valor_mensalidade),
-    valorPago: m.valor_pago == null ? null : Number(m.valor_pago),
-    formaPagamento: formaPagamentoMap.get(m.id) || null,
-    dataVencimento: m.data_vencimento || null,
-    dataPagamento: m.data_pagamento || null,
-  }));
+  return mensalidades.map((m) => {
+    const pagamento = pagamentoMap.get(m.id);
+    const paidAtDate = pagamento?.paid_at
+      ? new Date(pagamento.paid_at).toISOString().split("T")[0]
+      : null;
+
+    return {
+      id: String(m.id),
+      studentId: String(m.aluno_id),
+      studentName,
+      competenceYear: Number(m.competence_year),
+      competenceMonth: Number(m.competence_month),
+      status: m.status as MensalidadeStatus,
+      valor_mensalidade: Number(m.predicted_value),
+      valorPago: pagamento?.amount_paid ?? null,
+      formaPagamento: pagamento?.payment_method ?? null,
+      dataVencimento: m.due_date || null,
+      dataPagamento: paidAtDate,
+    };
+  });
 }
 
-export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
+export async function listMyMensalidades(): Promise<Mensalidade[]> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
 
@@ -588,7 +614,7 @@ export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
   const { data: mensalidades, error: mensalidadesError } = await supabase
     .from("mensalidades")
     .select(
-      "id, aluno_id, competence_year, competence_month, status, valor_mensalidade, valor_pago, data_vencimento, data_pagamento",
+      "id, aluno_id, competence_year, competence_month, status, predicted_value, due_date",
     )
     .eq("aluno_id", profile.user_id)
     .order("competence_year", { ascending: false })
@@ -602,13 +628,15 @@ export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
     return [];
   }
 
-  const mensalidadeIds = mensalidades.map((m) => m.id);
+  const mensalidadeIds = mensalidades.map((m: { id: unknown }) =>
+    String(m.id),
+  ) as string[];
 
   const { data: pagamentos, error: pagamentosError } = await supabase
     .from("pagamentos")
-    .select("mensalidade_id, forma_pagamento")
+    .select("mensalidade_id, amount_paid, payment_method, paid_at")
     .in("mensalidade_id", mensalidadeIds)
-    .order("created_at", { ascending: false });
+    .order("paid_at", { ascending: false });
 
   if (pagamentosError) {
     console.warn(
@@ -617,14 +645,24 @@ export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
     );
   }
 
-  const formaPagamentoMap = new Map<string, FormaPagamento | null>();
+  const pagamentoMap = new Map<
+    string,
+    {
+      amount_paid: number;
+      payment_method: FormaPagamento;
+      paid_at: string;
+    }
+  >();
+
   if (pagamentos) {
     for (const pagamento of pagamentos) {
-      if (!formaPagamentoMap.has(pagamento.mensalidade_id)) {
-        formaPagamentoMap.set(
-          pagamento.mensalidade_id,
-          (pagamento.forma_pagamento as FormaPagamento) || null,
-        );
+      const mid = String(pagamento.mensalidade_id);
+      if (!pagamentoMap.has(mid)) {
+        pagamentoMap.set(mid, {
+          amount_paid: Number(pagamento.amount_paid),
+          payment_method: pagamento.payment_method as FormaPagamento,
+          paid_at: String(pagamento.paid_at),
+        });
       }
     }
   }
@@ -637,17 +675,24 @@ export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
 
   const studentName = profileData?.name || profile.name || "Aluno";
 
-  return mensalidades.map((m) => ({
-    id: String(m.id),
-    studentId: String(m.aluno_id),
-    studentName,
-    competenceYear: Number(m.competence_year),
-    competenceMonth: Number(m.competence_month),
-    status: m.status as MensalidadeStatus,
-    valor_mensalidade: Number(m.valor_mensalidade),
-    valorPago: m.valor_pago == null ? null : Number(m.valor_pago),
-    formaPagamento: formaPagamentoMap.get(m.id) || null,
-    dataVencimento: m.data_vencimento || null,
-    dataPagamento: m.data_pagamento || null,
-  }));
+  return mensalidades.map((m) => {
+    const pagamento = pagamentoMap.get(String(m.id));
+    const paidAtDate = pagamento?.paid_at
+      ? new Date(pagamento.paid_at).toISOString().split("T")[0]
+      : null;
+
+    return {
+      id: String(m.id),
+      studentId: String(m.aluno_id),
+      studentName,
+      competenceYear: Number(m.competence_year),
+      competenceMonth: Number(m.competence_month),
+      status: m.status as MensalidadeStatus,
+      valor_mensalidade: Number(m.predicted_value),
+      valorPago: pagamento?.amount_paid ?? null,
+      formaPagamento: pagamento?.payment_method ?? null,
+      dataVencimento: m.due_date || null,
+      dataPagamento: paidAtDate,
+    };
+  });
 }
