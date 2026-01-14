@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 
 import type {
   FormaPagamento,
+  MensalidadeRow,
   MensalidadeStatus,
 } from "@/app/_lib/actions/finance";
 import type { Mensalidade } from "@/app/_lib/types/database";
@@ -14,6 +15,7 @@ import type { Mensalidade } from "@/app/_lib/types/database";
 export type PaymentStatus = MensalidadeStatus;
 export type PaymentMethod = FormaPagamento;
 export type TuitionInstallment = Mensalidade;
+export type { MensalidadeRow };
 
 const ALLOWED_FORMS: readonly FormaPagamento[] = [
   "dinheiro",
@@ -134,7 +136,7 @@ export async function markMensalidadeAsPaid(input: {
 export async function listMensalidadesForRecepcao(params?: {
   status?: "pendente" | "pago" | "todos";
   studentId?: string | null;
-}): Promise<Mensalidade[]> {
+}): Promise<MensalidadeRow[]> {
   await requireUserRole(["recepção", "administrativo"]);
 
   const supabase = await createServerSupabaseClient();
@@ -166,7 +168,7 @@ export async function listMensalidadesForRecepcao(params?: {
 
   if (error) {
     console.warn("[listMensalidadesForRecepcao] fallback mock:", error.message);
-    return buildMensalidadesMock({ status, studentId }) as Mensalidade[];
+    return buildMensalidadesMock({ status, studentId });
   }
 
   if (!data || data.length === 0) {
@@ -239,8 +241,8 @@ export async function listMensalidadesForRecepcao(params?: {
 function buildMensalidadesMock(input: {
   status: "pendente" | "pago" | "todos";
   studentId?: string;
-}): Mensalidade[] {
-  const base: Mensalidade[] = [
+}): MensalidadeRow[] {
+  const base: MensalidadeRow[] = [
     {
       id: "m1",
       studentId: input.studentId || "student-1",
@@ -499,7 +501,7 @@ export async function deletePagamento(pagamentoId: string) {
 
 export async function listMensalidadesByStudent(
   studentId: string,
-): Promise<Mensalidade[]> {
+): Promise<MensalidadeRow[]> {
   const id = String(studentId ?? "").trim();
   if (!id || id === "undefined" || id === "null") {
     throw new Error("ID do aluno inválido.");
@@ -601,7 +603,7 @@ export async function listMensalidadesByStudent(
   });
 }
 
-export async function listMyMensalidades(): Promise<Mensalidade[]> {
+export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
 
