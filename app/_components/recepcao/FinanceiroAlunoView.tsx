@@ -186,7 +186,7 @@ export default function FinanceiroAlunoView({
 
       {mensalidades.length === 0 && (
         <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-slate-500">
-          Nenhuma mensalidade encontrada.
+          Não existem dados para serem mostrados ainda.
         </div>
       )}
     </div>

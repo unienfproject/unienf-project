@@ -51,26 +51,35 @@ export async function listStudentsForRecepcao(
 
   const studentIds = (data ?? []).map((p) => p.user_id);
 
-  let turmasData: Record<string, string> = {};
+  const turmasData: Record<string, string> = {};
   if (studentIds.length > 0) {
-    const { data: turmas, error: turmasError } = await supabase
+    const { data: turmaAlunos, error: turmaAlunosError } = await supabase
       .from("turma_alunos")
-      .select(
-        `
-        aluno_id,
-        turmas:turmas!turma_alunos_turma_id_fkey(id, name, tag, status)
-      `,
-      )
-      .in("aluno_id", studentIds)
-      .eq("turmas.status", "ativa");
+      .select("aluno_id, turma_id")
+      .in("aluno_id", studentIds);
 
-    if (!turmasError && turmas) {
-      turmas.forEach((t: any) => {
-        const turma = Array.isArray(t.turmas) ? t.turmas[0] : t.turmas;
-        if (turma && !turmasData[t.aluno_id]) {
-          turmasData[t.aluno_id] = turma.name || turma.tag || "";
-        }
-      });
+    if (!turmaAlunosError && turmaAlunos && turmaAlunos.length > 0) {
+      const turmaIds = [
+        ...new Set(turmaAlunos.map((ta) => ta.turma_id)),
+      ] as string[];
+
+      const { data: turmas, error: turmasError } = await supabase
+        .from("turmas")
+        .select("id, name, tag, status")
+        .in("id", turmaIds)
+        .eq("status", "ativa");
+
+      if (!turmasError && turmas) {
+        const turmaMap = new Map(
+          turmas.map((t) => [t.id, t.name || t.tag || ""]),
+        );
+        turmaAlunos.forEach((ta) => {
+          const turmaName = turmaMap.get(ta.turma_id);
+          if (turmaName && !turmasData[ta.aluno_id]) {
+            turmasData[ta.aluno_id] = turmaName;
+          }
+        });
+      }
     }
   }
 
@@ -160,7 +169,11 @@ export async function updateStudentProfile(input: {
     telefone: currentData.telefone,
   };
 
-  const updateData: { name?: string; telefone?: string | null; updated_at: string } = {
+  const updateData: {
+    name?: string;
+    telefone?: string | null;
+    updated_at: string;
+  } = {
     updated_at: new Date().toISOString(),
   };
 

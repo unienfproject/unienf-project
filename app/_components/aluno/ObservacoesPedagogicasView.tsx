@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
   listObservacoesPedagogicasDoAluno,
   type ObservacaoPedagogica,
 } from "@/app/_lib/actions/observacoes-pedagogicas";
-import { BookOpen, User, Calendar } from "lucide-react";
+import { BookOpen, Calendar, User } from "lucide-react";
+import { useEffect, useState } from "react";
 
 type Props = {
   studentId: string;
@@ -36,9 +36,7 @@ function getRoleLabel(role: string): string {
   return labels[role] || role;
 }
 
-export default function ObservacoesPedagogicasView({
-  studentId,
-}: Props) {
+export default function ObservacoesPedagogicasView({ studentId }: Props) {
   const [observacoes, setObservacoes] = useState<ObservacaoPedagogica[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -89,7 +87,7 @@ export default function ObservacoesPedagogicasView({
         {observacoes.length === 0 ? (
           <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-center">
             <p className="text-sm text-slate-500">
-              Nenhuma observação pedagógica registrada para este aluno.
+              Não existem dados para serem mostrados ainda.
             </p>
           </div>
         ) : (
@@ -118,7 +116,7 @@ export default function ObservacoesPedagogicasView({
                   )}
                 </div>
               </div>
-              <p className="whitespace-pre-wrap text-sm text-slate-700">
+              <p className="text-sm whitespace-pre-wrap text-slate-700">
                 {obs.conteudo}
               </p>
             </div>
@@ -128,4 +126,3 @@ export default function ObservacoesPedagogicasView({
     </div>
   );
 }
-

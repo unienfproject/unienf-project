@@ -59,6 +59,17 @@ export type AvisoListRow = {
   totalTargets: number;
 };
 
+export type AvisoForStudent = {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  authorName: string | null;
+  authorRole: string | null;
+  scopeType: "turma" | "alunos";
+  turmaName: string | null;
+};
+
 async function requireAllowedRoles() {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
@@ -68,6 +79,154 @@ async function requireAllowedRoles() {
   if (!allowed.includes(role)) throw new Error("Sem permissão.");
 
   return profile;
+}
+
+export async function listAvisosForStudent(
+  studentId: string,
+): Promise<AvisoForStudent[]> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  const allowedRoles = ["recepção", "administrativo", "coordenação"];
+  if (!allowedRoles.includes(profile.role ?? "")) {
+    throw new Error("Sem permissão para listar avisos do aluno.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  // Buscar avisos direcionados ao aluno (via aviso_alunos)
+  const { data: avisoAlunos, error: avisoAlunosError } = await supabase
+    .from("aviso_alunos")
+    .select("aviso_id")
+    .eq("aluno_id", studentId);
+
+  if (avisoAlunosError) {
+    if (avisoAlunosError.code === "42P01") return [];
+    throw new Error(avisoAlunosError.message);
+  }
+
+  const avisoIds =
+    avisoAlunos && avisoAlunos.length > 0
+      ? avisoAlunos.map((aa) => aa.aviso_id)
+      : [];
+
+  // Buscar avisos das turmas do aluno
+  const { data: turmaAlunos, error: turmaAlunosError } = await supabase
+    .from("turma_alunos")
+    .select("turma_id")
+    .eq("aluno_id", studentId);
+
+  let turmaIds: string[] = [];
+  if (!turmaAlunosError && turmaAlunos) {
+    turmaIds = turmaAlunos.map((ta) => ta.turma_id);
+  }
+
+  // Buscar avisos direcionados ao aluno ou às suas turmas
+  // Fazer duas queries separadas e combinar os resultados
+  const avisosFormatados: AvisoForStudent[] = [];
+
+  // 1. Buscar avisos direcionados diretamente ao aluno
+  if (avisoIds.length > 0) {
+    const { data: avisosDiretos, error: avisosDiretosError } = await supabase
+      .from("avisos")
+      .select(
+        `
+        id,
+        title,
+        message,
+        created_at,
+        scope_type,
+        turma_id,
+        author_id,
+        profiles:profiles!avisos_author_id_fkey(name, role)
+      `,
+      )
+      .in("id", avisoIds)
+      .order("created_at", { ascending: false });
+
+    if (!avisosDiretosError && avisosDiretos) {
+      for (const aviso of avisosDiretos) {
+        const autor = Array.isArray(aviso.profiles)
+          ? aviso.profiles[0]
+          : aviso.profiles;
+
+        avisosFormatados.push({
+          id: String(aviso.id),
+          title: String(aviso.title ?? ""),
+          message: String(aviso.message ?? ""),
+          createdAt: String(aviso.created_at ?? ""),
+          authorName: autor?.name ? String(autor.name) : null,
+          authorRole: autor?.role ? String(autor.role) : null,
+          scopeType: (aviso.scope_type as "turma" | "alunos") ?? "alunos",
+          turmaName: null,
+        });
+      }
+    }
+  }
+
+  // 2. Buscar avisos das turmas do aluno
+  if (turmaIds.length > 0) {
+    const { data: avisosTurmas, error: avisosTurmasError } = await supabase
+      .from("avisos")
+      .select(
+        `
+        id,
+        title,
+        message,
+        created_at,
+        scope_type,
+        turma_id,
+        author_id,
+        profiles:profiles!avisos_author_id_fkey(name, role)
+      `,
+      )
+      .eq("scope_type", "turma")
+      .in("turma_id", turmaIds)
+      .order("created_at", { ascending: false });
+
+    if (!avisosTurmasError && avisosTurmas) {
+      for (const aviso of avisosTurmas) {
+        // Evitar duplicatas
+        if (avisosFormatados.some((a) => a.id === String(aviso.id))) {
+          continue;
+        }
+
+        const autor = Array.isArray(aviso.profiles)
+          ? aviso.profiles[0]
+          : aviso.profiles;
+
+        let turmaName: string | null = null;
+        if (aviso.turma_id) {
+          const { data: turma } = await supabase
+            .from("turmas")
+            .select("name, tag")
+            .eq("id", aviso.turma_id)
+            .single();
+          if (turma) {
+            turmaName = `${turma.name} (${turma.tag})`;
+          }
+        }
+
+        avisosFormatados.push({
+          id: String(aviso.id),
+          title: String(aviso.title ?? ""),
+          message: String(aviso.message ?? ""),
+          createdAt: String(aviso.created_at ?? ""),
+          authorName: autor?.name ? String(autor.name) : null,
+          authorRole: autor?.role ? String(autor.role) : null,
+          scopeType: "turma",
+          turmaName,
+        });
+      }
+    }
+  }
+
+  // Ordenar por data (mais recente primeiro)
+  avisosFormatados.sort((a, b) => {
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
+  return avisosFormatados;
 }
 
 export async function listAvisos(): Promise<AvisoListRow[]> {
