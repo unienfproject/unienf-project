@@ -226,7 +226,6 @@ export async function listProfessoresPaginated(params: {
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  // 1) total (count)
   let countQuery = supabase
     .from("profiles")
     .select("*", { count: "exact", head: true })
@@ -234,7 +233,6 @@ export async function listProfessoresPaginated(params: {
 
   const search = params.search?.trim();
   if (search) {
-    // ajuste os campos conforme seu schema real
     countQuery = countQuery.or(
       `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`,
     );
@@ -246,7 +244,6 @@ export async function listProfessoresPaginated(params: {
   const total = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
-  // 2) data (range)
   let dataQuery = supabase
     .from("profiles")
     .select("user_id, name, email, telefone")
@@ -271,4 +268,109 @@ export async function listProfessoresPaginated(params: {
   }));
 
   return { items, total, page, pageSize, totalPages };
+}
+
+
+type TurmaResumo = {
+  id: string;
+  titulo: string;
+  horario: string | null;
+  totalAlunos: number;
+};
+
+export type ProfessorOverviewData = {
+  professorName: string;
+  stats: { minhasTurmas: number; totalAlunos: number };
+  turmas: TurmaResumo[];
+};
+
+function safeString(v: unknown, fallback = "") {
+  return typeof v === "string" ? v : fallback;
+}
+
+export async function getProfessorOverview(): Promise<ProfessorOverviewData> {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: auth } = await supabase.auth.getUser();
+  if (!auth.user) throw new Error("Sessão inválida.");
+
+  const { data: profile, error: profileErr } = await supabase
+    .from("profiles")
+    .select("user_id, name, role")
+    .eq("user_id", auth.user.id)
+    .single();
+
+  if (profileErr) throw new Error(profileErr.message);
+  if (!profile) throw new Error("Perfil não encontrado.");
+  if (profile.role !== "professor") throw new Error("Sem permissão.");
+
+  const professorId = String(profile.user_id);
+  const professorName = safeString(profile.name, "Professor");
+
+  const { data: turmasData, error: turmasErr } = await supabase
+    .from("turmas")
+    .select("*")
+    .eq("professor_id", professorId);
+
+  if (turmasErr) throw new Error(turmasErr.message);
+
+  const turmaIds = (turmasData ?? []).map((t: any) => String(t.id ?? t.ID));
+  const minhasTurmas = turmaIds.length;
+
+  let totalAlunos = 0;
+  const turmaToCount = new Map<string, number>();
+
+  if (turmaIds.length) {
+    const { data: vinculos, error: vincErr } = await supabase
+      .from("turma_alunos")
+      .select("turma_id, aluno_id")
+      .in("turma_id", turmaIds);
+
+    if (vincErr) throw new Error(vincErr.message);
+
+    const alunosDistinct = new Set<string>();
+
+    for (const v of vinculos ?? []) {
+      const tid = String((v as any).turma_id ?? (v as any).TURMA_ID);
+      const aid = String((v as any).aluno_id ?? (v as any).ALUNO_ID);
+
+      alunosDistinct.add(aid);
+      turmaToCount.set(tid, (turmaToCount.get(tid) ?? 0) + 1);
+    }
+
+    totalAlunos = alunosDistinct.size;
+  }
+
+  const turmas: TurmaResumo[] = (turmasData ?? []).map((t: any) => {
+    const id = String(t.id ?? t.ID);
+
+    const titulo =
+      safeString(t.nome) ||
+      safeString(t.NOME) ||
+      safeString(t.titulo) ||
+      safeString(t.TITULO) ||
+      safeString(t.tag) ||
+      safeString(t.TAG) ||
+      "Turma";
+
+    const horario =
+      safeString(t.horario, "") ||
+      safeString(t.HORARIO, "") ||
+      safeString(t.turno, "") ||
+      safeString(t.TURNO, "") ||
+      null;
+
+    return {
+      id,
+      titulo,
+      horario,
+      totalAlunos: turmaToCount.get(id) ?? 0,
+    };
+  });
+
+  return {
+    professorName,
+    stats: { minhasTurmas, totalAlunos },
+    turmas,
+  };
 }
