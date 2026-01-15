@@ -75,7 +75,7 @@ export async function createAluno(input: {
       email_confirm: true,
       user_metadata: {
         name,
-        telefone,
+        phone: telefone,
       },
       app_metadata: {
         role: "aluno",
@@ -137,7 +137,7 @@ export async function listAlunos(): Promise<AlunoRow[]> {
       user_id,
       name,
       email,
-      telefone,
+      phone,
       created_at,
       alunos:alunos!alunos_user_id_fkey(age, date_of_birth)
     `,
@@ -154,7 +154,7 @@ export async function listAlunos(): Promise<AlunoRow[]> {
       id: p.user_id,
       name: p.name ?? "",
       email: p.email ?? "",
-      telefone: p.telefone,
+      telefone: p.phone,
       age: aluno?.age ?? null,
       dateOfBirth: aluno?.date_of_birth ?? null,
       createdAt: p.created_at,
@@ -193,7 +193,7 @@ export async function getMyProfile(): Promise<MyProfile> {
       user_id,
       name,
       email,
-      telefone,
+      phone,
       alunos:alunos!alunos_user_id_fkey(age, date_of_birth)
     `,
     )
@@ -212,7 +212,7 @@ export async function getMyProfile(): Promise<MyProfile> {
     .select(
       `
       turma_id,
-      turmas:turmas!turma_alunos_turma_id_fkey(id, name, tag, status)
+      turmas:turmas!turma_alunos_turma_id_fkey(id, tag, status)
     `,
     )
     .eq("aluno_id", profile.user_id)
@@ -228,7 +228,7 @@ export async function getMyProfile(): Promise<MyProfile> {
     if (turma && turma.status === "ativa") {
       turmaAtual = {
         id: turma.id,
-        name: turma.name,
+        name: turma.tag,
         tag: turma.tag,
       };
     }
@@ -238,7 +238,7 @@ export async function getMyProfile(): Promise<MyProfile> {
     id: profile.user_id,
     name: profileData.name ?? "",
     email: profileData.email ?? "",
-    telefone: profileData.telefone,
+    telefone: profileData.phone,
     age: aluno?.age ?? null,
     dateOfBirth: aluno?.date_of_birth ?? null,
     turmaAtual,
@@ -322,7 +322,7 @@ export async function getStudentPersonalData(
       user_id,
       name,
       email,
-      telefone,
+      phone,
       alunos:alunos!alunos_user_id_fkey(age, date_of_birth)
     `,
     )
@@ -393,7 +393,7 @@ export async function getStudentPersonalData(
     id: profileData.user_id,
     name: profileData.name ?? "",
     email: profileData.email ?? "",
-    telefone: profileData.telefone,
+    telefone: profileData.phone,
     age: dadosAluno?.age ?? null,
     dateOfBirth: dadosAluno?.date_of_birth ?? null,
     turmas,
@@ -428,7 +428,7 @@ export async function getAlunoProfile(
       user_id,
       name,
       email,
-      telefone,
+      phone,
       created_at,
       updated_at,
       alunos:alunos!alunos_user_id_fkey(age, date_of_birth)
@@ -445,68 +445,77 @@ export async function getAlunoProfile(
     ? profileData.alunos[0]
     : profileData.alunos;
 
-  // Buscar turmas do aluno
+  // Buscar turmas do aluno - fazer query separada para evitar problemas com joins aninhados
   const { data: turmasAluno, error: turmasAlunoError } = await supabase
     .from("turma_alunos")
-    .select(
-      `
-      turma_id,
-      turmas:turmas!turma_alunos_turma_id_fkey(
-        id,
-        name,
-        tag,
-        status,
-        disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
-      )
-    `,
-    )
+    .select("turma_id")
     .eq("aluno_id", id);
 
   if (turmasAlunoError) throw new Error(turmasAlunoError.message);
 
-  type TurmaAlunoComTurmaRow = {
-    turma_id: string;
-    turmas:
-      | {
-          id: string;
-          name: string;
-          tag: string;
-          status: string | null;
-          disciplinas: { name: string } | { name: string }[];
-        }
-      | {
-          id: string;
-          name: string;
-          tag: string;
-          status: string | null;
-          disciplinas: { name: string } | { name: string }[];
-        }[];
-  };
+  // Buscar dados das turmas separadamente
+  const turmaIds =
+    turmasAluno && turmasAluno.length > 0
+      ? turmasAluno.map((ta) => ta.turma_id)
+      : [];
 
-  const turmas = (turmasAluno ?? []).map(
-    (turmaAluno: TurmaAlunoComTurmaRow) => {
-      const turma = Array.isArray(turmaAluno.turmas)
-        ? turmaAluno.turmas[0]
-        : turmaAluno.turmas;
-      const disciplina = Array.isArray(turma?.disciplinas)
-        ? turma.disciplinas[0]
-        : turma?.disciplinas;
+  let turmasData: Array<{
+    id: string;
+    name: string;
+    tag: string;
+    status: string | null;
+    disciplinaName: string | null;
+  }> = [];
 
-      return {
-        id: turma?.id ?? "",
-        name: turma?.name ?? "",
-        tag: turma?.tag ?? "",
-        disciplinaName: disciplina?.name ?? null,
-        status: turma?.status ?? null,
+  if (turmaIds.length > 0) {
+    const { data: turmas, error: turmasError } = await supabase
+      .from("turmas")
+      .select(
+        `
+        id,
+        tag,
+        status,
+        disciplina_id,
+        disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
+      `,
+      )
+      .in("id", turmaIds);
+
+    if (turmasError) {
+      console.warn(
+        "[getAlunoProfile] Erro ao buscar turmas:",
+        turmasError.message,
+      );
+    } else if (turmas) {
+      type TurmaRow = {
+        id: unknown;
+        tag: unknown;
+        status: unknown;
+        disciplina_id: unknown;
+        disciplinas: { name: unknown } | { name: unknown }[] | null;
       };
-    },
-  );
+      turmasData = (turmas as TurmaRow[]).map((t) => {
+        const disciplina = Array.isArray(t.disciplinas)
+          ? t.disciplinas[0]
+          : t.disciplinas;
+        return {
+          id: String(t.id),
+          name: String(t.tag ?? ""),
+          tag: String(t.tag ?? ""),
+          status: t.status ? String(t.status) : null,
+          disciplinaName: disciplina?.name ? String(disciplina.name) : null,
+        };
+      });
+    }
+  }
+
+  const turmas = turmasData;
 
   return {
     id: profileData.user_id,
     name: profileData.name ?? "",
     email: profileData.email ?? "",
-    telefone: profileData.telefone,
+    telefone: profileData.phone,
     age: dadosAluno?.age ?? null,
     dateOfBirth: dadosAluno?.date_of_birth ?? null,
     turmas,
@@ -532,7 +541,7 @@ export async function updateAlunoProfile(input: {
 
   const { data: currentProfile, error: fetchError } = await supabase
     .from("profiles")
-    .select("user_id, name, telefone, email, role")
+    .select("user_id, name, phone, email, role")
     .eq("user_id", input.alunoId)
     .single();
 
@@ -544,13 +553,13 @@ export async function updateAlunoProfile(input: {
 
   const oldValue = {
     name: currentProfile.name,
-    telefone: currentProfile.telefone,
+    telefone: currentProfile.phone,
     email: currentProfile.email,
   };
 
   const updateProfileData: {
     name?: string;
-    telefone?: string | null;
+    phone?: string | null;
     email?: string | null;
     updated_at: string;
   } = {
@@ -561,7 +570,7 @@ export async function updateAlunoProfile(input: {
     updateProfileData.name = input.name.trim();
   }
   if (input.telefone !== undefined) {
-    updateProfileData.telefone = input.telefone ? input.telefone.trim() : null;
+    updateProfileData.phone = input.telefone ? input.telefone.trim() : null;
   }
   if (input.email !== undefined) {
     updateProfileData.email = input.email
@@ -635,7 +644,7 @@ export async function updateAlunoProfile(input: {
     oldValue: { ...oldValue, ...oldAlunoValue },
     newValue: {
       name: updateProfileData.name ?? currentProfile.name,
-      telefone: updateProfileData.telefone ?? currentProfile.telefone,
+      telefone: updateProfileData.phone ?? currentProfile.phone,
       email: updateProfileData.email ?? currentProfile.email,
       ...(updateAlunoData
         ? {
@@ -674,7 +683,7 @@ export async function listAlunosPaginated(params: {
 
   const search = params.search?.trim();
   const searchOr = search
-    ? `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`
+    ? `name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`
     : null;
 
   // 1) COUNT
@@ -699,7 +708,7 @@ export async function listAlunosPaginated(params: {
         user_id,
         name,
         email,
-        telefone,
+        phone,
         created_at,
         alunos:alunos!alunos_user_id_fkey (
           age,
@@ -720,7 +729,7 @@ export async function listAlunosPaginated(params: {
     user_id: unknown;
     name: unknown;
     email: unknown;
-    telefone: unknown;
+    phone: unknown;
     created_at: unknown;
     alunos:
       | { age: unknown; date_of_birth: unknown }
@@ -735,7 +744,7 @@ export async function listAlunosPaginated(params: {
       id: String(r.user_id),
       name: String(r.name ?? ""),
       email: String(r.email ?? ""),
-      telefone: r.telefone ? String(r.telefone) : null,
+      telefone: r.phone ? String(r.phone) : null,
       age: alunoMeta?.age != null ? Number(alunoMeta.age) : null,
       dateOfBirth: alunoMeta?.date_of_birth
         ? String(alunoMeta.date_of_birth)

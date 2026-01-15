@@ -76,7 +76,7 @@ export async function listNoticesForTeacher(
     if (aviso.scope_type === "turma" && aviso.turma_id) {
       const { data: turma } = await supabase
         .from("turmas")
-        .select("id, name, tag")
+        .select("id, tag")
         .eq("id", aviso.turma_id)
         .single();
 
@@ -90,7 +90,7 @@ export async function listNoticesForTeacher(
         audience: {
           type: "turma",
           classId: aviso.turma_id,
-          classLabel: turma ? `${turma.name} (${turma.tag})` : "Turma",
+          classLabel: turma ? turma.tag : "Turma",
         },
       });
     } else if (aviso.scope_type === "alunos") {
@@ -129,10 +129,10 @@ export async function listTeacherClassesForPicker(
 
   const { data: turmas, error } = await supabase
     .from("turmas")
-    .select("id, name, tag")
+    .select("id, tag")
     .eq("professor_id", teacherId)
     .eq("status", "ativa")
-    .order("name");
+    .order("tag");
 
   if (error) {
     if (error.code === "42P01") {
@@ -143,7 +143,7 @@ export async function listTeacherClassesForPicker(
 
   return (turmas ?? []).map((turma) => ({
     id: turma.id,
-    label: `${turma.name} (${turma.tag})`,
+    label: turma.tag,
   }));
 }
 

@@ -59,7 +59,7 @@ export async function createProfessor(input: {
       email_confirm: true,
       user_metadata: {
         name,
-        telefone,
+        phone: telefone,
       },
       app_metadata: {
         role: "professor",
@@ -76,7 +76,7 @@ export async function createProfessor(input: {
     .from("profiles")
     .update({
       name,
-      telefone,
+      phone: telefone,
       email,
       role: "professor",
       updated_at: new Date().toISOString(),
@@ -116,7 +116,7 @@ export async function listProfessores(): Promise<ProfessorRow[]> {
 
   const { data, error } = await supabase
     .from("profiles")
-    .select("user_id, name, email, telefone, created_at")
+    .select("user_id, name, email, phone, created_at")
     .eq("role", "professor")
     .order("created_at", { ascending: false });
 
@@ -126,7 +126,7 @@ export async function listProfessores(): Promise<ProfessorRow[]> {
     id: p.user_id,
     name: p.name ?? "",
     email: p.email ?? "",
-    telefone: p.telefone,
+    telefone: p.phone,
     createdAt: p.created_at,
   }));
 }
@@ -147,7 +147,7 @@ export async function updateProfessorProfile(input: {
 
   const { data: currentProfile, error: fetchError } = await supabase
     .from("profiles")
-    .select("user_id, name, telefone, email, role")
+    .select("user_id, name, phone, email, role")
     .eq("user_id", input.professorId)
     .single();
 
@@ -159,13 +159,13 @@ export async function updateProfessorProfile(input: {
 
   const oldValue = {
     name: currentProfile.name,
-    telefone: currentProfile.telefone,
+    telefone: currentProfile.phone,
     email: currentProfile.email,
   };
 
   const updateData: {
     name?: string;
-    telefone?: string | null;
+    phone?: string | null;
     email?: string | null;
     updated_at: string;
   } = {
@@ -176,7 +176,7 @@ export async function updateProfessorProfile(input: {
     updateData.name = input.name.trim();
   }
   if (input.telefone !== undefined) {
-    updateData.telefone = input.telefone ? input.telefone.trim() : null;
+    updateData.phone = input.telefone ? input.telefone.trim() : null;
   }
   if (input.email !== undefined) {
     updateData.email = input.email ? input.email.trim().toLowerCase() : null;
@@ -196,7 +196,7 @@ export async function updateProfessorProfile(input: {
     oldValue,
     newValue: {
       name: updateData.name ?? currentProfile.name,
-      telefone: updateData.telefone ?? currentProfile.telefone,
+      telefone: updateData.phone ?? currentProfile.phone,
       email: updateData.email ?? currentProfile.email,
     },
     description: `Dados pessoais do professor atualizados por ${profile.name ?? profile.email}`,
@@ -234,7 +234,7 @@ export async function listProfessoresPaginated(params: {
   const search = params.search?.trim();
   if (search) {
     countQuery = countQuery.or(
-      `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`,
+      `name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`,
     );
   }
 
@@ -246,14 +246,14 @@ export async function listProfessoresPaginated(params: {
 
   let dataQuery = supabase
     .from("profiles")
-    .select("user_id, name, email, telefone")
+    .select("user_id, name, email, phone")
     .eq("role", "professor")
     .order("created_at", { ascending: false })
     .range(from, to);
 
   if (search) {
     dataQuery = dataQuery.or(
-      `name.ilike.%${search}%,email.ilike.%${search}%,telefone.ilike.%${search}%`,
+      `name.ilike.%${search}%,email.ilike.%${search}%,phone.ilike.%${search}%`,
     );
   }
 
@@ -264,12 +264,11 @@ export async function listProfessoresPaginated(params: {
     id: r.user_id,
     name: r.name,
     email: r.email,
-    telefone: r.telefone,
+    telefone: r.phone,
   }));
 
   return { items, total, page, pageSize, totalPages };
 }
-
 
 type TurmaResumo = {
   id: string;
@@ -287,6 +286,26 @@ export type ProfessorOverviewData = {
 function safeString(v: unknown, fallback = "") {
   return typeof v === "string" ? v : fallback;
 }
+
+type TurmaRowFromDB = {
+  id: unknown;
+  tag?: unknown;
+  nome?: unknown;
+  NOME?: unknown;
+  titulo?: unknown;
+  TITULO?: unknown;
+  horario?: unknown;
+  HORARIO?: unknown;
+  turno?: unknown;
+  TURNO?: unknown;
+};
+
+type TurmaAlunoRowFromDB = {
+  turma_id: unknown;
+  aluno_id: unknown;
+  TURMA_ID?: unknown;
+  ALUNO_ID?: unknown;
+};
 
 export async function getProfessorOverview(): Promise<ProfessorOverviewData> {
   const supabase = await createServerSupabaseClient();
@@ -314,63 +333,200 @@ export async function getProfessorOverview(): Promise<ProfessorOverviewData> {
 
   if (turmasErr) throw new Error(turmasErr.message);
 
-  const turmaIds = (turmasData ?? []).map((t: any) => String(t.id ?? t.ID));
-  const minhasTurmas = turmaIds.length;
+  const turmasDoProfessor = (turmasData ?? []) as TurmaRowFromDB[];
+  const idsDasTurmas = turmasDoProfessor.map((turma) => String(turma.id ?? ""));
+  const quantidadeDeTurmas = idsDasTurmas.length;
 
-  let totalAlunos = 0;
-  const turmaToCount = new Map<string, number>();
+  let totalDeAlunos = 0;
+  const contadorDeAlunosPorTurma = new Map<string, number>();
 
-  if (turmaIds.length) {
-    const { data: vinculos, error: vincErr } = await supabase
+  if (idsDasTurmas.length > 0) {
+    const { data: vinculosTurmaAluno, error: vincErr } = await supabase
       .from("turma_alunos")
       .select("turma_id, aluno_id")
-      .in("turma_id", turmaIds);
+      .in("turma_id", idsDasTurmas);
 
     if (vincErr) throw new Error(vincErr.message);
 
-    const alunosDistinct = new Set<string>();
+    const alunosUnicos = new Set<string>();
+    const vinculos = (vinculosTurmaAluno ?? []) as TurmaAlunoRowFromDB[];
 
-    for (const v of vinculos ?? []) {
-      const tid = String((v as any).turma_id ?? (v as any).TURMA_ID);
-      const aid = String((v as any).aluno_id ?? (v as any).ALUNO_ID);
+    for (const vinculo of vinculos) {
+      const idDaTurma = String(vinculo.turma_id ?? vinculo.TURMA_ID ?? "");
+      const idDoAluno = String(vinculo.aluno_id ?? vinculo.ALUNO_ID ?? "");
 
-      alunosDistinct.add(aid);
-      turmaToCount.set(tid, (turmaToCount.get(tid) ?? 0) + 1);
+      alunosUnicos.add(idDoAluno);
+      const contadorAtual = contadorDeAlunosPorTurma.get(idDaTurma) ?? 0;
+      contadorDeAlunosPorTurma.set(idDaTurma, contadorAtual + 1);
     }
 
-    totalAlunos = alunosDistinct.size;
+    totalDeAlunos = alunosUnicos.size;
   }
 
-  const turmas: TurmaResumo[] = (turmasData ?? []).map((t: any) => {
-    const id = String(t.id ?? t.ID);
+  const turmasFormatadas: TurmaResumo[] = turmasDoProfessor.map((turma) => {
+    const idDaTurma = String(turma.id ?? "");
 
-    const titulo =
-      safeString(t.nome) ||
-      safeString(t.NOME) ||
-      safeString(t.titulo) ||
-      safeString(t.TITULO) ||
-      safeString(t.tag) ||
-      safeString(t.TAG) ||
+    const tituloDaTurma =
+      safeString(turma.nome) ||
+      safeString(turma.NOME) ||
+      safeString(turma.titulo) ||
+      safeString(turma.TITULO) ||
+      safeString(turma.tag) ||
+      safeString(turma.tag) ||
       "Turma";
 
-    const horario =
-      safeString(t.horario, "") ||
-      safeString(t.HORARIO, "") ||
-      safeString(t.turno, "") ||
-      safeString(t.TURNO, "") ||
+    const horarioDaTurma =
+      safeString(turma.horario, "") ||
+      safeString(turma.HORARIO, "") ||
+      safeString(turma.turno, "") ||
+      safeString(turma.TURNO, "") ||
       null;
 
+    const quantidadeDeAlunosNaTurma =
+      contadorDeAlunosPorTurma.get(idDaTurma) ?? 0;
+
     return {
-      id,
-      titulo,
-      horario,
-      totalAlunos: turmaToCount.get(id) ?? 0,
+      id: idDaTurma,
+      titulo: tituloDaTurma,
+      horario: horarioDaTurma,
+      totalAlunos: quantidadeDeAlunosNaTurma,
     };
   });
 
   return {
     professorName,
-    stats: { minhasTurmas, totalAlunos },
-    turmas,
+    stats: { minhasTurmas: quantidadeDeTurmas, totalAlunos: totalDeAlunos },
+    turmas: turmasFormatadas,
+  };
+}
+
+export type ProfessorProfileData = {
+  id: string;
+  name: string;
+  email: string;
+  telefone: string | null;
+  turmas: Array<{
+    id: string;
+    tag: string;
+    disciplinaName: string | null;
+    status: string | null;
+    totalAlunos: number;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type TurmaComDisciplinaRow = {
+  id: unknown;
+  tag: unknown;
+  status: unknown;
+  disciplina_id: unknown;
+  disciplinas: { name: unknown } | { name: unknown }[] | null;
+};
+
+type VinculoTurmaAlunoRow = {
+  turma_id: unknown;
+};
+
+export async function getProfessorProfile(
+  professorId: string,
+): Promise<ProfessorProfileData> {
+  const idDoProfessor = String(professorId ?? "").trim();
+  if (
+    !idDoProfessor ||
+    idDoProfessor === "undefined" ||
+    idDoProfessor === "null"
+  ) {
+    throw new Error("ID do professor inválido.");
+  }
+
+  const perfilDoUsuario = await getUserProfile();
+  if (!perfilDoUsuario) throw new Error("Sessão inválida.");
+
+  // Permitir admin e coordenação
+  const rolesPermitidos = ["administrativo", "coordenação"];
+  if (!rolesPermitidos.includes(perfilDoUsuario.role ?? "")) {
+    throw new Error("Sem permissão para visualizar perfil de professor.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  // Buscar dados do profile
+    .eq("role", "professor")
+    .single();
+
+  if (erroDoPerfil) throw new Error(erroDoPerfil.message);
+  if (!dadosDoPerfil) throw new Error("Professor não encontrado.");
+
+  // Buscar turmas do professor
+  const { data: turmasDoProfessor, error: erroDasTurmas } = await supabase
+    .from("turmas")
+    .select(
+      `
+      id,
+      tag,
+      status,
+      disciplina_id,
+      disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
+    `,
+    )
+    .eq("professor_id", idDoProfessor)
+    .order("created_at", { ascending: false });
+
+  if (erroDasTurmas) throw new Error(erroDasTurmas.message);
+
+  const idsDasTurmas = (turmasDoProfessor ?? []).map((turma) =>
+    String(turma.id),
+  );
+  const contadorDeAlunosPorTurma = new Map<string, number>();
+
+  if (idsDasTurmas.length > 0) {
+    const { data: vinculosTurmaAluno, error: erroDosVinculos } = await supabase
+      .from("turma_alunos")
+      .select("turma_id")
+      .in("turma_id", idsDasTurmas);
+
+    if (!erroDosVinculos && vinculosTurmaAluno) {
+      const vinculos = vinculosTurmaAluno as VinculoTurmaAlunoRow[];
+      for (const vinculo of vinculos) {
+        const idDaTurma = String(vinculo.turma_id);
+        const contadorAtual = contadorDeAlunosPorTurma.get(idDaTurma) ?? 0;
+        contadorDeAlunosPorTurma.set(idDaTurma, contadorAtual + 1);
+      }
+    }
+  }
+
+  const turmasFormatadas = (turmasDoProfessor ?? []).map(
+    (turma: TurmaComDisciplinaRow) => {
+      const dadosDaDisciplina = Array.isArray(turma.disciplinas)
+        ? turma.disciplinas[0]
+        : turma.disciplinas;
+
+      const idDaTurma = String(turma.id);
+      const tagDaTurma = String(turma.tag ?? "");
+      const nomeDaDisciplina = dadosDaDisciplina?.name
+        ? String(dadosDaDisciplina.name)
+        : null;
+      const statusDaTurma = turma.status ? String(turma.status) : null;
+      const quantidadeDeAlunos = contadorDeAlunosPorTurma.get(idDaTurma) ?? 0;
+
+      return {
+        id: idDaTurma,
+        tag: tagDaTurma,
+        disciplinaName: nomeDaDisciplina,
+        status: statusDaTurma,
+        totalAlunos: quantidadeDeAlunos,
+      };
+    },
+  );
+
+  return {
+    id: dadosDoPerfil.user_id,
+    name: dadosDoPerfil.name ?? "",
+    email: dadosDoPerfil.email ?? "",
+    telefone: dadosDoPerfil.phone,
+    turmas: turmasFormatadas,
+    createdAt: dadosDoPerfil.created_at,
+    updatedAt: dadosDoPerfil.updated_at,
   };
 }

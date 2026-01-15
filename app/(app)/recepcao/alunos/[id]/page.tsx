@@ -1,15 +1,13 @@
-import EtiquetasView from "@/app/_components/aluno/EtiquetasView";
-import ObservacoesPedagogicasView from "@/app/_components/aluno/ObservacoesPedagogicasView";
-import DocumentsView from "@/app/_components/documents/DocumentsView";
 import AlunoProfileActions from "@/app/_components/recepcao/AlunoProfileActions";
-import EditDadosPessoais from "@/app/_components/recepcao/EditDadosPessoais";
-import FinanceiroAlunoView from "@/app/_components/recepcao/FinanceiroAlunoView";
+import AlunoProfileTabs from "@/app/_components/recepcao/AlunoProfileTabs";
 import { Button } from "@/app/_components/ui/button";
 import { getAlunoProfile } from "@/app/_lib/actions/alunos";
+import { listAvisosForStudent } from "@/app/_lib/actions/avisos";
 import { listStudentDocuments } from "@/app/_lib/actions/documents";
 import { listMensalidadesByStudent } from "@/app/_lib/actions/mensalidades";
+import { listNotasByStudent } from "@/app/_lib/actions/notas";
 import { getUserProfile } from "@/app/_lib/actions/profile";
-import { ArrowLeft, BookOpen, Calendar, Mail } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default async function RecepcaoAlunoProfilePage({
@@ -63,6 +61,8 @@ export default async function RecepcaoAlunoProfilePage({
 
   const docs = await listStudentDocuments(studentId);
   const mensalidades = await listMensalidadesByStudent(studentId);
+  const avisos = await listAvisosForStudent(studentId);
+  const notas = await listNotasByStudent(studentId);
 
   return (
     <div className="flex flex-col">
@@ -87,111 +87,15 @@ export default async function RecepcaoAlunoProfilePage({
         />
       </div>
 
-      <div id="dados-pessoais" className="p-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">
-            Dados Pessoais
-          </h2>
-          <EditDadosPessoais
-            studentId={studentId}
-            initialName={alunoData.name}
-            initialTelefone={alunoData.telefone}
-          />
-          <div className="mt-4 space-y-3 border-t pt-4">
-            <div className="flex items-start gap-3">
-              <Mail className="mt-1 h-5 w-5 text-slate-400" />
-              <div>
-                <p className="text-xs font-medium text-slate-600">Email</p>
-                <p className="text-sm font-medium text-slate-900">
-                  {alunoData.email}
-                </p>
-              </div>
-            </div>
-
-            {alunoData.age !== null && (
-              <div className="flex items-start gap-3">
-                <Calendar className="mt-1 h-5 w-5 text-slate-400" />
-                <div>
-                  <p className="text-xs font-medium text-slate-600">
-                    Idade / Data de Nascimento
-                  </p>
-                  <p className="text-sm font-medium text-slate-900">
-                    {alunoData.age} anos
-                    {alunoData.dateOfBirth &&
-                      ` (${new Date(alunoData.dateOfBirth).toLocaleDateString("pt-BR")})`}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div id="financeiro" className="p-6">
-        <FinanceiroAlunoView
+      <div className="p-6">
+        <AlunoProfileTabs
+          alunoData={alunoData}
+          docs={docs}
           mensalidades={mensalidades}
+          avisos={avisos}
+          notas={notas}
           studentId={studentId}
         />
-      </div>
-
-      <div className="p-6">
-        <DocumentsView
-          title="Documentos do Aluno"
-          subtitle="Gerencie os documentos do aluno, marque como entregue e registre observações."
-          canEdit={true}
-          docs={docs}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">Turmas</h2>
-          {alunoData.turmas.length === 0 ? (
-            <p className="text-sm text-slate-500">
-              Aluno não está vinculado a nenhuma turma.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {alunoData.turmas.map((turma) => (
-                <div
-                  key={turma.id}
-                  className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3"
-                >
-                  <BookOpen className="h-5 w-5 text-slate-400" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-900">
-                      {turma.name}
-                    </p>
-                    <p className="text-xs text-slate-600">
-                      {turma.disciplinaName || "Sem disciplina"} • {turma.tag}
-                      {turma.status && ` • ${turma.status}`}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">
-            Etiquetas
-          </h2>
-          <EtiquetasView studentId={studentId} canEdit={true} />
-        </div>
-      </div>
-
-      <div className="p-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">
-            Observações Pedagógicas
-          </h2>
-          <p className="mb-4 text-sm text-slate-600">
-            Apenas visualização. Para criar ou editar observações, entre em
-            contato com a coordenação.
-          </p>
-          <ObservacoesPedagogicasView studentId={studentId} />
-        </div>
       </div>
     </div>
   );

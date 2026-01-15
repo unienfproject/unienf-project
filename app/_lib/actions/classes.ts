@@ -50,6 +50,7 @@ export async function listTeacherClasses(
 
   return (data ?? []).map((t) => ({
     id: t.id,
+    name: t.tag,
     tag: t.tag,
     start_date: t.start_date,
     end_date: t.end_date,
@@ -103,11 +104,18 @@ export async function createClass(input: {
 
   const supabase = await createServerSupabaseClient();
 
+  const tagTrimmed = input.tag.trim();
+  const periodMatch = tagTrimmed.match(/\d{4}\.\d$/);
+  const period = periodMatch
+    ? periodMatch[0]
+    : new Date().getFullYear().toString() + ".1";
+
   const { data: turma, error: turmaError } = await supabase
     .from("turmas")
     .insert({
       name: input.name.trim(),
-      tag: input.tag.trim(),
+      tag: tagTrimmed,
+      period: period,
       start_date: input.startDate,
       end_date: input.endDate,
       status: "ativa",
@@ -142,7 +150,7 @@ export async function createClass(input: {
 }
 
 export async function createTurmaAdmin(input: {
-  nome: string;
+  name: string;
   tag: string;
   startDate: string;
   endDate: string;
@@ -158,11 +166,20 @@ export async function createTurmaAdmin(input: {
 
   const supabase = await createServerSupabaseClient();
 
+  // Extrair período do tag (ex: "Primeiros_Socorros_2026.2" -> "2026.2")
+  // Se não houver padrão no tag, usar ano atual + semestre
+  const tagTrimmed = input.tag.trim();
+  const periodMatch = tagTrimmed.match(/\d{4}\.\d$/);
+  const period = periodMatch
+    ? periodMatch[0]
+    : new Date().getFullYear().toString() + ".1";
+
   const { data: turma, error: turmaError } = await supabase
     .from("turmas")
     .insert({
-      name: input.nome.trim(),
-      tag: input.tag.trim(),
+      name: input.name.trim(),
+      tag: tagTrimmed,
+      period: period,
       start_date: input.startDate,
       end_date: input.endDate,
       status: "ativa",
@@ -328,7 +345,6 @@ export async function getClassDetails(input: {
   teacherId: string;
 }): Promise<{
   id: string;
-  nome: string;
   tag: string;
   start_date: string;
   end_date: string;
@@ -349,7 +365,6 @@ export async function getClassDetails(input: {
 
   type TurmaComDisciplinaRow = {
     id: string;
-    name: string;
     tag: string;
     start_date: string;
     end_date: string;
@@ -364,7 +379,6 @@ export async function getClassDetails(input: {
     .select(
       `
       id,
-      name,
       tag,
       start_date,
       end_date,
@@ -421,7 +435,6 @@ export async function getClassDetails(input: {
 
   return {
     id: turmaData.id,
-    nome: turmaData.name,
     tag: turmaData.tag,
     start_date: turmaData.start_date,
     end_date: turmaData.end_date,
@@ -433,7 +446,7 @@ export async function getClassDetails(input: {
 
 export type StudentFromMyClasses = {
   id: string;
-  nome: string;
+  name: string;
   email: string;
   telefone: string | null;
   age: number | null;
@@ -483,10 +496,10 @@ export async function listStudentsFromMyClasses(
         user_id,
         name,
         email,
-        telefone
+        phone
       ),
       alunos:alunos!turma_alunos_aluno_id_fkey(age, date_of_birth),
-      turmas:turmas!turma_alunos_turma_id_fkey(id, name, tag)
+      turmas:turmas!turma_alunos_turma_id_fkey(id, tag)
     `,
     )
     .in("turma_id", turmaIds);
@@ -506,20 +519,18 @@ export async function listStudentsFromMyClasses(
           user_id: string;
           name: string | null;
           email: string | null;
-          telefone: string | null;
+          phone: string | null;
         }
       | {
           user_id: string;
           name: string | null;
           email: string | null;
-          telefone: string | null;
+          phone: string | null;
         }[];
     alunos:
       | { age: number | null; date_of_birth: string | null }
       | { age: number | null; date_of_birth: string | null }[];
-    turmas:
-      | { id: string; name: string; tag: string }
-      | { id: string; name: string; tag: string }[];
+    turmas: { id: string; tag: string } | { id: string; tag: string }[];
   };
 
   const alunosAgrupados = new Map<string, StudentFromMyClasses>();
@@ -539,9 +550,9 @@ export async function listStudentsFromMyClasses(
     if (!alunosAgrupados.has(alunoId)) {
       alunosAgrupados.set(alunoId, {
         id: alunoId,
-        nome: profileAluno?.name ?? "",
+        name: profileAluno?.name ?? "",
         email: profileAluno?.email ?? "",
-        telefone: profileAluno?.telefone ?? null,
+        telefone: profileAluno?.phone ?? null,
         age: dadosAluno?.age ?? null,
         dateOfBirth: dadosAluno?.date_of_birth ?? null,
         turmas: [],
@@ -552,13 +563,13 @@ export async function listStudentsFromMyClasses(
     if (turma && !alunoAtual.turmas.find((t) => t.id === turma.id)) {
       alunoAtual.turmas.push({
         id: turma.id,
-        name: turma.name,
+        name: turma.tag,
         tag: turma.tag,
       });
     }
   });
 
   return Array.from(alunosAgrupados.values()).sort((a, b) =>
-    a.nome.localeCompare(b.nome),
+    a.name.localeCompare(b.name),
   );
 }
