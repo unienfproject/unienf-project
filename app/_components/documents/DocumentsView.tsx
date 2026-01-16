@@ -74,7 +74,7 @@ export default function DocumentsView({
       await updateDocumentStatus({
         documentId,
         status: currentDoc.status,
-        observacao: notes || null,
+        observation: notes || null,
       });
       router.refresh();
     } catch (error) {

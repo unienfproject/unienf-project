@@ -19,14 +19,28 @@ export type DocumentItem = {
 export async function listMyDocuments(): Promise<DocumentItem[]> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
-
   if (profile.role !== "aluno") {
     throw new Error("Esta função é apenas para alunos.");
   }
 
   const supabase = await createServerSupabaseClient();
 
-  const { data: documentos, error } = await supabase
+  // 1) Tipos de documento (catálogo)
+  const { data: tipos, error: tiposErr } = await supabase
+    .from("documento_tipos")
+    .select("id, name, required")
+    .order("name");
+
+  if (tiposErr) {
+    if (tiposErr.code === "42P01") return [];
+    throw new Error(tiposErr.message);
+  }
+
+  // Se não existir nenhum tipo cadastrado, não há o que mostrar
+  if (!tipos || tipos.length === 0) return [];
+
+  // 2) Documentos do aluno (instâncias)
+  const { data: docsAluno, error: docsErr } = await supabase
     .from("documentos_aluno")
     .select(
       `
@@ -35,61 +49,68 @@ export async function listMyDocuments(): Promise<DocumentItem[]> {
       status,
       observation,
       rejected_reason,
-      updated_at,
-      documento_tipos:documento_tipos!documentos_aluno_document_type_id_fkey (
-        id,
-        name,
-        required
-      )
+      updated_at
     `,
     )
-    .eq("aluno_id", profile.user_id)
-    .order("updated_at", { ascending: false });
+    .eq("aluno_id", profile.user_id);
 
-  if (error) {
-    if (error.code === "42P01") {
-      return [];
+  if (docsErr) {
+    if (docsErr.code === "42P01") {
+      // não existe tabela -> devolve tudo como pendente
+      return tipos.map((t) => ({
+        id: `missing:${String(t.id)}`,
+        documentTypeId: String(t.id),
+        documentTypeName: String(t.name ?? "Documento"),
+        required: Boolean(t.required),
+        status: "pending" as DocumentoStatus,
+        notes: null,
+        updatedAt: new Date().toISOString(),
+      }));
     }
-    throw new Error(error.message);
+    throw new Error(docsErr.message);
   }
 
-  if (!documentos || documentos.length === 0) {
-    return [];
-  }
-
-  type DocumentoRow = {
+  type DocAlunoRow = {
     id: unknown;
     document_type_id: unknown;
     status: unknown;
     observation: unknown;
     rejected_reason: unknown;
     updated_at: unknown;
-    documento_tipos:
-      | { id: unknown; name: unknown; required: unknown }
-      | { id: unknown; name: unknown; required: unknown }[]
-      | null;
   };
 
-  return documentos.map((doc: DocumentoRow) => {
-    const tipo = Array.isArray(doc.documento_tipos)
-      ? doc.documento_tipos[0]
-      : doc.documento_tipos;
+  const mapByType = new Map<string, DocAlunoRow>();
+  (docsAluno ?? []).forEach((d: DocAlunoRow) => {
+    const typeId = String(d.document_type_id ?? "");
+    if (typeId) mapByType.set(typeId, d);
+  });
+
+  // 3) Merge: para cada tipo, retorna doc existente ou “pendente”
+  return tipos.map((t) => {
+    const typeId = String(t.id);
+    const existing = mapByType.get(typeId);
+
+    const status =
+      (existing?.status as DocumentoStatus) ?? ("pending" as DocumentoStatus);
 
     const notes =
-      doc.status === "rejected" && doc.rejected_reason
-        ? String(doc.rejected_reason)
-        : doc.observation
-          ? String(doc.observation)
+      status === "rejected" && existing?.rejected_reason
+        ? String(existing.rejected_reason)
+        : existing?.observation
+          ? String(existing.observation)
           : null;
 
     return {
-      id: String(doc.id),
-      documentTypeId: String(doc.document_type_id),
-      documentTypeName: tipo?.name ? String(tipo.name) : "Documento",
-      required: tipo?.required ? Boolean(tipo.required) : false,
-      status: doc.status as DocumentoStatus,
+      // Para aluno (canEdit=false), pode ser “missing:*” sem problema
+      id: existing?.id ? String(existing.id) : `missing:${typeId}`,
+      documentTypeId: typeId,
+      documentTypeName: String((t as any).name ?? "Documento"),
+      required: Boolean((t as any).required),
+      status,
       notes,
-      updatedAt: String(doc.updated_at),
+      updatedAt: existing?.updated_at
+        ? String(existing.updated_at)
+        : new Date().toISOString(),
     };
   });
 }
@@ -326,15 +347,41 @@ export async function listPendingDocumentsForDashboard(): Promise<
   });
 }
 
+export async function markStudentDocumentAsDelivered(input: {
+  alunoId: string;
+  docKey: string;
+}) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  const allowed = ["administrativo", "recepção", "coordenação"];
+  if (!allowed.includes(profile.role ?? "")) throw new Error("Sem permissão.");
+
+  const supabase = await createServerSupabaseClient();
+
+  const { error } = await supabase.from("aluno_documentos").upsert(
+    {
+      aluno_id: input.alunoId,
+      doc_key: input.docKey,
+      status: "entregue",
+      delivered_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "aluno_id,doc_key" },
+  );
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath(`/aluno/documentos`);
+  revalidatePath(`/admin/alunos/${input.alunoId}/documentos`);
+}
+
 export async function markDocumentAsDelivered(input: { documentId: string }) {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
 
-  const allowedRoles = ["recepção", "coordenação", "administrativo"];
-  const role = profile.role ?? "";
-  if (!allowedRoles.includes(role)) {
-    throw new Error("Sem permissão para dar check em documentos.");
-  }
+  const allowed = ["administrativo", "recepção", "coordenação"];
+  if (!allowed.includes(profile.role ?? "")) throw new Error("Sem permissão.");
 
   const documentId = (input.documentId ?? "").trim();
   if (!documentId) throw new Error("documentId inválido.");
