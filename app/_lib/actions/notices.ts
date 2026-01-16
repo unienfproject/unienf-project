@@ -2,7 +2,16 @@
 
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+
+function getAdminSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  return createAdminClient(url, serviceKey, {
+    auth: { persistSession: false },
+  });
+}
 
 type PickerItem = { id: string; label: string };
 
@@ -26,10 +35,13 @@ export async function listNoticesForTeacher(
   if (profile.role !== "professor") throw new Error("Sem permissão.");
   if (profile.user_id !== teacherId) throw new Error("Acesso inválido.");
 
-  const supabase = await createServerSupabaseClient();
+  // Usar cliente admin para evitar recursão infinita nas políticas RLS
+  // As permissões já foram validadas acima (é professor e teacherId corresponde ao user_id)
+  const adminSupabase = getAdminSupabase();
 
   // Buscar avisos criados pelo professor
-  const { data: avisos, error: avisosError } = await supabase
+  // Nota: Usamos cliente admin para evitar recursão infinita nas políticas RLS
+  const { data: avisos, error: avisosError } = await adminSupabase
     .from("avisos")
     .select(
       `
@@ -39,8 +51,7 @@ export async function listNoticesForTeacher(
       created_at,
       scope_type,
       turma_id,
-      author_id,
-      profiles:profiles!avisos_author_id_fkey(name, role)
+      author_id
     `,
     )
     .eq("author_id", teacherId)
@@ -61,20 +72,19 @@ export async function listNoticesForTeacher(
     scope_type: "turma" | "alunos";
     turma_id: string | null;
     author_id: string;
-    profiles:
-      | { name: string | null; role: string | null }
-      | { name: string | null; role: string | null }[];
   };
+
+  // Usar dados do perfil atual (já validado que é o autor)
+  const autorName = profile.name ?? profile.email ?? "Professor";
+  const autorRole =
+    (profile.role as "professor" | "coordenação" | "administrativo") ??
+    "professor";
 
   const avisosFormatados: NoticeRow[] = [];
 
   for (const aviso of (avisos ?? []) as AvisoRow[]) {
-    const autorAviso = Array.isArray(aviso.profiles)
-      ? aviso.profiles[0]
-      : aviso.profiles;
-
     if (aviso.scope_type === "turma" && aviso.turma_id) {
-      const { data: turma } = await supabase
+      const { data: turma } = await adminSupabase
         .from("turmas")
         .select("id, tag")
         .eq("id", aviso.turma_id)
@@ -85,8 +95,8 @@ export async function listNoticesForTeacher(
         title: aviso.title,
         message: aviso.message,
         created_at: aviso.created_at,
-        author_role: (autorAviso?.role as "professor" | "coordenação" | "administrativo") ?? "professor",
-        author_name: autorAviso?.name ?? "Desconhecido",
+        author_role: autorRole,
+        author_name: autorName,
         audience: {
           type: "turma",
           classId: aviso.turma_id,
@@ -94,7 +104,7 @@ export async function listNoticesForTeacher(
         },
       });
     } else if (aviso.scope_type === "alunos") {
-      const { count } = await supabase
+      const { count } = await adminSupabase
         .from("aviso_alunos")
         .select("*", { count: "exact", head: true })
         .eq("aviso_id", aviso.id);
@@ -104,8 +114,8 @@ export async function listNoticesForTeacher(
         title: aviso.title,
         message: aviso.message,
         created_at: aviso.created_at,
-        author_role: (autorAviso?.role as "professor" | "coordenação" | "administrativo") ?? "professor",
-        author_name: autorAviso?.name ?? "Desconhecido",
+        author_role: autorRole,
+        author_name: autorName,
         audience: {
           type: "alunos",
           studentCount: count ?? 0,
@@ -194,7 +204,9 @@ export async function createNotice(input: {
     if (turmaError) throw new Error(turmaError.message);
     if (!turma) throw new Error("Turma não encontrada.");
     if (turma.professor_id !== input.teacherId) {
-      throw new Error("Você não tem permissão para criar aviso para esta turma.");
+      throw new Error(
+        "Você não tem permissão para criar aviso para esta turma.",
+      );
     }
   }
 
