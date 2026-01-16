@@ -350,8 +350,8 @@ export default function TeacherNoticesView({
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Avisos</h1>
           <p className="text-slate-600">
-            Professor: {teacherName}. Visualize avisos e envie comunicados para
-            alunos ou turmas.
+            Professor: {teacherName}. <br/>
+            Visualize avisos e envie comunicados para alunos ou turmas.
           </p>
         </div>
 
