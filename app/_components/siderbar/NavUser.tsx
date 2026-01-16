@@ -121,7 +121,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild className="cursor-pointer">
-                <Link href="/">
+                <Link href="/perfil">
                   <UserCircle />
                   Conta
                 </Link>
@@ -130,7 +130,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleSignOut}
-              className="cursor-pointer hover:bg-[#FF0000] hover:text-white"
+              className="cursor-pointer"
             >
               <LogOut className="cursor-pointer hover:bg-[#FF0000] hover:text-white" />
               Log Out
