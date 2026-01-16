@@ -452,6 +452,10 @@ export async function getProfessorProfile(
   const supabase = await createServerSupabaseClient();
 
   // Buscar dados do profile
+  const { data: dadosDoPerfil, error: erroDoPerfil } = await supabase
+    .from("profiles")
+    .select("user_id, name, email, phone, created_at, updated_at")
+    .eq("user_id", idDoProfessor)
     .eq("role", "professor")
     .single();
 
