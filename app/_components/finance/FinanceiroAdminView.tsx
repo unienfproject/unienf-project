@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import StatusBadge from "@/app/_components/StatusBadge";
+import AdminPeriodFilter from "../admin/AdminPeriodFilter";
+import { getStudentRegistrationsStats } from "@/app/_lib/actions/dashboard";
 import CreateCostModal from "./CreateCostModal";
 import {
   type Cost,
@@ -9,8 +11,6 @@ import {
   getFinanceiroEntriesByMonth,
   getMensalidadesByMonth,
 } from "@/app/_lib/actions/finance";
-import { Input } from "../ui/input";
-import { Button } from "../ui/button";
 
 function monthLabel(month: number) {
   return (
@@ -101,10 +101,20 @@ function computeMensalidadeInsights(rows: MensalidadeRow[]) {
 export default async function FinanceiroAdminView({
   searchParams,
 }: {
-  searchParams?: { year?: string; month?: string };
+  searchParams?: { year?: string; month?: string; from?: string; to?: string };
 }) {
-  const year = Number(searchParams?.year ?? 2025);
-  const month = Number(searchParams?.month ?? 2);
+  const dateTo = searchParams?.to
+    ? new Date(searchParams.to)
+    : searchParams?.year && searchParams?.month
+      ? new Date(Number(searchParams.year), Number(searchParams.month) - 1, 1)
+      : new Date();
+
+  const dateFrom = searchParams?.from
+    ? new Date(searchParams.from)
+    : new Date(new Date(dateTo).getFullYear(), dateTo.getMonth() - 5, 1);
+
+  const year = dateTo.getFullYear();
+  const month = dateTo.getMonth() + 1;
 
   const summary = await getMonthlySummary(year, month);
   const costs = (await getCostsByMonth(year, month)) as Cost[];
@@ -117,6 +127,8 @@ export default async function FinanceiroAdminView({
   const mensalidadeInsights = computeMensalidadeInsights(mensalidades);
 
   const financeiroEntries = await getFinanceiroEntriesByMonth(year, month);
+
+  const registrationStats = await getStudentRegistrationsStats(dateFrom, dateTo);
   const hasFinanceiroEntries =
     Array.isArray(financeiroEntries) && financeiroEntries.length > 0;
 
@@ -131,10 +143,41 @@ export default async function FinanceiroAdminView({
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <PeriodPicker year={year} month={month} />
+            <AdminPeriodFilter />
             <CreateCostModal competenceYear={year} competenceMonth={month} />
           </div>
         </main>
+
+        <div className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Novos Alunos (Matrículas)
+            </h2>
+            <span className="text-xs text-slate-500">
+              Período: {dateFrom.toLocaleDateString("pt-BR")} a{" "}
+              {dateTo.toLocaleDateString("pt-BR")}
+            </span>
+          </div>
+          <div className="flex h-48 items-end gap-2 pt-4">
+            {registrationStats.map((d) => {
+              const max = Math.max(...registrationStats.map((s) => s.count), 1);
+              const heightPct = (d.count / max) * 100;
+              return (
+                <div key={d.label} className="group relative flex flex-1 flex-col items-center gap-2">
+                  <div
+                    className="w-full min-h-[4px] rounded-t-md bg-sky-500 transition-all hover:bg-sky-600"
+                    style={{ height: `${heightPct}%` }}
+                  >
+                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded bg-slate-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                      {d.count} alunos
+                    </div>
+                  </div>
+                  <span className="text-xs text-slate-600 whitespace-nowrap">{d.label}</span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <Card
@@ -438,40 +481,5 @@ function CardMini({ title, value }: { title: string; value: string }) {
       <p className="text-xs text-slate-600">{title}</p>
       <p className="text-lg font-bold text-slate-900">{value}</p>
     </div>
-  );
-}
-
-function PeriodPicker({ year, month }: { year: number; month: number }) {
-  return (
-    <form className="flex items-end gap-2" action="/admin/financeiro">
-      <div className="flex flex-col gap-1">
-        <span className="text-xs text-slate-600">Ano</span>
-        <Input
-          name="year"
-          defaultValue={year}
-          className="h-10 w-[110px] rounded-md border border-slate-200 bg-white px-3 text-sm"
-        />
-      </div>
-      <div className="flex flex-col gap-1">
-        <span className="text-xs text-slate-600">Mês</span>
-        <select
-          name="month"
-          defaultValue={month}
-          className="h-10 w-[140px] rounded-md border border-slate-200 bg-white px-3 text-sm"
-        >
-          {Array.from({ length: 12 }).map((_, i) => (
-            <option key={i + 1} value={i + 1}>
-              {String(i + 1).padStart(2, "0")} - {monthLabel(i + 1)}
-            </option>
-          ))}
-        </select>
-      </div>
-      <Button
-        type="submit"
-        className="hover:bg-primary h-10 rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 hover:text-white"
-      >
-        Aplicar
-      </Button>
-    </form>
   );
 }

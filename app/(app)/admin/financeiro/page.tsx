@@ -1,7 +1,12 @@
 import FinanceiroAdminView from "@/app/_components/finance/FinanceiroAdminView";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 
-export default async function FinanceiroPage() {
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+
+export default async function FinanceiroPage(props: Props) {
+  const searchParams = await props.searchParams;
   const profile = await getUserProfile();
 
   if (!profile) {
@@ -18,7 +23,12 @@ export default async function FinanceiroPage() {
 
   return (
     <div className="flex-col">
-      <FinanceiroAdminView />
+      <FinanceiroAdminView
+        searchParams={{
+          year: typeof searchParams.year === "string" ? searchParams.year : undefined,
+          month: typeof searchParams.month === "string" ? searchParams.month : undefined,
+        }}
+      />
     </div>
   );
 }
