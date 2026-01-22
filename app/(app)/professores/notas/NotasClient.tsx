@@ -52,7 +52,7 @@ export default function NotasClient(props: {
 
   const [draft, setDraft] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {};
-    for (const a of props.alunos) {
+    for (const a of props.alunos ?? []) {
       initial[a.alunoId] = a.nota == null ? "" : String(a.nota);
     }
     return initial;
@@ -60,7 +60,7 @@ export default function NotasClient(props: {
 
   useMemo(() => {
     const next: Record<string, string> = {};
-    for (const a of props.alunos) {
+    for (const a of props.alunos ?? []) {
       next[a.alunoId] = a.nota == null ? "" : String(a.nota);
     }
     setDraft(next);
@@ -201,7 +201,7 @@ export default function NotasClient(props: {
                         alunos.
                       </TableCell>
                     </TableRow>
-                  ) : props.alunos.length === 0 ? (
+                  ) : (props.alunos ?? []).length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={3}
@@ -211,7 +211,7 @@ export default function NotasClient(props: {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    props.alunos.map((aluno, idx) => {
+                    (props.alunos ?? []).map((aluno, idx) => {
                       const initials = (aluno.alunoName || "A")
                         .split(" ")
                         .map((n) => n[0])
@@ -270,7 +270,7 @@ export default function NotasClient(props: {
 
             <div className="border-border bg-muted/20 flex items-center justify-between border-t p-6">
               <p className="text-muted-foreground text-sm">
-                {filledCount} de {props.alunos.length} notas preenchidas
+                {filledCount} de {(props.alunos ?? []).length} notas preenchidas
               </p>
 
               <Button
@@ -280,7 +280,7 @@ export default function NotasClient(props: {
                   isPending ||
                   !props.turmaId ||
                   !props.avaliacaoId ||
-                  props.alunos.length === 0
+                  (props.alunos ?? []).length === 0
                 }
               >
                 <Save className="mr-2 h-4 w-4" />
