@@ -755,3 +755,233 @@ export async function listAlunosPaginated(params: {
 
   return { items, total, page, pageSize, totalPages };
 }
+
+export type AlunoDashboardNotaItem = {
+  id: string;
+  value: number;
+  turmaId: string | null;
+  turmaLabel: string;
+  avaliacaoLabel: string;
+  launchedAt: string; // ISO
+};
+
+export type AlunoDashboardAvisoItem = {
+  id: string;
+  title: string;
+  createdAt: string; // ISO
+};
+
+export type AlunoDashboardDocsResumo = {
+  entregues: number;
+  pendentes: number;
+  pct: number; // 0..100
+};
+
+export type AlunoDashboardOverview = {
+  alunoName: string;
+  turmaAtualLabel: string | null; // ex.: "Técnico 2024.1"
+  mediaGeral: number | null; // média simples das notas existentes
+  documentos: AlunoDashboardDocsResumo;
+  ultimasNotas: AlunoDashboardNotaItem[];
+  avisosRecentes: AlunoDashboardAvisoItem[];
+};
+
+/**
+ * Overview do aluno (Visão Geral).
+ * - Turma: via getMyProfile()
+ * - Média: média simples das notas existentes (tabela notas)
+ * - Últimas notas: notas + avaliações + turma/disciplinas + data via audit_logs (quando existir)
+ * - Avisos recentes: tabela avisos (filtra por turma_id ou aluno_id, se existirem)
+ * - Documentos: tenta tabela aluno_documentos (fallback 0/0 se não existir)
+ */
+export async function getAlunoOverviewDashboard(): Promise<AlunoDashboardOverview> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "aluno") throw new Error("Sem permissão.");
+
+  const supabase = await createServerSupabaseClient();
+  const alunoId = profile.user_id;
+
+  // 1) Turma atual (reaproveita seu getMyProfile)
+  const my = await getMyProfile();
+  const turmaAtualLabel = my.turmaAtual?.tag ?? null;
+
+  // 2) Últimas notas + média geral
+  // IMPORTANT: não usa turmas.name, usa turmas.tag
+  let ultimasNotas: AlunoDashboardNotaItem[] = [];
+  let mediaGeral: number | null = null;
+
+  try {
+    const { data: notas, error: notasErr } = await supabase
+      .from("notas")
+      .select(
+        `
+        id,
+        value,
+        created_at,
+        updated_at,
+        avaliacao_id,
+        avaliacoes:avaliacoes!notas_avaliacao_id_fkey(
+          id,
+          type,
+          name,
+          turma_id,
+          turmas:turmas!avaliacoes_turma_id_fkey(id, tag),
+          disciplinas:disciplinas!avaliacoes_disciplina_id_fkey(name)
+        )
+      `,
+      )
+      .eq("aluno_id", alunoId)
+      .order("updated_at", { ascending: false })
+      .limit(5);
+
+    if (notasErr) throw notasErr;
+
+    const rows = (notas ?? []) as any[];
+
+    // média simples com as notas existentes
+    const valores = rows
+      .map((n) => (n.value == null ? null : Number(n.value)))
+      .filter((v) => typeof v === "number" && Number.isFinite(v)) as number[];
+
+    if (valores.length) {
+      mediaGeral = valores.reduce((a, b) => a + b, 0) / valores.length;
+    }
+
+    // tenta pegar "data de lançamento" do audit_logs (se existir)
+    const noteIds = rows.map((n) => String(n.id));
+    const auditMap = new Map<string, string>();
+
+    if (noteIds.length) {
+      try {
+        const { data: audits, error: auditErr } = await supabase
+          .from("audit_logs")
+          .select("entityId, created_at, entity")
+          .eq("entity", "nota")
+          .in("entityId", noteIds)
+          .order("created_at", { ascending: false });
+
+        if (!auditErr && audits) {
+          for (const a of audits as any[]) {
+            const id = String(a.entityId ?? "");
+            if (id && !auditMap.has(id)) {
+              auditMap.set(id, String(a.created_at));
+            }
+          }
+        }
+      } catch {
+        // sem audit_logs, segue com updated_at
+      }
+    }
+
+    ultimasNotas = rows.map((n) => {
+      const avaliacao = Array.isArray(n.avaliacoes) ? n.avaliacoes[0] : n.avaliacoes;
+
+      const turmaObj = Array.isArray(avaliacao?.turmas)
+        ? avaliacao.turmas[0]
+        : avaliacao?.turmas;
+
+      const disciplinaObj = Array.isArray(avaliacao?.disciplinas)
+        ? avaliacao.disciplinas[0]
+        : avaliacao?.disciplinas;
+
+      const turmaLabel =
+        (turmaObj?.tag ? String(turmaObj.tag) : null) ??
+        (turmaAtualLabel ?? "Turma");
+
+      const avaliacaoLabel =
+        (avaliacao?.name ? String(avaliacao.name) : null) ??
+        (avaliacao?.type ? String(avaliacao.type) : null) ??
+        (disciplinaObj?.name ? String(disciplinaObj.name) : "Avaliação");
+
+      const launchedAt =
+        auditMap.get(String(n.id)) ??
+        (n.updated_at ? String(n.updated_at) : String(n.created_at));
+
+      return {
+        id: String(n.id),
+        value: Number(n.value),
+        turmaId: turmaObj?.id ? String(turmaObj.id) : null,
+        turmaLabel,
+        avaliacaoLabel,
+        launchedAt,
+      };
+    });
+  } catch {
+    ultimasNotas = [];
+    mediaGeral = null;
+  }
+
+  // 3) Documentos (tentativa por tabela padrão; se a sua for outra, me diga o nome)
+  // Esperado: aluno_documentos(aluno_id, status)
+  let documentos: AlunoDashboardDocsResumo = { entregues: 0, pendentes: 0, pct: 0 };
+
+  try {
+    const { data, error } = await supabase
+      .from("aluno_documentos")
+      .select("id, status")
+      .eq("aluno_id", alunoId);
+
+    if (error) {
+      // tabela não existe
+      if (error.code === "42P01") {
+        documentos = { entregues: 0, pendentes: 0, pct: 0 };
+      } else {
+        throw error;
+      }
+    } else {
+      const rows = (data ?? []) as any[];
+      const entregues = rows.filter((r) => String(r.status) === "entregue").length;
+      const pendentes = rows.filter((r) => String(r.status) !== "entregue").length;
+      const total = entregues + pendentes;
+      const pct = total > 0 ? Math.round((entregues / total) * 100) : 0;
+      documentos = { entregues, pendentes, pct };
+    }
+  } catch {
+    documentos = { entregues: 0, pendentes: 0, pct: 0 };
+  }
+
+  // 4) Avisos recentes (se o seu modelo for por tabela intermediária de destinatários, me avise)
+  // Esperado: avisos(id, title, created_at, turma_id?, aluno_id?)
+  let avisosRecentes: AlunoDashboardAvisoItem[] = [];
+
+  try {
+    const base = supabase
+      .from("avisos")
+      .select("id, title, created_at")
+      .order("created_at", { ascending: false })
+      .limit(5);
+
+    const { data, error } = turmaAtualLabel
+      ? await base.or(`aluno_id.eq.${alunoId},turma_tag.eq.${turmaAtualLabel}`)
+      : await base.eq("aluno_id", alunoId);
+
+    // Observação:
+    // Eu filtrei por turma_tag porque no seu sistema turma parece ser "tag".
+    // Se no seu banco o aviso relaciona por turma_id, trocamos para turma_id.eq.<id>.
+    if (error) {
+      if (error.code === "42703" || error.code === "42P01") {
+        avisosRecentes = [];
+      } else {
+        throw error;
+      }
+    } else {
+      avisosRecentes = (data ?? []).map((a: any) => ({
+        id: String(a.id),
+        title: String(a.title ?? "Aviso"),
+        createdAt: String(a.created_at),
+      }));
+    }
+  } catch {
+    avisosRecentes = [];
+  }
+
+  return {
+    alunoName: my.name || profile.name || "Aluno(a)",
+    turmaAtualLabel,
+    mediaGeral,
+    documentos,
+    ultimasNotas,
+    avisosRecentes,
+  };
+}
