@@ -17,7 +17,7 @@ export default function Location() {
           </p>
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div className="shadow-medium border-border/50 animate-slide-in-left h-[580px] w-[680px] overflow-hidden rounded-2xl border">
+          <div className="shadow-medium border-border/50 animate-slide-in-left h-[580px] w-full overflow-hidden rounded-2xl border">
             <iframe
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3677.1763739633593!2d-42.10735852469177!3d-22.832963279307094!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x970fb97cc65167%3A0xfaad73cbd70fe859!2sUNIENF%20Lagos!5e0!3m2!1spt-BR!2sbr!4v1766110304598!5m2!1spt-BR!2sbr"
               width="680"
