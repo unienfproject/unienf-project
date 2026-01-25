@@ -23,16 +23,18 @@ import {
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
-import type { DashboardStats } from "@/app/_lib/actions/dashboard";
+import type { DashboardStats, RegistrationStats } from "@/app/_lib/actions/dashboard";
 import type { PendingDocumentRow } from "@/app/_lib/actions/documents";
 import { markDocumentAsDelivered } from "@/app/_lib/actions/documents";
 
 export default function PendingDocumentsClient({
   initialRows = [],
   stats,
+  registrationStats = [],
 }: {
   initialRows?: PendingDocumentRow[];
-  stats: DashboardStats; // aqui pode ser obrigatório
+  stats: DashboardStats;
+  registrationStats?: RegistrationStats[];
 }) {
   const [rows, setRows] = useState<PendingDocumentRow[]>(initialRows);
   const [isPending, startTransition] = useTransition();
@@ -96,12 +98,34 @@ export default function PendingDocumentsClient({
                 </div>
                 <PeriodRangeButton />
               </div>
-              <div className="bg-muted/30 flex h-64 items-center justify-center rounded-xl">
-                <div className="text-center">
-                  <TrendingUp className="text-primary mx-auto mb-3 h-12 w-12" />
-                  <p className="text-muted-foreground">Gráfico de Matrículas</p>
+              {registrationStats.length > 0 ? (
+                <div className="flex h-64 items-end gap-2 pt-4">
+                  {registrationStats.map((d) => {
+                    const max = Math.max(...registrationStats.map((s) => s.count), 1);
+                    const heightPct = (d.count / max) * 100;
+                    return (
+                      <div key={d.label} className="group relative flex flex-1 flex-col items-center gap-2">
+                        <div
+                          className="w-full min-h-[4px] rounded-t-md bg-sky-500 transition-all hover:bg-sky-600"
+                          style={{ height: `${heightPct}%` }}
+                        >
+                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded bg-slate-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
+                            {d.count} alunos
+                          </div>
+                        </div>
+                        <span className="text-xs text-slate-600 whitespace-nowrap">{d.label}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              ) : (
+                <div className="bg-muted/30 flex h-64 items-center justify-center rounded-xl">
+                  <div className="text-center">
+                    <TrendingUp className="text-primary mx-auto mb-3 h-12 w-12" />
+                    <p className="text-muted-foreground">Sem dados no período</p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-6">
