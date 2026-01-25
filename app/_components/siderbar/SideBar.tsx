@@ -17,6 +17,7 @@ import {
   FolderOpen,
   GraduationCap,
   LayoutDashboard,
+  Book,
   Users,
   WalletCards,
 } from "lucide-react";
@@ -51,6 +52,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: "Visão Geral", url: "/admin", icon: LayoutDashboard },
     { title: "Alunos", url: "/admin/alunos", icon: Users },
     { title: "Professores", url: "/admin/professores", icon: GraduationCap },
+    { title: "Disciplinas", url: "/admin/disciplinas", icon: Book },
     { title: "Usuários", url: "/admin/users", icon: Users },
     { title: "Turmas", url: "/admin/turmas", icon: FolderOpen },
     { title: "Cursos", url: "/admin/cursos", icon: GraduationCap },
@@ -62,6 +64,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: "Visão Geral", url: "/admin", icon: LayoutDashboard },
     { title: "Alunos", url: "/admin/alunos", icon: Users },
     { title: "Professores", url: "/admin/professores", icon: GraduationCap },
+    { title: "Disciplinas", url: "/admin/disciplinas", icon: Book },
     { title: "Turmas", url: "/admin/turmas", icon: FolderOpen },
     { title: "Cursos", url: "/admin/cursos", icon: GraduationCap },
     { title: "Avisos", url: "/admin/avisos", icon: Bell },
@@ -78,6 +81,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const professorMenuItems = [
     { title: "Visão Geral", url: "/professores", icon: LayoutDashboard },
     { title: "Minhas Turmas", url: "/professores/turmas", icon: FolderOpen },
+    { title: "Disciplinas", url: "/professores/disciplinas", icon: Book },
     { title: "Lançar Notas", url: "/professores/notas", icon: ClipboardList },
     { title: "Avisos", url: "/professores/avisos", icon: Bell },
   ];
