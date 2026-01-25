@@ -18,7 +18,12 @@ type NavItem = {
   icon?: LucideIcon;
 };
 
-export function NavMain({ items }: { items: NavItem[] }) {
+type NavMainProps = {
+  items: NavItem[];
+  onNavigate?: () => void;
+};
+
+export function NavMain({ items, onNavigate }: NavMainProps) {
   const pathname = usePathname();
 
   return (
@@ -36,7 +41,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                   tooltip={item.title}
                   isActive={isActive}
                 >
-                  <Link href={item.url}>
+                  <Link href={item.url} onClick={onNavigate}>
                     {IconComp && <IconComp className="h-4 w-4" />}
                     <span>{item.title}</span>
                   </Link>

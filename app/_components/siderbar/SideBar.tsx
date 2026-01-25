@@ -8,7 +8,9 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/app/_components/ui/sidebar";
+
 import { getUserProfile, type Profile } from "@/app/_lib/actions/profile";
 import {
   Bell,
@@ -20,17 +22,23 @@ import {
   Book,
   Users,
   WalletCards,
+  X,
 } from "lucide-react";
+
 import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
 import { useEffect, useState } from "react";
+import { Button } from "@/app/_components/ui/button";
+
 import { NavMain } from "./NavMain";
 import { NavUser } from "./NavUser";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const { setOpen, isMobile } = useSidebar();
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -105,43 +113,38 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     const role = profile?.role;
 
+    const closeOnMobile = () => isMobile && setOpen(false);
+
     if (role === "administrativo") {
-      return <NavMain items={adminMenuItems} />;
+      return <NavMain items={adminMenuItems} onNavigate={closeOnMobile} />;
     }
 
     if (role === "coordenação") {
-      return <NavMain items={coordenacaoMenuItems} />;
+      return <NavMain items={coordenacaoMenuItems} onNavigate={closeOnMobile} />;
     }
 
     if (role === "aluno") {
-      return <NavMain items={alunoMenuItems} />;
+      return <NavMain items={alunoMenuItems} onNavigate={closeOnMobile} />;
     }
 
     if (role === "professor") {
-      return <NavMain items={professorMenuItems} />;
+      return <NavMain items={professorMenuItems} onNavigate={closeOnMobile} />;
     }
 
     if (role === "recepção") {
-      return <NavMain items={recepcaoMenuItems} />;
+      return <NavMain items={recepcaoMenuItems} onNavigate={closeOnMobile} />;
     }
+
     return (
-      <div className="flex flex-col gap-2 p-4">
-        <div className="text-muted-foreground text-sm">
-          Role não definida. Entre em contato com o administrador.
-        </div>
-        <div className="text-muted-foreground text-xs">
-          Role atual: {role || "não definida"}
-        </div>
-        <div className="text-muted-foreground text-xs">
-          Perfil não encontrado
-        </div>
+      <div className="flex flex-col gap-2 p-4 text-sm text-muted-foreground">
+        Role não definida.
       </div>
     );
   };
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader className="bg-primary pointer-events-none">
+      <SidebarHeader className="bg-primary relative flex items-center px-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
@@ -159,7 +162,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
 
-      <SidebarContent className="bg-primary">{renderMenu()}</SidebarContent>
+
+      <SidebarContent className="bg-primary">
+        {renderMenu()}
+      </SidebarContent>
 
       <SidebarFooter className="bg-primary">
         {profile && (
