@@ -77,7 +77,7 @@ export async function listStudentsForPicker(): Promise<PickerItem[]> {
   const { data, error } = await supabase
     .from("profiles")
     .select("user_id, name, email")
-    .eq("role", "aluno")
+    .in("role", ["aluno", "Aluno"])
     .order("name");
 
   if (error) throw new Error(error.message);

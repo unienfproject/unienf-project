@@ -31,12 +31,12 @@ export default function AdminAlunoProfileTabs({
 }: Props) {
   return (
     <Tabs defaultValue="dados-pessoais" className="w-full">
-      <TabsList className="grid w-full grid-cols-5">
-        <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
-        <TabsTrigger value="academico">Acadêmico</TabsTrigger>
-        <TabsTrigger value="documentos">Documentos</TabsTrigger>
-        <TabsTrigger value="status-documentos">Status Documentos</TabsTrigger>
-        <TabsTrigger value="financeiro">Financeiro</TabsTrigger>
+      <TabsList className=" grid w-full grid-cols-5">
+        <TabsTrigger className="cursor-pointer" value="dados-pessoais">Dados Pessoais</TabsTrigger>
+        <TabsTrigger className="cursor-pointer" value="academico">Acadêmico</TabsTrigger>
+        <TabsTrigger className="cursor-pointer" value="documentos">Documentos</TabsTrigger>
+        <TabsTrigger className="cursor-pointer" value="status-documentos">Status Documentos</TabsTrigger>
+        <TabsTrigger className="cursor-pointer" value="financeiro">Financeiro</TabsTrigger>
       </TabsList>
 
       <TabsContent value="dados-pessoais" className="mt-6">

@@ -152,3 +152,38 @@ export async function listAuditLogs(params?: {
     created_at: log.created_at,
   }));
 }
+
+export async function changeMyPassword(input: {
+  currentPassword: string;
+  newPassword: string;
+}) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  const supabase = await createServerSupabaseClient();
+
+  const currentPassword = input.currentPassword ?? "";
+  const newPassword = input.newPassword ?? "";
+
+  if (newPassword.length < 6) throw new Error("A nova senha deve ter pelo menos 6 caracteres.");
+
+  // Reautenticar exige e-mail
+  const { data: me, error: userErr } = await supabase.auth.getUser();
+  if (userErr) throw new Error(userErr.message);
+
+  const email = me.user?.email;
+  if (!email) throw new Error("E-mail da sessão não encontrado.");
+
+  const { error: signInErr } = await supabase.auth.signInWithPassword({
+    email,
+    password: currentPassword,
+  });
+
+  if (signInErr) throw new Error("Senha atual incorreta.");
+
+  const { error: updateErr } = await supabase.auth.updateUser({
+    password: newPassword,
+  });
+
+  if (updateErr) throw new Error(updateErr.message);
+}

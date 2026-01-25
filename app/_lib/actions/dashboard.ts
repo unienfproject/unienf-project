@@ -1,77 +1,100 @@
 "use server";
 
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
-import { createClient as createAdminClient } from "@supabase/supabase-js";
+
+export type RegistrationStats = {
+  label: string;
+  count: number;
+};
 
 export type DashboardStats = {
   totalAlunos: number;
-  totalProfessores: number;
   turmasAtivas: number;
+  totalProfessores: number;
   documentosPendentes: number;
 };
 
-function getAdminSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  return createAdminClient(url, serviceKey, {
-    auth: { persistSession: false },
-  });
-}
-
-export async function getDashboardStats(): Promise<DashboardStats> {
-  // 1) valida sessão e role do chamador (com client normal, respeitando auth)
+export async function DashboardStats(): Promise<DashboardStats> {
   const supabase = await createServerSupabaseClient();
-  const { data: authData } = await supabase.auth.getUser();
-  if (!authData.user) throw new Error("Sessão inválida.");
 
-  const { data: callerProfile, error: callerErr } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("user_id", authData.user.id)
-    .single();
-
-  if (callerErr) throw new Error(callerErr.message);
-  if (!callerProfile || callerProfile.role !== "administrativo") {
-    throw new Error("Apenas administrativo pode ver métricas.");
-  }
-
-  // 2) usa service role para contagens (não depende de RLS)
-  const admin = getAdminSupabase();
-
-  const [alunosCount, profCount, turmasAtivasCount, docsPendentesCount] =
-    await Promise.all([
-      admin
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("role", "aluno"),
-
-      admin
-        .from("profiles")
-        .select("*", { count: "exact", head: true })
-        .eq("role", "professor"),
-
-      admin
-        .from("turmas")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "ativa"),
-
-      admin
-        .from("documentos_aluno")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending"),
-    ]);
-
-  // Se algum der erro, melhor explodir com mensagem clara
-  if (alunosCount.error) throw new Error(alunosCount.error.message);
-  if (profCount.error) throw new Error(profCount.error.message);
-  if (turmasAtivasCount.error) throw new Error(turmasAtivasCount.error.message);
-  if (docsPendentesCount.error)
-    throw new Error(docsPendentesCount.error.message);
+  const [
+    { count: totalAlunos },
+    { count: turmasAtivas },
+    { count: totalProfessores },
+    { count: documentosPendentes },
+  ] = await Promise.all([
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("role", "aluno"),
+    supabase
+      .from("turmas")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "ativa"),
+    supabase
+      .from("profiles")
+      .select("*", { count: "exact", head: true })
+      .eq("role", "professor"),
+    supabase
+      .from("documents")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "pending"),
+  ]);
 
   return {
-    totalAlunos: alunosCount.count ?? 0,
-    totalProfessores: profCount.count ?? 0,
-    turmasAtivas: turmasAtivasCount.count ?? 0,
-    documentosPendentes: docsPendentesCount.count ?? 0,
+    totalAlunos: totalAlunos ?? 0,
+    turmasAtivas: turmasAtivas ?? 0,
+    totalProfessores: totalProfessores ?? 0,
+    documentosPendentes: documentosPendentes ?? 0,
   };
+}
+
+export async function getStudentRegistrationsStats(
+  from: Date,
+  to: Date,
+): Promise<RegistrationStats[]> {
+  const supabase = await createServerSupabaseClient();
+
+  const toISO = new Date(to);
+  toISO.setHours(23, 59, 59, 999);
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("created_at")
+    .eq("role", "aluno")
+    .gte("created_at", from.toISOString())
+    .lte("created_at", toISO.toISOString())
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  const statsMap = new Map<string, number>();
+
+  const current = new Date(from);
+  current.setDate(1);
+  const end = new Date(to);
+  end.setDate(1);
+
+  while (current <= end) {
+    const month = current.getMonth() + 1;
+    const year = current.getFullYear();
+    const key = `${String(month).padStart(2, "0")}/${year}`;
+    statsMap.set(key, 0);
+    current.setMonth(current.getMonth() + 1);
+  }
+
+  (data ?? []).forEach((p) => {
+    const d = new Date(p.created_at);
+    const month = d.getMonth() + 1;
+    const year = d.getFullYear();
+    const key = `${String(month).padStart(2, "0")}/${year}`;
+    if (statsMap.has(key)) {
+      statsMap.set(key, (statsMap.get(key) || 0) + 1);
+    }
+  });
+
+  return Array.from(statsMap.entries()).map(([label, count]) => ({
+    label,
+    count,
+  }));
 }
