@@ -2,6 +2,8 @@ import DocumentsView from "@/app/_components/documents/DocumentsView";
 import { canAccessDocuments, getUserProfile } from "@/app/_lib/actions/profile";
 import { listMyDocuments } from "@/app/_lib/actions/documents";
 
+export const dynamic = 'force-dynamic';
+
 export default async function DocumentosPage() {
   const profile = await getUserProfile();
 
@@ -31,7 +33,6 @@ export default async function DocumentosPage() {
       title="Meus Documentos"
       subtitle="Acompanhe documentos pendentes, entregues e as observações da UNIENF."
       canEdit={false}
-      studentId={profile.user_id}
       docs={docs}
     />
   );

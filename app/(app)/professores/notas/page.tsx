@@ -4,6 +4,8 @@ import { listTeacherClasses } from "@/app/_lib/actions/classes";
 // Estas duas actions você vai criar OU mapear para a action de notas que você já tem:
 import { listStudentsForGrades, listAssessmentsForClass } from "@/app/_lib/actions/notas";
 
+export const dynamic = 'force-dynamic';
+
 import NotasClient from "./NotasClient";
 
 export default async function NotasPage({

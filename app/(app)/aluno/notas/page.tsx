@@ -8,6 +8,8 @@ import {
 } from "@/app/_components/ui/table";
 import { Award, TrendingUp } from "lucide-react";
 import { listMyNotas } from "@/app/_lib/actions/notas";
+
+export const dynamic = 'force-dynamic';
 import { getUserProfile } from "@/app/_lib/actions/profile";
 
 function formatNota(value: number | null): string {

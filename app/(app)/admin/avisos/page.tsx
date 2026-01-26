@@ -2,6 +2,8 @@
 import AvisosClient from "@/app/_components/admin/AvisosClient";
 import { listAvisos } from "@/app/_lib/actions/avisos";
 
+export const dynamic = 'force-dynamic';
+
 export default async function AvisosPage() {
   const avisos = await listAvisos().catch(() => []);
 

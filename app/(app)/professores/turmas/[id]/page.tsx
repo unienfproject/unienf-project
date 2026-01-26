@@ -66,7 +66,7 @@ export default async function ClassDetailsPage({
           </Link>
           <div className="flex-1">
             <h1 className="text-2xl font-bold text-slate-900">
-              {classDetails.name}
+              {classDetails.tag}
             </h1>
             <p className="text-slate-600">
               {classDetails.disciplinaName || "Sem disciplina"}

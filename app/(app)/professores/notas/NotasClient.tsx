@@ -23,17 +23,10 @@ import {
 } from "@/app/_components/ui/table";
 import { Save } from "lucide-react";
 
-import { upsertGradesBulk } from "@/app/_lib/actions/notas";
+import { upsertGradesBulk, StudentForGradesRow } from "@/app/_lib/actions/notas";
 
 type TurmaItem = { id: string; name: string; tag: string };
 type AvaliacaoItem = { id: string; label: string };
-
-type AlunoNotaRow = {
-  alunoId: string;
-  alunoName: string;
-  etiquetas: string | null;
-  nota: number | null;
-};
 
 export default function NotasClient(props: {
   teacherName: string;
@@ -45,7 +38,7 @@ export default function NotasClient(props: {
   avaliacoes: AvaliacaoItem[];
   avaliacaoId: string;
 
-  alunos: AlunoNotaRow[];
+  alunos: StudentForGradesRow[];
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();

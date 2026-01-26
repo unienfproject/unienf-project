@@ -6,6 +6,8 @@ import {
   listSubjectsForPicker,
 } from "@/app/_lib/actions/classes";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProfessorTurmasPage() {
   const profile = await getUserProfile();
 

@@ -1,5 +1,7 @@
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
+
+export const dynamic = 'force-dynamic';
 import {
   Select,
   SelectContent,
