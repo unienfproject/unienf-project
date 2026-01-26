@@ -7,6 +7,7 @@ interface ActivityItemProps {
   variant?: "default" | "primary";
 }
 
+
 export default function ActivityItem({
   title,
   description,
