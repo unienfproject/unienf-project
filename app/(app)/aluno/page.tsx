@@ -5,6 +5,8 @@ import { ArrowRight, Award, Bell, BookOpen, CircleCheckBig, Clock, FileText } fr
 
 import { getAlunoOverviewDashboard } from "@/app/_lib/actions/alunos";
 
+export const dynamic = 'force-dynamic';
+
 function formatBR(iso: string) {
   const d = iso?.slice(0, 10);
   if (!d) return "-";

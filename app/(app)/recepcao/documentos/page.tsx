@@ -3,6 +3,8 @@ import { getUserProfile } from "@/app/_lib/actions/profile";
 import { listStudentsForRecepcao } from "@/app/_lib/actions/recepcao";
 import Link from "next/link";
 
+export const dynamic = 'force-dynamic';
+
 export default async function RecepcaoDocumentosPage() {
   const profile = await getUserProfile();
 

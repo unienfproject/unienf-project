@@ -2,6 +2,8 @@ import { getUserProfile } from "@/app/_lib/actions/profile";
 import { listNoticesReadOnly } from "@/app/_lib/actions/recepcao";
 import { NoticeRow } from "@/app/_lib/actions/recepcao";
 
+export const dynamic = 'force-dynamic';
+
 function formatDate(iso: string) {
   try {
     return new Date(iso).toLocaleString("pt-BR");

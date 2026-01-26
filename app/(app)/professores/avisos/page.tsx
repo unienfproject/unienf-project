@@ -6,6 +6,8 @@ import {
   listStudentsForPicker,
 } from "@/app/_lib/actions/notices";
 
+export const dynamic = 'force-dynamic';
+
 export default async function ProfessorAvisosPage() {
   const profile = await getUserProfile();
 

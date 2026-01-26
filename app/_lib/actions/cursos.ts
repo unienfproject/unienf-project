@@ -53,7 +53,6 @@ export async function createCurso(input: {
 export async function updateCurso(input: {
   id: string;
   name: string;
-  description?: string | null;
   durationMonths?: number | null;
 }): Promise<void> {
   const profile = await getUserProfile();
@@ -69,7 +68,6 @@ export async function updateCurso(input: {
 
   const payload = {
     name,
-    description: input.description?.trim() || null,
     duration_months: input.durationMonths ?? null,
     updated_at: new Date().toISOString(),
   };

@@ -1,5 +1,6 @@
 "use server";
 
+import { logAudit } from "@/app/_lib/actions/audit";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -697,7 +698,7 @@ export type AssessmentItem = { id: string; label: string };
 export type StudentForGradesRow = {
   alunoId: string;
   alunoName: string;
-  matricula: string | null;
+  etiquetas: string | null;
   nota: number | null;
 };
 
@@ -801,7 +802,7 @@ export async function listStudentsForGrades(input: {
   const alunosIds = (turmaAlunos ?? []).map((x: any) => String(x.aluno_id));
 
   // Busca notas já lançadas para a avaliação
-  const notasMap = new Map<string, number>();
+  const notasMap = new Map<string, number | null>();
   if (alunosIds.length > 0) {
     const { data: notas, error: notasErr } = await supabase
       .from("notas")
@@ -825,7 +826,7 @@ export async function listStudentsForGrades(input: {
     return {
       alunoId,
       alunoName: (p?.name as string | undefined) ?? "Aluno",
-      matricula: null,
+      etiquetas: null,
       nota: notasMap.has(alunoId) ? (notasMap.get(alunoId) as any) : null,
     };
   });

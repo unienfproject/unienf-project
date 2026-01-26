@@ -1,6 +1,8 @@
 import FinanceiroAlunoView from "@/app/_components/finance/FinanceiroAlunoview";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Financeiro() {
   const profile = await getUserProfile();
 

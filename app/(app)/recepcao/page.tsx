@@ -5,6 +5,8 @@ import { MensalidadeRow } from "@/app/_lib/actions/finance";
 import { listNoticesReadOnly } from "@/app/_lib/actions/recepcao";
 import { NoticeRow } from "@/app/_lib/actions/recepcao";
 
+export const dynamic = 'force-dynamic';
+
 function KpiCard({ title, value }: { title: string; value: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

@@ -15,7 +15,6 @@ import {
 } from "@/app/_components/ui/dialog";
 import { Input } from "@/app/_components/ui/input";
 import { Label } from "@/app/_components/ui/label";
-import { Textarea } from "@/app/_components/ui/textarea";
 import { updateCurso, type CursoRow } from "@/app/_lib/actions/cursos";
 
 interface EditCursoDialogProps {
@@ -33,7 +32,6 @@ export default function EditCursoDialog({
   const [pending, startTransition] = useTransition();
   const [form, setForm] = useState({
     name: "",
-    description: "",
     durationMonths: "",
   });
 
@@ -41,7 +39,6 @@ export default function EditCursoDialog({
     if (open && curso) {
       setForm({
         name: curso.name ?? "",
-        description: curso.description ?? "",
         durationMonths:
           curso.durationMonths !== null && curso.durationMonths !== undefined
             ? String(curso.durationMonths)
@@ -51,7 +48,7 @@ export default function EditCursoDialog({
     }
 
     if (!open) {
-      setForm({ name: "", description: "", durationMonths: "" });
+      setForm({ name: "", durationMonths: "" });
     }
   }, [open, curso]);
 
@@ -69,7 +66,6 @@ export default function EditCursoDialog({
         await updateCurso({
           id: curso.id,
           name: form.name.trim(),
-          description: form.description.trim() || null,
           durationMonths: form.durationMonths
             ? parseInt(form.durationMonths, 10)
             : null,
@@ -105,19 +101,6 @@ export default function EditCursoDialog({
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               placeholder="Ex.: Tecnico em Enfermagem"
               required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-description">Descricao (opcional)</Label>
-            <Textarea
-              id="edit-description"
-              value={form.description}
-              onChange={(e) =>
-                setForm({ ...form, description: e.target.value })
-              }
-              placeholder="Descreva o curso..."
-              rows={3}
             />
           </div>
 

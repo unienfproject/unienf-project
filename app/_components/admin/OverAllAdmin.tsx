@@ -200,7 +200,7 @@ export default function PendingDocumentsClient({
                       </TableCell>
 
                       <TableCell className="text-foreground px-4 py-3 text-sm">
-                        {row.documentTitle}
+                        {row.documentTypeName}
                       </TableCell>
 
                       <TableCell className="px-4 py-3 text-right">

@@ -5,7 +5,7 @@ import {
   listMensalidadesForRecepcao,
   markMensalidadeAsPaid,
   type PaymentMethod,
-  type TuitionInstallment,
+  type MensalidadeRow,
 } from "@/app/_lib/actions/mensalidades";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -41,7 +41,7 @@ export default function FinanceiroRecepcaoView() {
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
   const [search, setSearch] = useState("");
-  const [rows, setRows] = useState<TuitionInstallment[]>([]);
+  const [rows, setRows] = useState<MensalidadeRow[]>([]);
   const [loading, setLoading] = useState(false);
 
   async function load() {
@@ -213,7 +213,7 @@ function Row({
   row,
   onPaid,
 }: {
-  row: TuitionInstallment;
+  row: MensalidadeRow;
   onPaid: (data: {
     paidAmount: number;
     paidAt: string;

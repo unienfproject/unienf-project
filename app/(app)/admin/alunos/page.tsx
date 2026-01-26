@@ -2,6 +2,8 @@ import AlunosPageClient from "@/app/_components/admin/AlunosPageClient";
 import AlunosTable from "@/app/_components/admin/AlunosTable";
 import { listAlunos } from "@/app/_lib/actions/alunos";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Alunos() {
   let alunos: Awaited<ReturnType<typeof listAlunos>> = [];
 
@@ -16,7 +18,7 @@ export default async function Alunos() {
       <main className="p-6">
         <div className="space-y-6">
           <AlunosPageClient alunos={alunos} />
-          <AlunosTable alunos={alunos} />
+          <AlunosTable />
         </div>
       </main>
     </div>

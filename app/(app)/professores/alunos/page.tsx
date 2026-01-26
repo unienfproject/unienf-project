@@ -1,6 +1,8 @@
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { listStudentsFromMyClasses } from "@/app/_lib/actions/classes";
 import Link from "next/link";
+
+export const dynamic = 'force-dynamic';
 import {
   Table,
   TableBody,
