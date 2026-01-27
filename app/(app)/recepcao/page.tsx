@@ -45,6 +45,7 @@ export default async function RecepcaoHomePage() {
 
   return (
     <div className="flex flex-col">
+      <main className="p-3">
       <div className="flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Recepção</h1>
@@ -94,6 +95,7 @@ export default async function RecepcaoHomePage() {
           ) : null}
         </div>
       </section>
+      </main>
     </div>
   );
 }

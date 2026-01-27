@@ -33,6 +33,7 @@ export default async function FinanceiroAlunoView({
 
   return (
     <div className="flex flex-col">
+      <main className="p-4">
       <div>
         <h1 className="gap-4 p-4 text-2xl font-bold text-slate-900">
           Financeiro
@@ -107,6 +108,7 @@ export default async function FinanceiroAlunoView({
           </table>
         </div>
       </div>
+      </main>
     </div>
   );
 }

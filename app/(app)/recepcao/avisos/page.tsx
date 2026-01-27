@@ -24,14 +24,12 @@ export default async function RecepcaoAvisosPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-6 p-6">
-        <h1 className="text-2xl font-bold text-slate-900">Avisos</h1>
-        <p className="text-slate-600">
-          A recepção pode apenas visualizar avisos. Não há envio por esta role.
-        </p>
+      <main className="p-4">
+      <div className="flex flex-col gap-3 p-6">
+        <h1 className="text-3xl font-bold text-slate-900">Avisos</h1>
       </div>
 
-      <section className="m-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b p-4">
           <h2 className="font-semibold text-slate-900">Feed de avisos</h2>
           <p className="text-sm text-slate-600">
@@ -66,6 +64,7 @@ export default async function RecepcaoAvisosPage() {
           ) : null}
         </div>
       </section>
+      </main>
     </div>
   );
 }

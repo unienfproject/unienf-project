@@ -86,14 +86,15 @@ export default function DocumentsView({
   }
 
   return (
-    <div className="bg-background flex min-h-screen flex-col">
-      <div className="flex flex-col gap-4 p-4">
+    <div className="bg-background flex gap-2 min-h-screen flex-col">
+      <main className="p-6">
+      <div className="flex flex-col  p-4">
         <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
         <p className="text-slate-600">{subtitle}</p>
       </div>
 
-      <div className="gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between gap-3">
+      <div className="rounded-2xl border border-slate-200  bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">
               Progresso da documentação
@@ -130,6 +131,7 @@ export default function DocumentsView({
           />
         ))}
       </div>
+      </main>
     </div>
   );
 }
