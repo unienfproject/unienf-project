@@ -1,4 +1,5 @@
 import { BookOpen, FlaskConical, Trophy, Users } from "lucide-react";
+
 import FeatureCard from "./FeatureCard";
 
 const features = [
