@@ -534,3 +534,44 @@ export async function getProfessorProfile(
     updatedAt: dadosDoPerfil.updated_at,
   };
 }
+
+export async function deleteProfessor(professorId: string) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  if (profile.role !== "administrativo") {
+    throw new Error("Sem permissão para excluir professores.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const admin = getAdminSupabase();
+
+  const { data: currentProfile, error } = await supabase
+    .from("profiles")
+    .select("user_id, name, email, role")
+    .eq("user_id", professorId)
+    .single();
+
+  if (error) throw new Error(error.message);
+  if (!currentProfile || currentProfile.role !== "professor") {
+    throw new Error("Professor não encontrado.");
+  }
+
+  const { error: authError } =
+    await admin.auth.admin.deleteUser(professorId);
+
+  if (authError) throw new Error(authError.message);
+
+  await logAudit({
+    action: "delete",
+    entity: "professor",
+    entityId: professorId,
+    oldValue: {
+      name: currentProfile.name,
+      email: currentProfile.email,
+    },
+    description: `Professor ${currentProfile.name ?? ""} excluído`,
+  });
+
+  revalidatePath("/admin/professores");
+}

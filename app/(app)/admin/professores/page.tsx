@@ -1,5 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 import CreateProfessorDialog from "@/app/_components/admin/CreateProfessorDialog";
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
@@ -19,11 +22,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/app/_components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/app/_components/ui/dialog";
 
-import { listProfessoresPaginated } from "@/app/_lib/actions/professores";
-import { usePaginatedData } from "@/app/_hooks/usePaginatedData"; // ajuste o path se o seu hook estiver em outro lugar
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 import {
   EllipsisVertical,
   Eye,
@@ -33,11 +39,25 @@ import {
   UserSearch,
 } from "lucide-react";
 
+import { usePaginatedData } from "@/app/_hooks/usePaginatedData";
+import {
+  listProfessoresPaginated,
+  updateProfessorProfile,
+  deleteProfessor,
+  type ProfessorRow,
+} from "@/app/_lib/actions/professores";
+import { Label } from "@/app/_components/ui/label";
+
 const PAGE_SIZE = 10;
 
 export default function Professores() {
   const router = useRouter();
-  const [dialogOpen, setDialogOpen] = useState(false);
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingProfessor, setEditingProfessor] =
+    useState<ProfessorRow | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const {
     items: professores,
@@ -51,9 +71,42 @@ export default function Professores() {
     next,
   } = usePaginatedData(listProfessoresPaginated, PAGE_SIZE);
 
+  async function handleSaveProfessor() {
+    if (!editingProfessor) return;
+
+    try {
+      setSaving(true);
+
+      await updateProfessorProfile({
+        professorId: editingProfessor.id,
+        name: editingProfessor.name,
+        email: editingProfessor.email,
+        telefone: editingProfessor.telefone,
+      });
+
+      setIsEditOpen(false);
+      setEditingProfessor(null);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeleteProfessor(professor: ProfessorRow) {
+    const confirmed = window.confirm(
+      `Tem certeza que deseja excluir o professor "${professor.name}"?`,
+    );
+
+    if (!confirmed) return;
+
+    await deleteProfessor(professor.id);
+  }
+
   return (
     <div className="flex flex-col">
-      <CreateProfessorDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <CreateProfessorDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+      />
 
       <main className="p-6">
         <div className="space-y-6">
@@ -68,7 +121,7 @@ export default function Professores() {
             </div>
 
             <Button
-              onClick={() => setDialogOpen(true)}
+              onClick={() => setCreateOpen(true)}
               className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all duration-200 hover:shadow-md"
             >
               <UserPlus className="h-4 w-4" />
@@ -140,13 +193,9 @@ export default function Professores() {
                         .toUpperCase()
                         .slice(0, 2);
 
-                      // No seu schema, o id do profile costuma ser user_id.
-                      // O paginated deve retornar "id" já pronto para uso.
-                      const professorId = prof.id;
-
                       return (
                         <TableRow
-                          key={professorId}
+                          key={prof.id}
                           className="border-border/50 hover:bg-muted/20 bg-background border-b transition-colors last:border-0"
                         >
                           <TableCell className="px-6 py-4">
@@ -179,7 +228,6 @@ export default function Professores() {
                                     variant="ghost"
                                     size="icon"
                                     className="hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 items-center justify-center rounded-lg"
-                                    aria-label="Ações do Professor"
                                   >
                                     <EllipsisVertical className="h-4 w-4" />
                                   </Button>
@@ -196,7 +244,7 @@ export default function Professores() {
                                     className="cursor-pointer"
                                     onClick={() =>
                                       router.push(
-                                        `/admin/professores/${professorId}`,
+                                        `/admin/professores/${prof.id}`,
                                       )
                                     }
                                   >
@@ -207,7 +255,8 @@ export default function Professores() {
                                   <DropdownMenuItem
                                     className="cursor-pointer"
                                     onClick={() => {
-                                      // TODO: abrir modal de edição do professor
+                                      setEditingProfessor(prof);
+                                      setIsEditOpen(true);
                                     }}
                                   >
                                     <Pencil className="mr-2 h-4 w-4" />
@@ -218,9 +267,9 @@ export default function Professores() {
 
                                   <DropdownMenuItem
                                     className="text-destructive focus:text-destructive cursor-pointer"
-                                    onClick={() => {
-                                      // TODO: confirmar exclusão
-                                    }}
+                                    onClick={() =>
+                                      handleDeleteProfessor(prof)
+                                    }
                                   >
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Excluir
@@ -244,6 +293,7 @@ export default function Professores() {
 
               <div className="flex items-center gap-2">
                 <Button
+                  className="cursor-pointer"
                   variant="outline"
                   onClick={prev}
                   disabled={page === 1 || loading}
@@ -251,6 +301,7 @@ export default function Professores() {
                   Anterior
                 </Button>
                 <Button
+                  className="cursor-pointer"
                   variant="outline"
                   onClick={next}
                   disabled={page === totalPages || loading}
@@ -262,6 +313,69 @@ export default function Professores() {
           </div>
         </div>
       </main>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar professor</DialogTitle>
+          </DialogHeader>
+
+          {editingProfessor && (
+            <div className="space-y-4">
+              <Label htmlFor="Nome">Nome</Label>
+              <Input
+                value={editingProfessor.name}
+                onChange={(e) =>
+                  setEditingProfessor({
+                    ...editingProfessor,
+                    name: e.target.value,
+                  })
+                }
+                placeholder="Nome"
+              />
+
+              <Label htmlFor="Email">Email</Label>
+              <Input
+                value={editingProfessor.email ?? ""}
+                onChange={(e) =>
+                  setEditingProfessor({
+                    ...editingProfessor,
+                    email: e.target.value || null,
+                  })
+                }
+                placeholder="Email"
+              />
+
+              <Label htmlFor="Telefone">Telefone</Label>
+              <Input
+                value={editingProfessor.telefone ?? ""}
+                onChange={(e) =>
+                  setEditingProfessor({
+                    ...editingProfessor,
+                    telefone: e.target.value || null,
+                  })
+                }
+                placeholder="Telefone"
+              />
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              className="cursor-pointer"
+              variant="outline"
+              onClick={() => setIsEditOpen(false)}
+              disabled={saving}
+            >
+              Cancelar
+            </Button>
+
+            <Button className="cursor-pointer" onClick={handleSaveProfessor} disabled={saving}>
+              {saving ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
