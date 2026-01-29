@@ -180,3 +180,43 @@ export async function listCursosPaginated(params: {
 
   return { items, total, page, pageSize, totalPages };
 }
+
+export async function deleteCurso(input: {
+  id: string;
+}): Promise<void> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  if (profile.role !== "administrativo") {
+    throw new Error("Sem permissão para excluir cursos.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: curso, error: fetchError } = await supabase
+    .from("cursos")
+    .select("id, name, duration_months")
+    .eq("id", input.id)
+    .single();
+
+  if (fetchError || !curso) {
+    throw new Error("Curso não encontrado.");
+  }
+
+  const { error } = await supabase
+    .from("cursos")
+    .delete()
+    .eq("id", input.id);
+
+  if (error) throw new Error(error.message);
+
+  await logAudit({
+    action: "delete",
+    entity: "curso",
+    entityId: input.id,
+    oldValue: curso,
+    description: `Curso ${curso.name} excluído`,
+  });
+
+  revalidatePath("/admin/cursos");
+}

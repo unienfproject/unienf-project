@@ -1,9 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
+import { Label } from "@/app/_components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/app/_components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -12,7 +21,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/app/_components/ui/table";
-
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,12 +33,20 @@ import {
 import { EllipsisVertical, Eye, Pencil, UserSearch } from "lucide-react";
 
 import { usePaginatedData } from "@/app/_hooks/usePaginatedData";
-import { listAlunosPaginated } from "@/app/_lib/actions/alunos";
+import {
+  listAlunosPaginated,
+  updateAlunoProfile,
+  type AlunoRow,
+} from "@/app/_lib/actions/alunos";
 
 const PAGE_SIZE = 10;
 
 export default function AlunosTable() {
   const router = useRouter();
+
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingAluno, setEditingAluno] = useState<AlunoRow | null>(null);
+  const [saving, setSaving] = useState(false);
 
   const {
     items: alunos,
@@ -44,6 +60,27 @@ export default function AlunosTable() {
     next,
   } = usePaginatedData(listAlunosPaginated, PAGE_SIZE);
 
+  async function handleSave() {
+    if (!editingAluno) return;
+
+    try {
+      setSaving(true);
+
+      await updateAlunoProfile({
+        alunoId: editingAluno.id,
+        name: editingAluno.name,
+        email: editingAluno.email,
+        telefone: editingAluno.telefone,
+        dateOfBirth: editingAluno.dateOfBirth ?? null,
+      });
+
+      setIsEditOpen(false);
+      setEditingAluno(null);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <>
       <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-4">
@@ -51,171 +88,177 @@ export default function AlunosTable() {
           <div className="relative flex-1">
             <UserSearch className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2" />
             <Input
-              type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="border-input bg-background ring-offset-background file:text-foreground placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 pl-10 text-base focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm"
               placeholder="Buscar por nome, email ou telefone..."
+              className="pl-10"
             />
           </div>
         </div>
       </div>
 
-      <div>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-muted/30">
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader className="bg-muted/30">
+            <TableRow>
+              <TableHead>Nome</TableHead>
+              <TableHead>Telefone</TableHead>
+              <TableHead>Turma</TableHead>
+              <TableHead className="text-right">Ações</TableHead>
+            </TableRow>
+          </TableHeader>
+
+          <TableBody>
+            {loading ? (
               <TableRow>
-                <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
-                  Nome
-                </TableHead>
-                <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
-                  Telefone
-                </TableHead>
-                <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
-                  Turma
-                </TableHead>
-                <TableHead className="text-muted-foreground px-6 py-4 text-right text-sm font-medium">
-                  Ações
-                </TableHead>
+                <TableCell colSpan={4} className="text-center py-6">
+                  Carregando alunos...
+                </TableCell>
               </TableRow>
-            </TableHeader>
+            ) : alunos.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center py-6">
+                  Nenhum aluno encontrado.
+                </TableCell>
+              </TableRow>
+            ) : (
+              alunos.map((aluno) => (
+                <TableRow key={aluno.id}>
+                  <TableCell>
+                    <div>
+                      <p className="font-medium">{aluno.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {aluno.email}
+                      </p>
+                    </div>
+                  </TableCell>
 
-            <TableBody>
-              {loading ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-muted-foreground px-6 py-6 text-center"
-                  >
-                    Carregando alunos...
+                  <TableCell>{aluno.telefone || "-"}</TableCell>
+                  <TableCell>-</TableCell>
+
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button className="cursor-pointer" variant="ghost" size="icon">
+                          <EllipsisVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() =>
+                            router.push(`/admin/alunos/${aluno.id}`)
+                          }
+                        >
+                          <Eye className="mr-2 h-4 w-4" />
+                          Ver perfil
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
+                          className="cursor-pointer"
+                          onClick={() => {
+                            setEditingAluno(aluno);
+                            setIsEditOpen(true);
+                          }}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
-              ) : alunos.length === 0 ? (
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    className="text-muted-foreground px-6 py-4 text-center"
-                  >
-                    {search
-                      ? "Nenhum aluno encontrado com o termo pesquisado."
-                      : "Nenhum aluno encontrado."}
-                  </TableCell>
-                </TableRow>
-              ) : (
-                alunos.map((aluno) => {
-                  const name = aluno.name?.trim() || "Aluno";
-                  const initials = name
-                    .split(" ")
-                    .filter(Boolean)
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2);
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-                  return (
-                    <TableRow
-                      key={aluno.id}
-                      className="border-border/50 hover:bg-muted/20 bg-background border-b transition-colors last:border-0"
-                    >
-                      <TableCell className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                            <span className="text-primary text-sm font-semibold">
-                              {initials}
-                            </span>
-                          </div>
-                          <div>
-                            <p className="text-foreground text-sm font-medium">
-                              {name}
-                            </p>
-                            <p className="text-muted-foreground text-xs">
-                              {aluno.email || "-"}
-                            </p>
-                          </div>
-                        </div>
-                      </TableCell>
-
-                      <TableCell className="text-foreground px-6 py-4 text-sm">
-                        {aluno.telefone || "-"}
-                      </TableCell>
-
-                      <TableCell className="text-foreground px-6 py-4 text-sm">
-                        -
-                      </TableCell>
-
-                      <TableCell className="px-6 py-4 text-right">
-                        <div className="flex items-center justify-end">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="ring-offset-background focus-visible:ring-ring hover:bg-accent hover:text-accent-foreground inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
-                                aria-label="Ações do aluno"
-                              >
-                                <EllipsisVertical className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-
-                            <DropdownMenuContent align="end" className="w-44">
-                              <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-
-                              <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() =>
-                                  router.push(`/admin/alunos/${aluno.id}`)
-                                }
-                              >
-                                <Eye className="mr-2 h-4 w-4" />
-                                Ver perfil
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                className="cursor-pointer"
-                                onClick={() => {
-                                  // TODO: abrir modal de edição
-                                }}
-                              >
-                                <Pencil className="mr-2 h-4 w-4" />
-                                Editar
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              )}
-            </TableBody>
-          </Table>
-        </div>
-
-        <div className="border-border/50 flex items-center justify-between border-t px-6 py-4">
-          <p className="text-muted-foreground text-sm">
-            Mostrando {alunos.length} de {total} alunos
-          </p>
-
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              onClick={prev}
-              disabled={page === 1 || loading}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              onClick={next}
-              disabled={page === totalPages || loading}
-            >
-              Próximo
-            </Button>
-          </div>
+      <div className="flex items-center justify-between border-t px-6 py-4">
+        <p className="text-sm text-muted-foreground">
+          Mostrando {alunos.length} de {total} alunos
+        </p>
+        <div className="flex gap-2">
+          <Button className="cursor-pointer" onClick={prev} disabled={page === 1 || loading}>
+            Anterior
+          </Button>
+          <Button className="cursor-pointer" onClick={next} disabled={page === totalPages || loading}>
+            Próximo
+          </Button>
         </div>
       </div>
+
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Editar aluno</DialogTitle>
+          </DialogHeader>
+
+          {editingAluno && (
+            <div className="space-y-4">
+              <Label htmlFor="name">Nome</Label>
+              <Input
+                value={editingAluno.name}
+                onChange={(e) =>
+                  setEditingAluno({ ...editingAluno, name: e.target.value })
+                }
+                placeholder="Nome"
+              />
+
+              <Label htmlFor="email">E-mail</Label>
+              <Input
+                value={editingAluno.email}
+                onChange={(e) =>
+                  setEditingAluno({ ...editingAluno, email: e.target.value })
+                }
+                placeholder="Email"
+              />
+
+              <Label htmlFor="Telefone">Telefone</Label>
+              <Input
+                value={editingAluno.telefone ?? ""}
+                onChange={(e) =>
+                  setEditingAluno({
+                    ...editingAluno,
+                    telefone: e.target.value || null,
+                  })
+                }
+                placeholder="Telefone"
+              />
+
+              <Label htmlFor="dateOfBirth">Data de Nascimento</Label>
+              <Input
+                type="date"
+                value={editingAluno.dateOfBirth ?? ""}
+                onChange={(e) =>
+                  setEditingAluno({
+                    ...editingAluno,
+                    dateOfBirth: e.target.value || null,
+                  })
+                }
+              />
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditOpen(false)}
+              disabled={saving}
+              className="cursor-pointer"
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} disabled={saving} className="cursor-pointer">
+              {saving ? "Salvando..." : "Salvar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
