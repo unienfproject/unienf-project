@@ -1,6 +1,8 @@
+import { Input } from "@/app/_components/ui/input";
 import type { StudentRow } from "@/app/_lib/actions/profile";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { listStudentsForRecepcao } from "@/app/_lib/actions/recepcao";
+import { Search } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = 'force-dynamic';
@@ -17,7 +19,8 @@ export default async function RecepcaoDocumentosPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-6 p-6">
+      <main className="p-4">
+      <div className="flex flex-col gap-3 p-6">
         <h1 className="text-2xl font-bold text-slate-900">Documentos</h1>
         <p className="text-slate-600">
           A recepção pode marcar documentos como entregues/pendentes dentro do
@@ -26,12 +29,18 @@ export default async function RecepcaoDocumentosPage() {
       </div>
 
       <section className="gap-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="border-b p-4">
-          <h2 className="font-semibold text-slate-900">Escolha um aluno</h2>
-          <p className="text-sm text-slate-600">
-            Abra a página de documentos do aluno para atualizar status e
-            observações.
-          </p>
+        <div className="flex flex-col gap-3 p-2">
+          <div className="border-b p-4">
+            <h2 className="font-semibold text-slate-900">Escolha um aluno</h2>
+            <p className="text-sm text-slate-600">
+              Abra a página de documentos do aluno para atualizar status e
+              observações.
+            </p>
+            <div className="flex flex-row mt-2">
+            <Search />
+            <Input type="text" placeholder="Buscar aluno" className="w-full"/>
+            </div>
+          </div>  
         </div>
 
         <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-2">
@@ -58,6 +67,7 @@ export default async function RecepcaoDocumentosPage() {
           ) : null}
         </div>
       </section>
+      </main>
     </div>
   );
 }

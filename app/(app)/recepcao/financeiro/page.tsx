@@ -96,6 +96,7 @@ export default async function RecepcaoFinanceiroPage({
 
   return (
     <div className="flex flex-col">
+      <main className="p-4">
       <div className="flex flex-col gap-4 p-4">
         <h1 className="text-2xl font-bold text-slate-900">Financeiro</h1>
         <p className="text-slate-600">
@@ -375,7 +376,9 @@ export default async function RecepcaoFinanceiroPage({
           </div>
         </section>
       ) : null}
+    </main>
     </div>
+    
   );
 }
 

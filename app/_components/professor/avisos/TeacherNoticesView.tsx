@@ -346,6 +346,7 @@ export default function TeacherNoticesView({
 
   return (
     <div className="flex flex-col gap-6">
+      <main className="p-4">
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Avisos</h1>
@@ -355,7 +356,7 @@ export default function TeacherNoticesView({
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-4">
           <div className="flex flex-col gap-1">
             <span className="text-xs text-slate-600">Buscar</span>
             <Input
@@ -366,7 +367,7 @@ export default function TeacherNoticesView({
             />
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-4">
             <span className="text-xs text-slate-600">Filtro</span>
             <Select
               value={filter}
@@ -413,7 +414,7 @@ export default function TeacherNoticesView({
         />
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden gap-4 rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b p-4">
           <h2 className="font-semibold text-slate-900">Últimos avisos</h2>
           <p className="text-sm text-slate-600">
@@ -421,9 +422,9 @@ export default function TeacherNoticesView({
           </p>
         </div>
 
-        <div className="divide-y">
+        <div className="divide-y gap-4">
           {filtered.map((n) => (
-            <div key={n.id} className="p-4">
+            <div key={n.id} className="p-4 gap-4 flex flex-col">
               <div className="flex flex-col gap-1 md:flex-row md:items-start md:justify-between">
                 <div className="flex flex-col">
                   <h3 className="text-base font-semibold text-slate-900">
@@ -454,7 +455,9 @@ export default function TeacherNoticesView({
             </div>
           ) : null}
         </div>
+        
       </div>
+      </main>
 
       {openCreate ? (
         <CreateNoticeModal
