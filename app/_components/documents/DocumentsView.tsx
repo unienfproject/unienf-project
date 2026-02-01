@@ -6,6 +6,7 @@ import {
   updateDocumentStatus,
 } from "../../_lib/actions/documents";
 import DocumentCard from "./DocumentCard";
+import Link from "next/link";
 
 type Props = {
   title: string;
@@ -112,7 +113,14 @@ export default function DocumentsView({
           <div className="h-3 bg-sky-500" style={{ width: `${pct}%` }} />
         </div>
       </div>
-
+      <div className="text-2xl font-bold text-center flex flex-col items-center justify-center">
+        <h2 className="">
+          EM CASO DE DÚVIDAS, ENTRE EM CONTATO COM A RECEPÇÃO:
+        </h2>
+        <p>
+          <strong className="text-sky-600 hover:text-green-400 transition-colors"> <Link href="https://wa.me/5511987654321" target="_blank">VIA WHATSAPP: (22) 2621-1627 </Link></strong>
+        </p>
+      </div>
       <div className="m-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         {docs.map((doc) => (
           <DocumentCard
