@@ -51,9 +51,7 @@ export default function Location() {
                     Telefone
                   </h3>
                   <p className="text-muted-foreground">
-                    (22) 2621-1627
-                    <br />
-                    (22) 98765-4321 (WhatsApp)
+                    (22) 2621-1627 (Whatsapp)
                   </p>
                 </div>
               </div>
@@ -66,7 +64,7 @@ export default function Location() {
                 <div>
                   <h3 className="text-foreground mb-1 font-semibold">E-mail</h3>
                   <p className="text-muted-foreground">
-                    contato@unienf.com.br
+                    administrativo@unienflagos.com
                     <br />
                     unienflagos@gmail.com
                   </p>
@@ -85,7 +83,7 @@ export default function Location() {
                   <p className="text-muted-foreground">
                     Segunda a Sexta: 8h às 20h
                     <br />
-                    Sábado: 8h às 12h
+                    Sábado e Domingo: 8h às 12h
                   </p>
                 </div>
               </div>
