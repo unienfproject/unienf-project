@@ -121,15 +121,15 @@ export default function DisciplinasPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Disciplinas</h1>
+          <h1 className="text-2xl font-bold">Conteúdos</h1>
           <p className="text-muted-foreground">
-            Gerencie disciplinas reutilizáveis nas turmas
+            Gerencie conteúdos reutilizáveis nas turmas
           </p>
         </div>
 
         <Button onClick={openCreate} className="flex gap-2">
           <Plus className="h-4 w-4" />
-          Nova Disciplina
+          Novo Conteúdo
         </Button>
       </div>
 
@@ -138,7 +138,6 @@ export default function DisciplinasPage() {
           <TableHeader className="bg-muted/30">
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Data de Criação</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -153,7 +152,7 @@ export default function DisciplinasPage() {
             ) : disciplinas.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center py-6">
-                  Nenhuma disciplina cadastrada.
+                  Nenhum conteúdo cadastrado.
                 </TableCell>
               </TableRow>
             ) : (
@@ -214,26 +213,26 @@ export default function DisciplinasPage() {
         <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
-              {editing ? "Editar Disciplina" : "Nova Disciplina"}
+              {editing ? "Editar Conteúdo" : "Novo conteúdo"}
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <Input
-              placeholder="Nome da disciplina"
+              placeholder="Nome da conteúdo"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
 
             <Textarea
-              placeholder="Conteúdo da disciplina"
+              placeholder="Conteúdo"
               rows={6}
               value={conteudo}
               onChange={(e) => setConteudo(e.target.value)}
             />
 
             <Button onClick={handleSave}>
-              {editing ? "Salvar alterações" : "Criar disciplina"}
+              {editing ? "Salvar alterações" : "Criar Conteúdo"}
             </Button>
           </div>
         </DialogContent>
@@ -242,12 +241,12 @@ export default function DisciplinasPage() {
       <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Turmas que utilizam esta disciplina</DialogTitle>
+            <DialogTitle>Disciplinas que utilizam este conteúdo.</DialogTitle>
           </DialogHeader>
 
           {turmas.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              Nenhuma turma vinculada.
+              Nenhuma disciplina vinculada.
             </p>
           ) : (
             <ul className="list-disc pl-5 space-y-1">

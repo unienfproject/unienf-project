@@ -58,10 +58,10 @@ export default function Turmas() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-foreground text-2xl font-bold">
-                Turmas Cadastradas
+                Disciplinas Cadastradas
               </h1>
               <p className="text-muted-foreground">
-                Gerencie todas as turmas cadastradas
+                Gerencie todas as disciplinas cadastradas
               </p>
             </div>
 
@@ -70,7 +70,7 @@ export default function Turmas() {
               className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all duration-200 hover:shadow-md"
             >
               <FolderPlus />
-              Nova Turma
+              Nova Disciplina
             </Button>
           </div>
 
@@ -95,13 +95,13 @@ export default function Turmas() {
                 <TableHeader className="bg-muted/30">
                   <TableRow>
                     <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
-                      Disciplina
+                      Turma
                     </TableHead>
                     <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
                       Professor
                     </TableHead>
                     <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
-                      Turma
+                      Disciplina
                     </TableHead>
                     <TableHead className="text-muted-foreground px-6 py-4 text-right text-sm font-medium">
                       Ações
@@ -116,7 +116,7 @@ export default function Turmas() {
                         colSpan={4}
                         className="text-muted-foreground px-6 py-6 text-center"
                       >
-                        Carregando turmas...
+                        Carregando Disciplinas...
                       </TableCell>
                     </TableRow>
                   ) : turmas.length === 0 ? (
@@ -197,7 +197,7 @@ export default function Turmas() {
                                     }
                                   >
                                     <Eye className="mr-2 h-4 w-4" />
-                                    Ver turma
+                                    Ver Disciplina
                                   </DropdownMenuItem>
 
                                   <DropdownMenuItem
@@ -223,7 +223,7 @@ export default function Turmas() {
 
             <div className="border-border/50 flex items-center justify-between border-t px-6 py-4">
               <p className="text-muted-foreground text-sm">
-                Mostrando {turmas.length} de {total} turmas
+                Mostrando {turmas.length} de {total} disciplinas
               </p>
 
               <div className="flex items-center gap-2">
