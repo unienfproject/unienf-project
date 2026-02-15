@@ -77,9 +77,7 @@ export default function CursosPage() {
   const filteredCursos = useMemo(() => {
     if (!search.trim()) return cursos;
     const term = search.toLowerCase();
-    return cursos.filter((c) =>
-      c.name.toLowerCase().includes(term),
-    );
+    return cursos.filter((c) => c.name.toLowerCase().includes(term));
   }, [cursos, search]);
 
   function openCreate() {
@@ -103,8 +101,7 @@ export default function CursosPage() {
   async function handleCreate() {
     await createCurso({
       name: formName,
-      durationMonths:
-        formDuration === "" ? null : Number(formDuration),
+      durationMonths: formDuration === "" ? null : Number(formDuration),
     });
 
     setCreateOpen(false);
@@ -117,8 +114,7 @@ export default function CursosPage() {
     await updateCurso({
       id: selectedCurso.id,
       name: formName,
-      durationMonths:
-        formDuration === "" ? null : Number(formDuration),
+      durationMonths: formDuration === "" ? null : Number(formDuration),
     });
 
     setEditOpen(false);
@@ -137,7 +133,7 @@ export default function CursosPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6 p-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Cursos</h1>
@@ -153,16 +149,16 @@ export default function CursosPage() {
       </div>
 
       <div className="relative max-w-full">
-        <FolderSearch2 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <FolderSearch2 className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2" />
         <Input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar curso..."
-          className="pl-10 "
+          className="pl-12"
         />
       </div>
 
-      <div className="border rounded-xl overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -189,9 +185,7 @@ export default function CursosPage() {
               filteredCursos.map((curso) => (
                 <TableRow key={curso.id}>
                   <TableCell>{curso.name}</TableCell>
-                  <TableCell>
-                    {curso.durationMonths ?? "-"}
-                  </TableCell>
+                  <TableCell>{curso.durationMonths ?? "-"}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -204,16 +198,12 @@ export default function CursosPage() {
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuSeparator />
 
-                        <DropdownMenuItem
-                          onClick={() => openInfo(curso)}
-                        >
+                        <DropdownMenuItem onClick={() => openInfo(curso)}>
                           <Eye className="mr-2 h-4 w-4" />
                           Informações
                         </DropdownMenuItem>
 
-                        <DropdownMenuItem
-                          onClick={() => openEdit(curso)}
-                        >
+                        <DropdownMenuItem onClick={() => openEdit(curso)}>
                           <Pencil className="mr-2 h-4 w-4" />
                           Editar
                         </DropdownMenuItem>
@@ -259,9 +249,7 @@ export default function CursosPage() {
                 value={formDuration}
                 onChange={(e) =>
                   setFormDuration(
-                    e.target.value === ""
-                      ? ""
-                      : Number(e.target.value),
+                    e.target.value === "" ? "" : Number(e.target.value),
                   )
                 }
               />
@@ -286,14 +274,12 @@ export default function CursosPage() {
                 <strong>Nome:</strong> {selectedCurso.name}
               </p>
               <p>
-                <strong>Duração:</strong>{" "}
-                {selectedCurso.durationMonths ?? "-"} meses
+                <strong>Duração:</strong> {selectedCurso.durationMonths ?? "-"}{" "}
+                meses
               </p>
               <p>
                 <strong>Criado em:</strong>{" "}
-                {new Date(
-                  selectedCurso.createdAt,
-                ).toLocaleDateString()}
+                {new Date(selectedCurso.createdAt).toLocaleDateString()}
               </p>
             </div>
           )}
@@ -306,7 +292,7 @@ export default function CursosPage() {
             <DialogTitle>Editar Curso</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4 gap-2">
+          <div className="gap-2 space-y-4">
             <div className="gap-2">
               <Label>Nome do curso</Label>
               <Input
@@ -324,9 +310,7 @@ export default function CursosPage() {
                 value={formDuration}
                 onChange={(e) =>
                   setFormDuration(
-                    e.target.value === ""
-                      ? ""
-                      : Number(e.target.value),
+                    e.target.value === "" ? "" : Number(e.target.value),
                   )
                 }
               />
