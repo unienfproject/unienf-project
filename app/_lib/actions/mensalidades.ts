@@ -147,12 +147,17 @@ export async function listMensalidadesForRecepcao(params?: {
       `
         id,
         aluno_id,
+        turma_id,
         competence_year,
         competence_month,
         status,
         predicted_value,
         due_date,
-        profiles:profiles!mensalidades_aluno_id_fkey ( name )
+        profiles:profiles!mensalidades_aluno_id_fkey ( name ),
+        turmas:turmas!mensalidades_turma_id_fkey(
+          tag,
+          disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
+        )
       `,
     )
     .order("competence_year", { ascending: false })
@@ -207,16 +212,25 @@ export async function listMensalidadesForRecepcao(params?: {
   type SupabaseRow = {
     id: unknown;
     aluno_id: unknown;
+    turma_id: unknown;
     competence_year: unknown;
     competence_month: unknown;
     status: unknown;
     predicted_value: unknown;
     due_date: unknown;
     profiles: { name: unknown } | { name: unknown }[] | null;
+    turmas:
+      | { tag: unknown; disciplinas: { name: unknown } | { name: unknown }[] | null }
+      | { tag: unknown; disciplinas: { name: unknown } | { name: unknown }[] | null }[]
+      | null;
   };
 
   return ((data as unknown as SupabaseRow[]) ?? []).map((r: SupabaseRow) => {
     const profile = Array.isArray(r.profiles) ? r.profiles[0] : r.profiles;
+    const turma = Array.isArray(r.turmas) ? r.turmas[0] : r.turmas;
+    const disciplina = Array.isArray(turma?.disciplinas)
+      ? turma?.disciplinas[0]
+      : turma?.disciplinas;
     const pagamento = pagamentoMap.get(String(r.id));
     const paidAtDate = pagamento?.paid_at
       ? new Date(pagamento.paid_at).toISOString().split("T")[0]
@@ -226,6 +240,9 @@ export async function listMensalidadesForRecepcao(params?: {
       id: String(r.id),
       studentId: String(r.aluno_id),
       studentName: (profile?.name as string | undefined) ?? "Aluno",
+      turmaId: r.turma_id ? String(r.turma_id) : null,
+      turmaTag: turma?.tag ? String(turma.tag) : null,
+      disciplinaName: disciplina?.name ? String(disciplina.name) : null,
       competenceYear: Number(r.competence_year),
       competenceMonth: Number(r.competence_month),
       status: r.status as MensalidadeStatus,
@@ -247,6 +264,9 @@ function buildMensalidadesMock(input: {
       id: "m1",
       studentId: input.studentId || "student-1",
       studentName: "Maria Silva",
+      turmaId: null,
+      turmaTag: null,
+      disciplinaName: null,
       competenceYear: 2025,
       competenceMonth: 2,
       status: "pendente",
@@ -260,6 +280,9 @@ function buildMensalidadesMock(input: {
       id: "m2",
       studentId: input.studentId || "student-1",
       studentName: "Maria Silva",
+      turmaId: null,
+      turmaTag: null,
+      disciplinaName: null,
       competenceYear: 2025,
       competenceMonth: 1,
       status: "pago",
@@ -286,6 +309,9 @@ function buildMensalidadesMock(input: {
       id: "m4",
       studentId: input.studentId || "student-3",
       studentName: "Ana Costa",
+      turmaId: null,
+      turmaTag: null,
+      disciplinaName: null,
       competenceYear: 2025,
       competenceMonth: 2,
       status: "pendente",
@@ -520,7 +546,20 @@ export async function listMensalidadesByStudent(
   const { data: mensalidades, error: mensalidadesError } = await supabase
     .from("mensalidades")
     .select(
-      "id, aluno_id, competence_year, competence_month, status, predicted_value, due_date",
+      `
+      id,
+      aluno_id,
+      turma_id,
+      competence_year,
+      competence_month,
+      status,
+      predicted_value,
+      due_date,
+      turmas:turmas!mensalidades_turma_id_fkey(
+        tag,
+        disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
+      )
+      `,
     )
     .eq("aluno_id", id)
     .order("competence_year", { ascending: false })
@@ -582,6 +621,12 @@ export async function listMensalidadesByStudent(
   const studentName = profileData?.name || "Aluno";
 
   return mensalidades.map((m) => {
+    const turma = Array.isArray((m as any).turmas)
+      ? (m as any).turmas[0]
+      : (m as any).turmas;
+    const disciplina = Array.isArray(turma?.disciplinas)
+      ? turma?.disciplinas[0]
+      : turma?.disciplinas;
     const pagamento = pagamentoMap.get(m.id);
     const paidAtDate = pagamento?.paid_at
       ? new Date(pagamento.paid_at).toISOString().split("T")[0]
@@ -591,6 +636,9 @@ export async function listMensalidadesByStudent(
       id: String(m.id),
       studentId: String(m.aluno_id),
       studentName,
+      turmaId: m.turma_id ? String(m.turma_id) : null,
+      turmaTag: turma?.tag ? String(turma.tag) : null,
+      disciplinaName: disciplina?.name ? String(disciplina.name) : null,
       competenceYear: Number(m.competence_year),
       competenceMonth: Number(m.competence_month),
       status: m.status as MensalidadeStatus,
@@ -616,7 +664,20 @@ export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
   const { data: mensalidades, error: mensalidadesError } = await supabase
     .from("mensalidades")
     .select(
-      "id, aluno_id, competence_year, competence_month, status, predicted_value, due_date",
+      `
+      id,
+      aluno_id,
+      turma_id,
+      competence_year,
+      competence_month,
+      status,
+      predicted_value,
+      due_date,
+      turmas:turmas!mensalidades_turma_id_fkey(
+        tag,
+        disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
+      )
+      `,
     )
     .eq("aluno_id", profile.user_id)
     .order("competence_year", { ascending: false })
@@ -678,6 +739,12 @@ export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
   const studentName = profileData?.name || profile.name || "Aluno";
 
   return mensalidades.map((m) => {
+    const turma = Array.isArray((m as any).turmas)
+      ? (m as any).turmas[0]
+      : (m as any).turmas;
+    const disciplina = Array.isArray(turma?.disciplinas)
+      ? turma?.disciplinas[0]
+      : turma?.disciplinas;
     const pagamento = pagamentoMap.get(String(m.id));
     const paidAtDate = pagamento?.paid_at
       ? new Date(pagamento.paid_at).toISOString().split("T")[0]
@@ -687,6 +754,9 @@ export async function listMyMensalidades(): Promise<MensalidadeRow[]> {
       id: String(m.id),
       studentId: String(m.aluno_id),
       studentName,
+      turmaId: m.turma_id ? String(m.turma_id) : null,
+      turmaTag: turma?.tag ? String(turma.tag) : null,
+      disciplinaName: disciplina?.name ? String(disciplina.name) : null,
       competenceYear: Number(m.competence_year),
       competenceMonth: Number(m.competence_month),
       status: m.status as MensalidadeStatus,

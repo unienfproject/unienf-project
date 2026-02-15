@@ -185,11 +185,25 @@ export type MensalidadeStatus = "pendente" | "pago" | "atrasado" | "cancelado";
 export type Mensalidade = {
   id: UUID; // uuid
   aluno_id: UUID; // uuid (FK -> profiles.user_id)
+  turma_id: UUID | null; // uuid nullable (FK -> turmas.id)
   competence_year: number; // int4
   competence_month: number; // int4 (1-12)
   due_date: DateString | null; // date nullable
   status: MensalidadeStatus; // text NOT NULL default 'pendente'
   predicted_value: number; // numeric NOT NULL
+  created_at: Timestamp; // timestamptz
+  updated_at: Timestamp; // timestamptz
+};
+
+export type TurmaPreco = {
+  id: UUID; // uuid
+  turma_id: UUID; // uuid (FK -> turmas.id)
+  duracao_meses: number; // int4
+  valor_mensalidade: number; // numeric
+  dia_vencimento: number; // int4
+  inicio_competencia: DateString | null; // date
+  ativo: boolean; // bool
+  created_by: UUID | null; // uuid (FK -> profiles.user_id)
   created_at: Timestamp; // timestamptz
   updated_at: Timestamp; // timestamptz
 };

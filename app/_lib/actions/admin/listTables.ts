@@ -68,6 +68,7 @@ export async function listPublicTables() {
     "notas",
     "turma_aluno_resultados",
     "mensalidades",
+    "turma_precos",
     "pagamentos",
     "recibos",
     "receipt_counters",
