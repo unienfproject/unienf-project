@@ -125,9 +125,7 @@ export function NavUser({
                   <span className="truncate font-medium">
                     {user.name || "Usuário"}
                   </span>
-                  <span className="truncate text-xs">
-                    {user.email || ""}
-                  </span>
+                  <span className="truncate text-xs">{user.email || ""}</span>
                 </div>
 
                 <MoreVertical className="ml-auto size-4" />
@@ -163,9 +161,10 @@ export function NavUser({
 
               <DropdownMenuItem
                 onClick={handleSignOut}
-                className="cursor-pointer"
+                variant="destructive"
+                className="cursor-pointer hover:bg-red-500"
               >
-                <LogOut />
+                <LogOut className="cursor-pointer hover:bg-red-500" />
                 Log Out
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -183,9 +182,7 @@ export function NavUser({
             <div className="space-y-4">
               <div className="flex items-center gap-4">
                 <Avatar className="h-16 w-16 rounded-lg">
-                  <AvatarImage
-                    src={profile.avatar_url || undefined}
-                  />
+                  <AvatarImage src={profile.avatar_url || undefined} />
                   <AvatarFallback className="rounded-lg text-lg">
                     {profile.name
                       ?.split(" ")
@@ -197,10 +194,8 @@ export function NavUser({
                 </Avatar>
 
                 <div>
-                  <p className="font-semibold text-lg">
-                    {profile.name}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-lg font-semibold">{profile.name}</p>
+                  <p className="text-muted-foreground text-sm">
                     {profile.email}
                   </p>
                 </div>

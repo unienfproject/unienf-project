@@ -82,7 +82,7 @@ export default function Turmas() {
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
+                  className="pl-12"
                   placeholder="Buscar por disciplina, professor ou etiqueta..."
                 />
               </div>
