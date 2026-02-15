@@ -91,7 +91,7 @@ export default function AlunosTable() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por nome, email ou telefone..."
-              className="pl-10"
+              className="pl-12"
             />
           </div>
         </div>

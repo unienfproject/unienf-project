@@ -12,7 +12,7 @@ export default function Header() {
   return (
     <header className="bg-card/95 border-border/50 fixed top-0 right-0 left-0 z-50 border-b backdrop-blur-md">
       <div className="container mx-auto px-4 lg:px-8">
-        <div className="flex h-14 items-center justify-between py-4 lg:h-16">
+        <div className="flex h-16 items-center justify-between py-4 lg:h-22">
           <Link className="group flex items-center gap-2" href="/">
             <Image
               src="/logo-unienf-vf.png"
@@ -59,16 +59,15 @@ export default function Header() {
             </Button>
           </div>
           <Button
-            className="bg-white cursor-pointer rounded-lg p-2 transition-colors lg:hidden"
+            className="cursor-pointer rounded-lg bg-white p-2 transition-colors lg:hidden"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <Menu className="text-foreground h-6 w-6" />
           </Button>
-
         </div>
       </div>
       {menuOpen && (
-        <div className="lg:hidden bg-card border-b border-border px-4 py-6">
+        <div className="bg-card border-border border-b px-4 py-6 lg:hidden">
           <nav className="flex flex-col gap-4">
             <Link
               href="#home"
