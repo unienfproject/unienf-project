@@ -229,6 +229,7 @@ export default function TeacherClassesView({
       {openCreate ? (
         <CreateClassModal
           teacherId={teacherId}
+          teacherName={teacherName}
           subjects={subjects}
           students={students}
           onClose={() => setOpenCreate(false)}
