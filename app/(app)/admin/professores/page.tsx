@@ -132,12 +132,12 @@ export default function Professores() {
           <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-4">
             <div className="flex flex-col gap-4 sm:flex-row">
               <div className="relative flex-1">
-                <UserSearch className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                <UserSearch className="text-muted-foreground absolute top-1/2 left-3 -translate-y-1/2" />
                 <Input
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
+                  className="pl-12"
                   placeholder="Buscar por nome, email ou telefone..."
                 />
               </div>
