@@ -23,7 +23,10 @@ import {
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
-import type { DashboardStats, RegistrationStats } from "@/app/_lib/actions/dashboard";
+import type {
+  DashboardStats,
+  RegistrationStats,
+} from "@/app/_lib/actions/dashboard";
 import type { PendingDocumentRow } from "@/app/_lib/actions/documents";
 import { markDocumentAsDelivered } from "@/app/_lib/actions/documents";
 
@@ -57,30 +60,27 @@ export default function PendingDocumentsClient({
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <div className="flex gap-3 flex-row justify-between">
             <StatCard
               label="Total de Alunos"
               value={stats.totalAlunos}
               icon={Users}
+              className="w-full"
               variant="default"
             />
             <StatCard
               label="Turmas Ativas"
               value={stats.turmasAtivas}
               icon={FolderOpen}
+              className="w-full"
               variant="success"
             />
             <StatCard
               label="Professores"
               value={stats.totalProfessores}
               icon={UserCheck}
+              className="w-full"
               variant="muted"
-            />
-            <StatCard
-              label="Documentos Pendentes"
-              value={stats.documentosPendentes}
-              icon={FileText}
-              variant="warning"
             />
           </div>
 
@@ -100,19 +100,27 @@ export default function PendingDocumentsClient({
               {registrationStats.length > 0 ? (
                 <div className="flex h-64 items-end gap-2 pt-4">
                   {registrationStats.map((d) => {
-                    const max = Math.max(...registrationStats.map((s) => s.count), 1);
+                    const max = Math.max(
+                      ...registrationStats.map((s) => s.count),
+                      1,
+                    );
                     const heightPct = (d.count / max) * 100;
                     return (
-                      <div key={d.label} className="group relative flex h-full flex-1 flex-col items-center justify-end gap-2">
+                      <div
+                        key={d.label}
+                        className="group relative flex h-full flex-1 flex-col items-center justify-end gap-2"
+                      >
                         <div
-                          className="w-full min-h-[4px] rounded-t-md bg-sky-500 transition-all hover:bg-sky-600"
+                          className="min-h-[4px] w-full rounded-t-md bg-sky-500 transition-all hover:bg-sky-600"
                           style={{ height: `${heightPct}%` }}
                         >
                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded bg-slate-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
                             {d.count} alunos
                           </div>
                         </div>
-                        <span className="text-xs text-slate-600 whitespace-nowrap">{d.label}</span>
+                        <span className="text-xs whitespace-nowrap text-slate-600">
+                          {d.label}
+                        </span>
                       </div>
                     );
                   })}
@@ -121,7 +129,9 @@ export default function PendingDocumentsClient({
                 <div className="bg-muted/30 flex h-64 items-center justify-center rounded-xl">
                   <div className="text-center">
                     <TrendingUp className="text-primary mx-auto mb-3 h-12 w-12" />
-                    <p className="text-muted-foreground">Sem dados no período</p>
+                    <p className="text-muted-foreground">
+                      Sem dados no período
+                    </p>
                   </div>
                 </div>
               )}
