@@ -1,7 +1,37 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const ROLE_REDIRECT_PATHS: Record<string, string> = {
+  aluno: "/aluno",
+  professor: "/professores",
+  recepcao: "/recepcao",
+  recepção: "/recepcao",
+  coordenação: "/admin",
+  admin: "/admin",
+};
+
+function getRedirectPathByRole(role: string | null | undefined): string | null {
+  if (!role) return null;
+  return ROLE_REDIRECT_PATHS[role] ?? null;
+}
+
 export async function proxy(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  const publicRoutes = [
+    "/login",
+    "/signup",
+    "/auth",
+    "/verify-email",
+    "/reset-password",
+  ];
+
+  const isPublicRoute = publicRoutes.some((route) =>
+    pathname.startsWith(route),
+  );
+  const isHomePage = pathname === "/";
+  const isApiRoute = pathname.startsWith("/api/");
+  const isAuthPage = pathname === "/login" || pathname === "/signup";
+
   const response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -25,24 +55,31 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: { id: string } | null = null;
 
-  const pathname = request.nextUrl.pathname;
+  try {
+    const {
+      data: { user: authUser },
+      error,
+    } = await supabase.auth.getUser();
 
-  const publicRoutes = [
-    "/login",
-    "/signup",
-    "/auth",
-    "/verify-email",
-    "/reset-password",
-  ];
-  const isPublicRoute = publicRoutes.some((route) =>
-    pathname.startsWith(route),
-  );
-  const isHomePage = pathname === "/";
-  const isApiRoute = pathname.startsWith("/api/");
+    if (error) {
+      console.error("Proxy auth getUser error:", error.message);
+    }
+
+    user = authUser;
+  } catch (error) {
+    console.error("Proxy auth unexpected error:", error);
+
+    if (isPublicRoute || isHomePage || isApiRoute) {
+      return response;
+    }
+
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("redirectedFrom", pathname);
+    return NextResponse.redirect(url);
+  }
 
   if (!user && !isPublicRoute && !isHomePage && !isApiRoute) {
     const url = request.nextUrl.clone();
@@ -51,22 +88,22 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && (pathname === "/login" || pathname === "/signup")) {
-    const { data: profileData } = await supabase
+  if (user && isAuthPage) {
+    const { data: profileData, error: profileError } = await supabase
       .from("profiles")
       .select("role")
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
-    const role = profileData?.role;
+    if (profileError) {
+      console.error("Proxy profile role error:", profileError.message);
+      return response;
+    }
 
-    let redirectPath = "/";
-
-    if (role === "aluno") redirectPath = "/aluno";
-    else if (role === "professor") redirectPath = "/professores";
-    else if (role === "recepção") redirectPath = "/recepcao";
-    else if (role === "administrativo" || role === "coordenação")
-      redirectPath = "/admin";
+    const redirectPath = getRedirectPathByRole(profileData?.role);
+    if (!redirectPath) {
+      return response;
+    }
 
     const url = request.nextUrl.clone();
     url.pathname = redirectPath;

@@ -4,7 +4,11 @@ import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-type PickerItem = { id: string; label: string };
+type PickerItem = {
+  id: string;
+  label: string;
+  description?: string | null;
+};
 
 type ClassRow = {
   id: string;
@@ -63,12 +67,16 @@ export async function listSubjectsForPicker(): Promise<PickerItem[]> {
 
   const { data, error } = await supabase
     .from("disciplinas")
-    .select("id, name")
+    .select("id, name, conteudo")
     .order("name");
 
   if (error) throw new Error(error.message);
 
-  return (data ?? []).map((d) => ({ id: d.id, label: d.name }));
+  return (data ?? []).map((d) => ({
+    id: d.id,
+    label: d.name,
+    description: d.conteudo ?? null,
+  }));
 }
 
 export async function listStudentsForPicker(): Promise<PickerItem[]> {
