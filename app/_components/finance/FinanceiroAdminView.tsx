@@ -163,7 +163,7 @@ export default async function FinanceiroAdminView({
               const max = Math.max(...registrationStats.map((s) => s.count), 1);
               const heightPct = (d.count / max) * 100;
               return (
-                <div key={d.label} className="group relative flex flex-1 flex-col items-center gap-2">
+                <div key={d.label} className="group relative flex h-full flex-1 flex-col items-center justify-end gap-2">
                   <div
                     className="w-full min-h-[4px] rounded-t-md bg-sky-500 transition-all hover:bg-sky-600"
                     style={{ height: `${heightPct}%` }}
