@@ -9,19 +9,19 @@ type PickerItem = { id: string; label: string };
 
 export default function CreateClassModal({
   teacherId,
+  teacherName,
   subjects,
   students,
   onClose,
 }: {
   teacherId: string;
+  teacherName: string;
   subjects: PickerItem[];
   students: PickerItem[];
   onClose: () => void;
 }) {
   const [isPending, startTransition] = useTransition();
 
-  const [name, setName] = useState("");
-  const [tag, setTag] = useState("");
   const [startDate, setStartDate] = useState(() =>
     new Date().toISOString().slice(0, 10),
   );
@@ -32,7 +32,7 @@ export default function CreateClassModal({
   const [subjectQuery, setSubjectQuery] = useState("");
   const [studentQuery, setStudentQuery] = useState("");
 
-  const [selectedSubjectIds, setSelectedSubjectIds] = useState<string[]>([]);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +48,17 @@ export default function CreateClassModal({
     return students.filter((s) => s.label.toLowerCase().includes(q));
   }, [studentQuery, students]);
 
-  function toggle(list: string[], id: string) {
+  const autoTag = useMemo(() => {
+    const disciplinaNome =
+      subjects.find((s) => s.id === selectedSubjectId)?.label ?? "";
+    const inicio = startDate || "";
+    const termino = endDate || startDate || "";
+
+    if (!disciplinaNome || !teacherName || !inicio || !termino) return "";
+    return `${disciplinaNome} - ${teacherName} - ${inicio} - ${termino}`;
+  }, [subjects, selectedSubjectId, teacherName, startDate, endDate]);
+
+  function toggleStudent(list: string[], id: string) {
     return list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
   }
 
@@ -59,7 +69,7 @@ export default function CreateClassModal({
           <div>
             <h3 className="text-lg font-semibold text-slate-900">Nova turma</h3>
             <p className="text-sm text-slate-600">
-              Defina dados, selecione disciplinas e vincule alunos.
+              Defina dados, selecione uma disciplina e vincule alunos.
             </p>
           </div>
 
@@ -78,12 +88,8 @@ export default function CreateClassModal({
             e.preventDefault();
             setError(null);
 
-            if (!name.trim() || !tag.trim()) {
-              setError("Informe nome e etiqueta.");
-              return;
-            }
-            if (!selectedSubjectIds.length) {
-              setError("Selecione ao menos uma disciplina.");
+            if (!selectedSubjectId) {
+              setError("Selecione uma disciplina.");
               return;
             }
 
@@ -91,11 +97,9 @@ export default function CreateClassModal({
               try {
                 await createClass({
                   teacherId,
-                  name: name.trim(),
-                  tag: tag.trim(),
                   startDate,
                   endDate,
-                  subjectIds: selectedSubjectIds,
+                  subjectIds: [selectedSubjectId],
                   studentIds: selectedStudentIds,
                 });
                 onClose();
@@ -107,24 +111,13 @@ export default function CreateClassModal({
             });
           }}
         >
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <Field label="Nome da turma">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <Field label="Etiqueta (automática)">
               <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={autoTag}
+                readOnly
                 className="h-10 rounded-md border border-slate-200 px-3 text-sm"
-                placeholder="Ex.: Turma 0624"
-                required
-              />
-            </Field>
-
-            <Field label="Etiqueta">
-              <Input
-                value={tag}
-                onChange={(e) => setTag(e.target.value)}
-                className="h-10 rounded-md border border-slate-200 px-3 text-sm"
-                placeholder="Ex.: 0624-NOITE"
-                required
+                placeholder="Será gerada automaticamente"
               />
             </Field>
 
@@ -155,11 +148,11 @@ export default function CreateClassModal({
               query={subjectQuery}
               onQuery={setSubjectQuery}
               items={filteredSubjects}
-              selectedIds={selectedSubjectIds}
+              selectedIds={selectedSubjectId ? [selectedSubjectId] : []}
               onToggle={(id) =>
-                setSelectedSubjectIds((prev) => toggle(prev, id))
+                setSelectedSubjectId((prev) => (prev === id ? null : id))
               }
-              helper="Selecione as disciplinas que serão ministradas."
+              helper="Selecione a disciplina da turma."
             />
 
             <Picker
@@ -169,7 +162,7 @@ export default function CreateClassModal({
               items={filteredStudents}
               selectedIds={selectedStudentIds}
               onToggle={(id) =>
-                setSelectedStudentIds((prev) => toggle(prev, id))
+                setSelectedStudentIds((prev) => toggleStudent(prev, id))
               }
               helper="Opcional: vincule alunos agora, ou depois na tela de turma."
             />
@@ -282,9 +275,7 @@ function Picker({
         })}
 
         {!items.length ? (
-          <div className="p-4 text-sm text-slate-500">
-            Nenhum item encontrado.
-          </div>
+          <div className="p-4 text-sm text-slate-500">Nenhum item encontrado.</div>
         ) : null}
       </div>
     </div>

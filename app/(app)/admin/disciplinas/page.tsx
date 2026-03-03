@@ -6,7 +6,6 @@ import {
   deleteDisciplina,
   listDisciplinas,
   updateDisciplina,
-  listTurmasByDisciplina,
 } from "@/app/_lib/actions/disciplinas";
 
 import { Button } from "@/app/_components/ui/button";
@@ -35,18 +34,12 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 
-import {
-  EllipsisVertical,
-  Pencil,
-  Plus,
-  Trash2,
-  Info,
-} from "lucide-react";
+import { EllipsisVertical, Pencil, Plus, Trash2, Info } from "lucide-react";
 
 type Disciplina = {
   id: string;
   name: string;
-  conteudo: string;
+  conteudo: string | null;
   created_at: string;
 };
 
@@ -58,7 +51,8 @@ export default function DisciplinasPage() {
   const [infoOpen, setInfoOpen] = useState(false);
 
   const [editing, setEditing] = useState<Disciplina | null>(null);
-  const [turmas, setTurmas] = useState<{ id: string; nome: string }[]>([]);
+  const [selectedDisciplina, setSelectedDisciplina] =
+    useState<Disciplina | null>(null);
 
   const [name, setName] = useState("");
   const [conteudo, setConteudo] = useState("");
@@ -84,7 +78,7 @@ export default function DisciplinasPage() {
   function openEdit(d: Disciplina) {
     setEditing(d);
     setName(d.name);
-    setConteudo(d.conteudo);
+    setConteudo(d.conteudo ?? "");
     setModalOpen(true);
   }
 
@@ -93,7 +87,7 @@ export default function DisciplinasPage() {
 
     if (editing) {
       await updateDisciplina({
-        id: editing.id,
+        disciplinaId: editing.id,
         name,
         conteudo,
       });
@@ -111,9 +105,8 @@ export default function DisciplinasPage() {
     load();
   }
 
-  async function openInfo(disciplinaId: string) {
-    const data = await listTurmasByDisciplina(disciplinaId);
-    setTurmas(data);
+  function openInfo(disciplina: Disciplina) {
+    setSelectedDisciplina(disciplina);
     setInfoOpen(true);
   }
 
@@ -138,6 +131,7 @@ export default function DisciplinasPage() {
           <TableHeader className="bg-muted/30">
             <TableRow>
               <TableHead>Nome</TableHead>
+              <TableHead>Criada em</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -184,7 +178,7 @@ export default function DisciplinasPage() {
 
                         <DropdownMenuItem
                           className="cursor-pointer"
-                          onClick={() => openInfo(d.id)}
+                          onClick={() => openInfo(d)}
                         >
                           <Info className="mr-2 h-4 w-4" />
                           Informações
@@ -212,14 +206,12 @@ export default function DisciplinasPage() {
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>
-              {editing ? "Editar Conteúdo" : "Novo conteúdo"}
-            </DialogTitle>
+            <DialogTitle>{editing ? "Editar Conteúdo" : "Novo conteúdo"}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
             <Input
-              placeholder="Nome da conteúdo"
+              placeholder="Nome do conteúdo"
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -238,22 +230,46 @@ export default function DisciplinasPage() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={infoOpen} onOpenChange={setInfoOpen}>
-        <DialogContent>
+      <Dialog
+        open={infoOpen}
+        onOpenChange={(open) => {
+          setInfoOpen(open);
+          if (!open) setSelectedDisciplina(null);
+        }}
+      >
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Disciplinas que utilizam este conteúdo.</DialogTitle>
+            <DialogTitle>Informações da disciplina</DialogTitle>
           </DialogHeader>
 
-          {turmas.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nenhuma disciplina vinculada.
-            </p>
-          ) : (
-            <ul className="list-disc pl-5 space-y-1">
-              {turmas.map((t) => (
-                <li key={t.id}>{t.nome}</li>
-              ))}
-            </ul>
+          {!selectedDisciplina ? null : (
+            <div className="space-y-4 text-sm">
+              <div>
+                <p className="font-medium">Nome</p>
+                <p className="text-muted-foreground">{selectedDisciplina.name}</p>
+              </div>
+
+              <div>
+                <p className="font-medium">Conteúdo</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">
+                  {selectedDisciplina.conteudo || "Não informado."}
+                </p>
+              </div>
+
+              <div>
+                <p className="font-medium">Data de criação</p>
+                <p className="text-muted-foreground">
+                  {new Date(selectedDisciplina.created_at).toLocaleDateString(
+                    "pt-BR",
+                    {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    },
+                  )}
+                </p>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
