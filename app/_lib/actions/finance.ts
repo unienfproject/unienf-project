@@ -10,6 +10,9 @@ export type MensalidadeRow = {
   id: string;
   studentId: string;
   studentName: string;
+  turmaId?: string | null;
+  turmaTag?: string | null;
+  disciplinaName?: string | null;
 
   competenceYear: number;
   competenceMonth: number;

@@ -43,8 +43,6 @@ export default function CreateTurmaDialog({
   const [pending, startTransition] = useTransition();
 
   const [form, setForm] = useState({
-    name: "",
-    tag: "",
     startDate: new Date().toISOString().slice(0, 10),
     endDate: "",
     professorId: "",
@@ -82,17 +80,28 @@ export default function CreateTurmaDialog({
     return alunos.filter((a) => a.label.toLowerCase().includes(q));
   }, [alunoQuery, alunos]);
 
+  const autoTag = useMemo(() => {
+    const disciplinaNome =
+      disciplinas.find((d) => d.id === form.disciplinaId)?.label ?? "";
+    const professorNome =
+      professores.find((p) => p.id === form.professorId)?.label ?? "";
+    const inicio = form.startDate || "";
+    const termino = form.endDate || form.startDate || "";
+
+    if (!disciplinaNome || !professorNome || !inicio || !termino) return "";
+    return `${disciplinaNome} - ${professorNome} - ${inicio} - ${termino}`;
+  }, [
+    disciplinas,
+    professores,
+    form.disciplinaId,
+    form.professorId,
+    form.startDate,
+    form.endDate,
+  ]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
-    if (!form.name.trim()) {
-      toast.error("Nome da turma é obrigatório.");
-      return;
-    }
-    if (!form.tag.trim()) {
-      toast.error("Etiqueta é obrigatória.");
-      return;
-    }
     if (!form.professorId) {
       toast.error("Selecione um professor.");
       return;
@@ -105,8 +114,6 @@ export default function CreateTurmaDialog({
     startTransition(async () => {
       try {
         await createTurmaAdmin({
-          name: form.name.trim(),
-          tag: form.tag.trim(),
           startDate: form.startDate,
           endDate: form.endDate || form.startDate,
           professorId: form.professorId,
@@ -116,8 +123,6 @@ export default function CreateTurmaDialog({
 
         toast.success("Turma criada com sucesso!");
         setForm({
-          name: "",
-          tag: "",
           startDate: new Date().toISOString().slice(0, 10),
           endDate: "",
           professorId: "",
@@ -127,9 +132,7 @@ export default function CreateTurmaDialog({
         onOpenChange(false);
         router.refresh();
       } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Erro ao criar turma.",
-        );
+        toast.error(err instanceof Error ? err.message : "Erro ao criar turma.");
       }
     });
   }
@@ -153,24 +156,12 @@ export default function CreateTurmaDialog({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="name">Nome da turma</Label>
-              <Input
-                id="name"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                placeholder="Ex.: Turma 0624"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tag">Etiqueta</Label>
+              <Label htmlFor="tag">Etiqueta (automática)</Label>
               <Input
                 id="tag"
-                value={form.tag}
-                onChange={(e) => setForm({ ...form, tag: e.target.value })}
-                placeholder="Ex.: 0624-NOITE"
-                required
+                value={autoTag}
+                readOnly
+                placeholder="Será gerada automaticamente"
               />
             </div>
           </div>

@@ -232,6 +232,7 @@ export default function TeacherClassesView({
         open={openCreate}
         onOpenChange={setOpenCreate}
         teacherId={teacherId}
+        teacherName={teacherName}
         subjects={subjects}
         students={students}
       />

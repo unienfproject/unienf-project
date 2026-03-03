@@ -1,5 +1,6 @@
 "use server";
 
+import { generateMensalidadesForEnrollment } from "@/app/_lib/actions/pricing";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -18,6 +19,63 @@ type ClassRow = {
   end_date: string;
   status: "ativa" | "finalizada";
 };
+
+function buildPeriodFromStartDate(startDate: string): string {
+  const [yearStr, monthStr] = startDate.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month)) {
+    const now = new Date();
+    const semester = now.getMonth() + 1 <= 6 ? 1 : 2;
+    return `${now.getFullYear()}.${semester}`;
+  }
+
+  const semester = month <= 6 ? 1 : 2;
+  return `${year}.${semester}`;
+}
+
+async function buildTurmaTag(params: {
+  disciplinaId: string;
+  professorId: string;
+  startDate: string;
+  endDate: string;
+}) {
+  const supabase = await createServerSupabaseClient();
+
+  const { data: disciplina, error: disciplinaError } = await supabase
+    .from("disciplinas")
+    .select("name")
+    .eq("id", params.disciplinaId)
+    .single();
+
+  if (disciplinaError || !disciplina?.name) {
+    throw new Error("Disciplina selecionada não encontrada.");
+  }
+
+  const { data: professor, error: professorError } = await supabase
+    .from("profiles")
+    .select("name, email")
+    .eq("user_id", params.professorId)
+    .single();
+
+  if (professorError || !professor) {
+    throw new Error("Professor selecionado não encontrado.");
+  }
+
+  const professorNome = (professor.name ?? professor.email ?? "").trim();
+  if (!professorNome) {
+    throw new Error(
+      "Professor selecionado sem nome válido para gerar etiqueta.",
+    );
+  }
+
+  const disciplinaNome = disciplina.name.trim();
+  const inicio = params.startDate.trim();
+  const termino = params.endDate.trim();
+
+  return `${disciplinaNome} - ${professorNome} - ${inicio} - ${termino}`;
+}
 
 export async function listTeacherClasses(
   teacherId: string,
@@ -98,8 +156,6 @@ export async function listStudentsForPicker(): Promise<PickerItem[]> {
 
 export async function createClass(input: {
   teacherId: string;
-  name: string;
-  tag: string;
   startDate: string;
   endDate: string;
   subjectIds: string[];
@@ -112,23 +168,29 @@ export async function createClass(input: {
 
   const supabase = await createServerSupabaseClient();
 
-  const tagTrimmed = input.tag.trim();
-  const periodMatch = tagTrimmed.match(/\d{4}\.\d$/);
-  const period = periodMatch
-    ? periodMatch[0]
-    : new Date().getFullYear().toString() + ".1";
+  const disciplinaId = input.subjectIds[0];
+  if (!disciplinaId) {
+    throw new Error("Selecione uma disciplina.");
+  }
+
+  const tag = await buildTurmaTag({
+    disciplinaId,
+    professorId: input.teacherId,
+    startDate: input.startDate,
+    endDate: input.endDate,
+  });
+  const period = buildPeriodFromStartDate(input.startDate);
 
   const { data: turma, error: turmaError } = await supabase
     .from("turmas")
     .insert({
-      name: input.name.trim(),
-      tag: tagTrimmed,
+      tag,
       period: period,
       start_date: input.startDate,
       end_date: input.endDate,
       status: "ativa",
       professor_id: input.teacherId,
-      disciplina_id: input.subjectIds[0] || null,
+      disciplina_id: disciplinaId,
       created_by: profile.user_id,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -151,15 +213,23 @@ export async function createClass(input: {
       .insert(turmaAlunos);
 
     if (alunosError) throw new Error(alunosError.message);
+
+    for (const studentId of input.studentIds) {
+      await generateMensalidadesForEnrollment({
+        turmaId: turma.id,
+        studentId,
+      });
+    }
   }
 
   revalidatePath("/professores/turmas");
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/recepcao/financeiro");
+  revalidatePath("/aluno/financeiro");
   return { turmaId: turma.id };
 }
 
 export async function createTurmaAdmin(input: {
-  name: string;
-  tag: string;
   startDate: string;
   endDate: string;
   professorId: string;
@@ -168,25 +238,24 @@ export async function createTurmaAdmin(input: {
 }): Promise<{ turmaId: string }> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
-  if (profile.role !== "administrativo") {
+  if (profile.role !== "administrativo" && profile.role !== "coordenação") {
     throw new Error("Sem permissão para criar turmas.");
   }
 
   const supabase = await createServerSupabaseClient();
 
-  // Extrair período do tag (ex: "Primeiros_Socorros_2026.2" -> "2026.2")
-  // Se não houver padrão no tag, usar ano atual + semestre
-  const tagTrimmed = input.tag.trim();
-  const periodMatch = tagTrimmed.match(/\d{4}\.\d$/);
-  const period = periodMatch
-    ? periodMatch[0]
-    : new Date().getFullYear().toString() + ".1";
+  const tag = await buildTurmaTag({
+    disciplinaId: input.disciplinaId,
+    professorId: input.professorId,
+    startDate: input.startDate,
+    endDate: input.endDate,
+  });
+  const period = buildPeriodFromStartDate(input.startDate);
 
   const { data: turma, error: turmaError } = await supabase
     .from("turmas")
     .insert({
-      name: input.name.trim(),
-      tag: tagTrimmed,
+      tag,
       period: period,
       start_date: input.startDate,
       end_date: input.endDate,
@@ -215,9 +284,19 @@ export async function createTurmaAdmin(input: {
       .insert(turmaAlunos);
 
     if (alunosError) throw new Error(alunosError.message);
+
+    for (const studentId of input.studentIds) {
+      await generateMensalidadesForEnrollment({
+        turmaId: turma.id,
+        studentId,
+      });
+    }
   }
 
   revalidatePath("/admin/turmas");
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/recepcao/financeiro");
+  revalidatePath("/aluno/financeiro");
   return { turmaId: turma.id };
 }
 
@@ -305,8 +384,16 @@ export async function addStudentToClass(input: {
 
   if (insertError) throw new Error(insertError.message);
 
+  await generateMensalidadesForEnrollment({
+    turmaId: input.classId,
+    studentId: input.studentId,
+  });
+
   revalidatePath(`/professores/turmas/${input.classId}`);
   revalidatePath("/professores/turmas");
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/recepcao/financeiro");
+  revalidatePath("/aluno/financeiro");
 }
 
 export async function removeStudentFromClass(input: {
