@@ -3,6 +3,7 @@
 import { finalizeClass } from "@/app/_lib/actions/classes";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
+import { FolderPlus } from "lucide-react";
 
 function Kpi({ title, value }: { title: string; value: string }) {
   return (
@@ -34,7 +35,7 @@ type ClassRow = {
   status: "ativa" | "finalizada";
 };
 
-type PickerItem = { id: string; label: string };
+type PickerItem = { id: string; label: string; description?: string | null };
 
 export default function TeacherClassesView({
   teacherId,
@@ -86,9 +87,10 @@ export default function TeacherClassesView({
           <Button
             type="button"
             onClick={() => setOpenCreate(true)}
-            className="bg-primary hover:bg-primary h-10 rounded-md px-4 text-sm font-medium text-white"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all duration-200 hover:shadow-md"
           >
-            Nova turma
+            <FolderPlus className="h-4 w-4" />
+            Nova Turma
           </Button>
         </div>
       </div>
@@ -226,15 +228,14 @@ export default function TeacherClassesView({
         </div>
       </div>
 
-      {openCreate ? (
-        <CreateClassModal
-          teacherId={teacherId}
-          teacherName={teacherName}
-          subjects={subjects}
-          students={students}
-          onClose={() => setOpenCreate(false)}
-        />
-      ) : null}
+      <CreateClassModal
+        open={openCreate}
+        onOpenChange={setOpenCreate}
+        teacherId={teacherId}
+        teacherName={teacherName}
+        subjects={subjects}
+        students={students}
+      />
     </div>
   );
 }

@@ -1,40 +1,52 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { Button } from "@/app/_components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/app/_components/ui/dialog";
+import { Input } from "@/app/_components/ui/input";
+import { Label } from "@/app/_components/ui/label";
 import { createClass } from "@/app/_lib/actions/classes";
-import { Button } from "../../ui/button";
-import { Input } from "../../ui/input";
+import { useRouter } from "next/navigation";
+import { useMemo, useState, useTransition } from "react";
+import { toast } from "sonner";
 
-type PickerItem = { id: string; label: string };
+type PickerItem = { id: string; label: string; description?: string | null };
 
 export default function CreateClassModal({
+  open,
+  onOpenChange,
   teacherId,
   teacherName,
   subjects,
   students,
-  onClose,
 }: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   teacherId: string;
   teacherName: string;
   subjects: PickerItem[];
   students: PickerItem[];
-  onClose: () => void;
 }) {
-  const [isPending, startTransition] = useTransition();
-
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
   const [startDate, setStartDate] = useState(() =>
     new Date().toISOString().slice(0, 10),
   );
-  const [endDate, setEndDate] = useState(() =>
-    new Date().toISOString().slice(0, 10),
-  );
+  const [endDate, setEndDate] = useState("");
 
   const [subjectQuery, setSubjectQuery] = useState("");
   const [studentQuery, setStudentQuery] = useState("");
 
-  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string | null>(
+    null,
+  );
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
   const filteredSubjects = useMemo(() => {
     const q = subjectQuery.trim().toLowerCase();
@@ -62,84 +74,92 @@ export default function CreateClassModal({
     return list.includes(id) ? list.filter((x) => x !== id) : [...list, id];
   }
 
+  function resetForm() {
+    setStartDate(new Date().toISOString().slice(0, 10));
+    setEndDate("");
+    setSubjectQuery("");
+    setStudentQuery("");
+    setSelectedSubjectId(null);
+    setSelectedStudentIds([]);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (!selectedSubjectId) {
+      toast.error("Selecione uma disciplina.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        await createClass({
+          teacherId,
+          startDate,
+          endDate: endDate || startDate,
+          subjectIds: [selectedSubjectId],
+          studentIds: selectedStudentIds,
+        });
+
+        toast.success("Turma criada com sucesso!");
+        resetForm();
+        onOpenChange(false);
+        router.refresh();
+      } catch (err) {
+        toast.error(
+          err instanceof Error ? err.message : "Erro ao criar turma.",
+        );
+      }
+    });
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-3xl rounded-2xl bg-white shadow-lg">
-        <div className="flex items-start justify-between gap-3 border-b p-5">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">Nova turma</h3>
-            <p className="text-sm text-slate-600">
-              Defina dados, selecione uma disciplina e vincule alunos.
-            </p>
-          </div>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) resetForm();
+        onOpenChange(nextOpen);
+      }}
+    >
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Nova Turma</DialogTitle>
+          <DialogDescription>
+            Preencha os dados para cadastrar uma nova turma.
+          </DialogDescription>
+        </DialogHeader>
 
-          <Button
-            type="button"
-            onClick={onClose}
-            className="rounded-md border border-slate-200 px-3 py-2 text-sm hover:bg-slate-50"
-          >
-            Fechar
-          </Button>
-        </div>
-
-        <form
-          className="flex flex-col gap-5 p-5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setError(null);
-
-            if (!selectedSubjectId) {
-              setError("Selecione uma disciplina.");
-              return;
-            }
-
-            startTransition(async () => {
-              try {
-                await createClass({
-                  teacherId,
-                  startDate,
-                  endDate,
-                  subjectIds: [selectedSubjectId],
-                  studentIds: selectedStudentIds,
-                });
-                onClose();
-              } catch (err: unknown) {
-                setError(
-                  err instanceof Error ? err.message : "Erro ao criar turma.",
-                );
-              }
-            });
-          }}
-        >
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Field label="Etiqueta (automática)">
+            <div className="space-y-2">
+              <Label htmlFor="tag">Etiqueta (automática)</Label>
               <Input
+                id="tag"
                 value={autoTag}
                 readOnly
-                className="h-10 rounded-md border border-slate-200 px-3 text-sm"
                 placeholder="Será gerada automaticamente"
               />
-            </Field>
-
-            <Field label="Início">
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Data de início</Label>
               <Input
+                id="startDate"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="h-10 rounded-md border border-slate-200 px-3 text-sm"
                 required
               />
-            </Field>
+            </div>
 
-            <Field label="Término">
+            <div className="space-y-2">
+              <Label htmlFor="endDate">Data de término</Label>
               <Input
+                id="endDate"
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="h-10 rounded-md border border-slate-200 px-3 text-sm"
-                required
               />
-            </Field>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -164,46 +184,29 @@ export default function CreateClassModal({
               onToggle={(id) =>
                 setSelectedStudentIds((prev) => toggleStudent(prev, id))
               }
-              helper="Opcional: vincule alunos agora, ou depois na tela de turma."
+              helper="Opcional: vincule alunos agora, ou depois na tela da turma."
             />
           </div>
 
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
-
-          <div className="flex items-center justify-end gap-2 border-t pt-4">
+          <DialogFooter>
             <Button
               type="button"
-              onClick={onClose}
-              className="h-10 rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 hover:bg-slate-50"
+              variant="outline"
+              onClick={() => {
+                resetForm();
+                onOpenChange(false);
+              }}
+              disabled={pending}
             >
               Cancelar
             </Button>
-            <Button
-              disabled={isPending}
-              type="submit"
-              className="h-10 rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600 disabled:opacity-60"
-            >
-              {isPending ? "Salvando..." : "Criar turma"}
+            <Button type="submit" disabled={pending}>
+              {pending ? "Salvando..." : "Criar Turma"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
-      </div>
-    </div>
-  );
-}
-
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1">
-      <span className="text-sm font-medium text-slate-700">{label}</span>
-      {children}
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -220,7 +223,7 @@ function Picker({
   helper: string;
   query: string;
   onQuery: (v: string) => void;
-  items: { id: string; label: string }[];
+  items: { id: string; label: string; description?: string | null }[];
   selectedIds: string[];
   onToggle: (id: string) => void;
 }) {
@@ -259,7 +262,14 @@ function Picker({
                 active ? "bg-sky-50" : "bg-white",
               ].join(" ")}
             >
-              <span className="text-slate-900">{it.label}</span>
+              <span className="text-slate-900">
+                {it.label}
+                {it.description?.trim() ? (
+                  <span className="block text-xs text-slate-500">
+                    {it.description}
+                  </span>
+                ) : null}
+              </span>
               <span
                 className={[
                   "rounded-full px-2 py-1 text-xs font-medium",
