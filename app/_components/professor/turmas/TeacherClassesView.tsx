@@ -3,7 +3,7 @@
 import { finalizeClass } from "@/app/_lib/actions/classes";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { FolderPlus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 function Kpi({ title, value }: { title: string; value: string }) {
   return (
@@ -87,9 +87,8 @@ export default function TeacherClassesView({
           <Button
             type="button"
             onClick={() => setOpenCreate(true)}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all duration-200 hover:shadow-md"
           >
-            <FolderPlus className="h-4 w-4" />
+            <Plus className="h-4 w-4" />
             Nova Turma
           </Button>
         </div>
