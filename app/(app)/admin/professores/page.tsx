@@ -91,9 +91,9 @@ export default function Professores() {
     }
   }
 
-  async function handleDeleteProfessor(professor: ProfessorRow) {
+  async function handleDeleteProfessor(professor: { id: string; name: string | null }) {
     const confirmed = window.confirm(
-      `Tem certeza que deseja excluir o professor "${professor.name}"?`,
+      `Tem certeza que deseja excluir o professor "${professor.name ?? "Professor"}"?`,
     );
 
     if (!confirmed) return;
@@ -255,7 +255,13 @@ export default function Professores() {
                                   <DropdownMenuItem
                                     className="cursor-pointer"
                                     onClick={() => {
-                                      setEditingProfessor(prof);
+                                      setEditingProfessor({
+                                        id: prof.id,
+                                        name: prof.name ?? "",
+                                        email: prof.email ?? "",
+                                        telefone: prof.telefone,
+                                        createdAt: prof.createdAt,
+                                      });
                                       setIsEditOpen(true);
                                     }}
                                   >
@@ -340,7 +346,7 @@ export default function Professores() {
                 onChange={(e) =>
                   setEditingProfessor({
                     ...editingProfessor,
-                    email: e.target.value || null,
+                    email: e.target.value,
                   })
                 }
                 placeholder="Email"

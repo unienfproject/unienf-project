@@ -236,6 +236,7 @@ export async function listProfessoresPaginated(params: {
     email: string | null;
     telefone: string | null;
     cpf?: string | null;
+    createdAt: string;
   }>
 > {
   const supabase = await createServerSupabaseClient();
@@ -265,7 +266,7 @@ export async function listProfessoresPaginated(params: {
 
   let dataQuery = supabase
     .from("profiles")
-    .select("user_id, name, email, phone")
+    .select("user_id, name, email, phone, created_at")
     .eq("role", "professor")
     .order("created_at", { ascending: false })
     .range(from, to);
@@ -284,6 +285,7 @@ export async function listProfessoresPaginated(params: {
     name: r.name,
     email: r.email,
     telefone: r.phone,
+    createdAt: r.created_at,
   }));
 
   return { items, total, page, pageSize, totalPages };
