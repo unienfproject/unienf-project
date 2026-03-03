@@ -1,5 +1,6 @@
 "use server";
 
+import { generateMensalidadesForEnrollment } from "@/app/_lib/actions/pricing";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { revalidatePath } from "next/cache";
@@ -60,7 +61,9 @@ async function buildTurmaTag(params: {
 
   const professorNome = (professor.name ?? professor.email ?? "").trim();
   if (!professorNome) {
-    throw new Error("Professor selecionado sem nome válido para gerar etiqueta.");
+    throw new Error(
+      "Professor selecionado sem nome válido para gerar etiqueta.",
+    );
   }
 
   const disciplinaNome = disciplina.name.trim();
@@ -202,9 +205,19 @@ export async function createClass(input: {
       .insert(turmaAlunos);
 
     if (alunosError) throw new Error(alunosError.message);
+
+    for (const studentId of input.studentIds) {
+      await generateMensalidadesForEnrollment({
+        turmaId: turma.id,
+        studentId,
+      });
+    }
   }
 
   revalidatePath("/professores/turmas");
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/recepcao/financeiro");
+  revalidatePath("/aluno/financeiro");
   return { turmaId: turma.id };
 }
 
@@ -263,9 +276,19 @@ export async function createTurmaAdmin(input: {
       .insert(turmaAlunos);
 
     if (alunosError) throw new Error(alunosError.message);
+
+    for (const studentId of input.studentIds) {
+      await generateMensalidadesForEnrollment({
+        turmaId: turma.id,
+        studentId,
+      });
+    }
   }
 
   revalidatePath("/admin/turmas");
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/recepcao/financeiro");
+  revalidatePath("/aluno/financeiro");
   return { turmaId: turma.id };
 }
 
@@ -353,8 +376,16 @@ export async function addStudentToClass(input: {
 
   if (insertError) throw new Error(insertError.message);
 
+  await generateMensalidadesForEnrollment({
+    turmaId: input.classId,
+    studentId: input.studentId,
+  });
+
   revalidatePath(`/professores/turmas/${input.classId}`);
   revalidatePath("/professores/turmas");
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/recepcao/financeiro");
+  revalidatePath("/aluno/financeiro");
 }
 
 export async function removeStudentFromClass(input: {

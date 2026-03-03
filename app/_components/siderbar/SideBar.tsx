@@ -22,14 +22,13 @@ import {
   Book,
   Users,
   WalletCards,
-  X,
+  CircleDollarSign,
 } from "lucide-react";
 
 import Image from "next/image";
 import Link from "next/link";
 import * as React from "react";
 import { useEffect, useState } from "react";
-import { Button } from "@/app/_components/ui/button";
 
 import { NavMain } from "./NavMain";
 import { NavUser } from "./NavUser";
@@ -64,6 +63,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: "Usuários", url: "/admin/users", icon: Users },
     { title: "Turmas", url: "/admin/turmas", icon: FolderOpen },
     { title: "Cursos", url: "/admin/cursos", icon: GraduationCap },
+    { title: "Valores", url: "/admin/precos", icon: CircleDollarSign },
     { title: "Financeiro", url: "/admin/financeiro", icon: WalletCards },
     { title: "Avisos", url: "/admin/avisos", icon: Bell },
   ];
@@ -98,6 +98,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: "Visão Geral", url: "/recepcao", icon: LayoutDashboard },
     { title: "Alunos", url: "/recepcao/alunos", icon: Users },
     { title: "Documentos", url: "/recepcao/documentos", icon: FileText },
+    { title: "Valores", url: "/recepcao/precos", icon: CircleDollarSign },
     { title: "Financeiro", url: "/recepcao/financeiro", icon: WalletCards },
     { title: "Avisos", url: "/recepcao/avisos", icon: Bell },
   ];
