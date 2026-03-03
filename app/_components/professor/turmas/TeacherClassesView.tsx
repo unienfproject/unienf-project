@@ -1,9 +1,9 @@
 "use client";
 
 import { finalizeClass } from "@/app/_lib/actions/classes";
+import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState, useTransition } from "react";
-import { Plus } from "lucide-react";
 
 function Kpi({ title, value }: { title: string; value: string }) {
   return (
@@ -84,10 +84,7 @@ export default function TeacherClassesView({
             />
           </div>
 
-          <Button
-            type="button"
-            onClick={() => setOpenCreate(true)}
-          >
+          <Button type="button" onClick={() => setOpenCreate(true)}>
             <Plus className="h-4 w-4" />
             Nova Turma
           </Button>
