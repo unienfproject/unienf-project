@@ -1,6 +1,7 @@
 "use server";
 
 import { logAudit } from "@/app/_lib/actions/audit";
+import { saveDbErrorLog } from "@/app/_lib/server/dbErrorLogger";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import type { PaginatedResult } from "@/app/_lib/actions/pagination";
@@ -86,7 +87,16 @@ export async function createInternalUser(input: {
     },
   );
 
-  if (createErr) throw new Error(createErr.message);
+  if (createErr) {
+    await saveDbErrorLog({
+      action: "admin/createInternalUser",
+      stage: "auth.admin.createUser",
+      actorId: authData.user.id,
+      payload: { email, role },
+      error: createErr,
+    });
+    throw new Error(createErr.message);
+  }
   if (!created.user) throw new Error("Falha ao criar usuário.");
 
   const userId = created.user.id;
@@ -102,7 +112,16 @@ export async function createInternalUser(input: {
     })
     .eq("user_id", userId);
 
-  if (profileErr) throw new Error(profileErr.message);
+  if (profileErr) {
+    await saveDbErrorLog({
+      action: "admin/createInternalUser",
+      stage: "update.profiles",
+      actorId: authData.user.id,
+      payload: { user_id: userId, email, role },
+      error: profileErr,
+    });
+    throw new Error(profileErr.message);
+  }
 
   return { userId };
 }

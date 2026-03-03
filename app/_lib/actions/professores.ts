@@ -3,6 +3,7 @@
 import { logAudit } from "@/app/_lib/actions/audit";
 import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 import { getUserProfile } from "@/app/_lib/actions/profile";
+import { saveDbErrorLog } from "@/app/_lib/server/dbErrorLogger";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
@@ -67,7 +68,16 @@ export async function createProfessor(input: {
     },
   );
 
-  if (createErr) throw new Error(createErr.message);
+  if (createErr) {
+    await saveDbErrorLog({
+      action: "admin/createProfessor",
+      stage: "auth.admin.createUser",
+      actorId: profile.user_id,
+      payload: { email, role: "professor" },
+      error: createErr,
+    });
+    throw new Error(createErr.message);
+  }
   if (!created.user) throw new Error("Falha ao criar usuário.");
 
   const userId = created.user.id;
@@ -83,7 +93,16 @@ export async function createProfessor(input: {
     })
     .eq("user_id", userId);
 
-  if (profileErr) throw new Error(profileErr.message);
+  if (profileErr) {
+    await saveDbErrorLog({
+      action: "admin/createProfessor",
+      stage: "update.profiles",
+      actorId: profile.user_id,
+      payload: { user_id: userId, email, role: "professor" },
+      error: profileErr,
+    });
+    throw new Error(profileErr.message);
+  }
 
   await logAudit({
     action: "create",

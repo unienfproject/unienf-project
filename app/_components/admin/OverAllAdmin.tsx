@@ -27,6 +27,7 @@ import type {
   DashboardStats,
   RegistrationStats,
 } from "@/app/_lib/actions/dashboard";
+import type { RecentAuditActivity } from "@/app/_lib/actions/audit";
 import type { PendingDocumentRow } from "@/app/_lib/actions/documents";
 import { markDocumentAsDelivered } from "@/app/_lib/actions/documents";
 
@@ -34,11 +35,33 @@ export default function PendingDocumentsClient({
   initialRows = [],
   stats,
   registrationStats = [],
+  recentActivities = [],
 }: {
   initialRows?: PendingDocumentRow[];
   stats: DashboardStats;
   registrationStats?: RegistrationStats[];
+  recentActivities?: RecentAuditActivity[];
 }) {
+  function formatRelativeTime(iso: string) {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return "-";
+    const diffMs = Date.now() - date.getTime();
+    const minuteMs = 60 * 1000;
+    const hourMs = 60 * minuteMs;
+    const dayMs = 24 * hourMs;
+
+    if (diffMs < hourMs) {
+      const minutes = Math.max(1, Math.floor(diffMs / minuteMs));
+      return `Há ${minutes} min`;
+    }
+    if (diffMs < dayMs) {
+      const hours = Math.floor(diffMs / hourMs);
+      return `Há ${hours} h`;
+    }
+    const days = Math.floor(diffMs / dayMs);
+    return `Há ${days} dia${days > 1 ? "s" : ""}`;
+  }
+
   const [rows, setRows] = useState<PendingDocumentRow[]>(initialRows);
   const [isPending, startTransition] = useTransition();
 
@@ -142,30 +165,21 @@ export default function PendingDocumentsClient({
                 Atividades Recentes
               </h3>
               <div className="space-y-4">
-                <ActivityItem
-                  title="Novo aluno matriculado"
-                  description="Maria Silva"
-                  time="Há 2 horas"
-                  variant="primary"
-                />
-                <ActivityItem
-                  title="Documentos aprovados"
-                  description="João Santos"
-                  time="Há 3 horas"
-                  variant="primary"
-                />
-                <ActivityItem
-                  title="Nota lançada"
-                  description="Prof. Ana Costa"
-                  time="Há 5 horas"
-                  variant="primary"
-                />
-                <ActivityItem
-                  title="Nova turma criada"
-                  description="Turma 2024.1"
-                  time="Há 1 dia"
-                  variant="primary"
-                />
+                {recentActivities.length > 0 ? (
+                  recentActivities.map((activity) => (
+                    <ActivityItem
+                      key={activity.id}
+                      title={activity.title}
+                      description={activity.description}
+                      time={formatRelativeTime(activity.actedAt)}
+                      variant="primary"
+                    />
+                  ))
+                ) : (
+                  <p className="text-muted-foreground text-sm">
+                    Sem atividades recentes no audit log.
+                  </p>
+                )}
               </div>
             </div>
           </div>
