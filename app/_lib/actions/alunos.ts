@@ -3,6 +3,7 @@
 import { logAudit } from "@/app/_lib/actions/audit";
 import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 import { getUserProfile } from "@/app/_lib/actions/profile";
+import { saveDbErrorLog } from "@/app/_lib/server/dbErrorLogger";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
@@ -83,7 +84,16 @@ export async function createAluno(input: {
     },
   );
 
-  if (createErr) throw new Error(createErr.message);
+  if (createErr) {
+    await saveDbErrorLog({
+      action: "admin/createAluno",
+      stage: "auth.admin.createUser",
+      actorId: profile.user_id,
+      payload: { email, role: "aluno" },
+      error: createErr,
+    });
+    throw new Error(createErr.message);
+  }
   if (!created.user) throw new Error("Falha ao criar usuário.");
 
   const userId = created.user.id;
@@ -96,7 +106,19 @@ export async function createAluno(input: {
     updated_at: new Date().toISOString(),
   });
 
-  if (alunoError) throw new Error(alunoError.message);
+  if (alunoError) {
+    await saveDbErrorLog({
+      action: "admin/createAluno",
+      stage: "insert.alunos",
+      actorId: profile.user_id,
+      payload: {
+        user_id: userId,
+        date_of_birth: dateOfBirth,
+      },
+      error: alunoError,
+    });
+    throw new Error(alunoError.message);
+  }
 
   await logAudit({
     action: "create",

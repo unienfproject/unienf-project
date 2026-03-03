@@ -2,6 +2,7 @@
 
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
+import type { AuditActionDB } from "@/app/_lib/types/database";
 
 export type AuditAction =
   | "create"
@@ -38,6 +39,50 @@ export interface AuditLog {
   ip_address?: string;
   user_agent?: string;
   created_at: string;
+}
+
+export type RecentAuditActivity = {
+  id: string;
+  tableName: string;
+  action: AuditActionDB | AuditAction;
+  recordId: string | null;
+  actorId: string | null;
+  actorName: string;
+  actedAt: string;
+  title: string;
+  description: string;
+};
+
+function tableLabel(tableName: string) {
+  const map: Record<string, string> = {
+    profiles: "perfis",
+    alunos: "alunos",
+    professores: "professores",
+    cursos: "cursos",
+    disciplinas: "disciplinas",
+    turmas: "turmas",
+    turma_alunos: "vínculos de turma",
+    notas: "notas",
+    avaliacoes: "avaliações",
+    mensalidades: "mensalidades",
+    pagamentos: "pagamentos",
+    documento_tipos: "tipos de documento",
+    documentos_aluno: "documentos do aluno",
+    avisos: "avisos",
+    audit_logs: "auditoria",
+  };
+  return map[tableName] ?? tableName.replaceAll("_", " ");
+}
+
+function actionLabel(action: string) {
+  if (action === "INSERT" || action === "create") return "Cadastro";
+  if (action === "UPDATE" || action === "update") return "Atualização";
+  if (action === "DELETE" || action === "delete") return "Remoção";
+  if (action === "role_change") return "Alteração de função";
+  if (action === "payment") return "Pagamento";
+  if (action === "grade_change") return "Lançamento de nota";
+  if (action === "document_change") return "Atualização de documento";
+  return "Ação";
 }
 
 export async function logAudit(input: {
@@ -151,6 +196,124 @@ export async function listAuditLogs(params?: {
     user_agent: log.user_agent,
     created_at: log.created_at,
   }));
+}
+
+export async function listRecentAuditActivities(
+  limit = 8,
+): Promise<RecentAuditActivity[]> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "administrativo") {
+    throw new Error("Apenas administrativo pode ver logs de auditoria.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: modernRows, error: modernError } = await supabase
+    .from("audit_logs")
+    .select("id, table_name, action, record_id, actor_id, acted_at")
+    .order("acted_at", { ascending: false })
+    .limit(limit);
+
+  if (!modernError) {
+    const rows = modernRows ?? [];
+    const actorIds = Array.from(
+      new Set(
+        rows
+          .map((r: { actor_id: string | null }) => r.actor_id)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    );
+
+    const actorNameById = new Map<string, string>();
+    if (actorIds.length > 0) {
+      const { data: actors } = await supabase
+        .from("profiles")
+        .select("user_id, name, email")
+        .in("user_id", actorIds);
+
+      for (const actor of actors ?? []) {
+        actorNameById.set(
+          String(actor.user_id),
+          String(actor.name ?? actor.email ?? "Sistema"),
+        );
+      }
+    }
+
+    return rows.map((row: any) => {
+      const action = String(row.action) as AuditActionDB;
+      const tableName = String(row.table_name ?? "");
+      const actorId = row.actor_id ? String(row.actor_id) : null;
+      const actorName = actorId
+        ? (actorNameById.get(actorId) ?? "Usuário")
+        : "Sistema";
+
+      return {
+        id: String(row.id),
+        tableName,
+        action,
+        recordId: row.record_id ? String(row.record_id) : null,
+        actorId,
+        actorName,
+        actedAt: String(row.acted_at),
+        title: `${actionLabel(action)} em ${tableLabel(tableName)}`,
+        description: `${actorName}${row.record_id ? ` • registro ${String(row.record_id)}` : ""}`,
+      };
+    });
+  }
+
+  const { data: legacyRows, error: legacyError } = await supabase
+    .from("audit_logs")
+    .select("id, action, entity, entity_id, user_id, created_at, description")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (legacyError) {
+    if (legacyError.code === "42P01") return [];
+    throw new Error(legacyError.message);
+  }
+
+  const rows = legacyRows ?? [];
+  const actorIds = Array.from(
+    new Set(
+      rows
+        .map((r: { user_id: string | null }) => r.user_id)
+        .filter((id): id is string => Boolean(id)),
+    ),
+  );
+
+  const actorNameById = new Map<string, string>();
+  if (actorIds.length > 0) {
+    const { data: actors } = await supabase
+      .from("profiles")
+      .select("user_id, name, email")
+      .in("user_id", actorIds);
+    for (const actor of actors ?? []) {
+      actorNameById.set(
+        String(actor.user_id),
+        String(actor.name ?? actor.email ?? "Sistema"),
+      );
+    }
+  }
+
+  return rows.map((row: any) => {
+    const action = String(row.action) as AuditAction;
+    const tableName = String(row.entity ?? "");
+    const actorId = row.user_id ? String(row.user_id) : null;
+    const actorName = actorId ? (actorNameById.get(actorId) ?? "Usuário") : "Sistema";
+
+    return {
+      id: String(row.id),
+      tableName,
+      action,
+      recordId: row.entity_id ? String(row.entity_id) : null,
+      actorId,
+      actorName,
+      actedAt: String(row.created_at),
+      title: `${actionLabel(action)} em ${tableLabel(tableName)}`,
+      description: String(row.description ?? `${actorName} realizou uma ação no sistema.`),
+    };
+  });
 }
 
 export async function changeMyPassword(input: {

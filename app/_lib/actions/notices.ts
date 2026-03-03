@@ -1,6 +1,7 @@
 "use server";
 
 import { getUserProfile } from "@/app/_lib/actions/profile";
+import { saveDbErrorLog } from "@/app/_lib/server/dbErrorLogger";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
@@ -223,7 +224,19 @@ export async function createNotice(input: {
     .select("id")
     .single();
 
-  if (avisoError) throw new Error(avisoError.message);
+  if (avisoError) {
+    await saveDbErrorLog({
+      action: "teacher/createNotice",
+      stage: "insert.avisos",
+      actorId: profile.user_id,
+      payload: {
+        scope_type: input.target.type,
+        turma_id: input.target.type === "turma" ? input.target.classId : null,
+      },
+      error: avisoError,
+    });
+    throw new Error(avisoError.message);
+  }
   if (!aviso) throw new Error("Falha ao criar aviso.");
 
   if (input.target.type === "alunos") {
@@ -234,7 +247,16 @@ export async function createNotice(input: {
       }));
 
       const { error } = await supabase.from("aviso_alunos").insert(avisoAlunos);
-      if (error) throw new Error(error.message);
+      if (error) {
+        await saveDbErrorLog({
+          action: "teacher/createNotice",
+          stage: "insert.aviso_alunos",
+          actorId: profile.user_id,
+          payload: { aviso_id: aviso.id, student_count: input.target.studentIds.length },
+          error,
+        });
+        throw new Error(error.message);
+      }
     }
   }
 
@@ -270,7 +292,19 @@ export async function createAvisoAdmin(input: {
     .select("id")
     .single();
 
-  if (avisoError) throw new Error(avisoError.message);
+  if (avisoError) {
+    await saveDbErrorLog({
+      action: "admin/createAvisoAdmin",
+      stage: "insert.avisos",
+      actorId: profile.user_id,
+      payload: {
+        scope_type: input.target.type,
+        turma_id: input.target.type === "turma" ? input.target.classId : null,
+      },
+      error: avisoError,
+    });
+    throw new Error(avisoError.message);
+  }
   if (!aviso) throw new Error("Falha ao criar aviso.");
 
   if (input.target.type === "alunos") {
@@ -281,7 +315,16 @@ export async function createAvisoAdmin(input: {
       }));
 
       const { error } = await supabase.from("aviso_alunos").insert(avisoAlunos);
-      if (error) throw new Error(error.message);
+      if (error) {
+        await saveDbErrorLog({
+          action: "admin/createAvisoAdmin",
+          stage: "insert.aviso_alunos",
+          actorId: profile.user_id,
+          payload: { aviso_id: aviso.id, student_count: input.target.studentIds.length },
+          error,
+        });
+        throw new Error(error.message);
+      }
     }
   }
 
