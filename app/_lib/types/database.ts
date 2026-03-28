@@ -1,20 +1,15 @@
 /**
- * Tipos TypeScript baseados no schema do banco de dados Supabase
+ * Tipos alinhados ao schema Postgres/Supabase (export do painel ou introspecção).
+ * Colunas `numeric` podem chegar como string dependendo do client — aqui usamos number.
  *
- * Este arquivo contém os tipos que refletem exatamente a estrutura
- * das tabelas no banco de dados.
- *
- * Nota prática: colunas `numeric` do Postgres às vezes vêm como string dependendo do client/config.
- * Aqui mantive como number porque é o padrão que vocês estavam usando no front.
+ * O dump SQL de referência (só contexto) pode viver em `database/schema/` se precisares.
  */
 
 export type UUID = string;
-export type Timestamp = string; // timestamptz
-export type DateString = string; // date (YYYY-MM-DD)
+export type Timestamp = string;
+export type DateString = string;
 
-// ============================================================================
-// PROFILES
-// ============================================================================
+// --- Domínios alinhados a CHECK constraints ---
 
 export type ProfileRole =
   | "aluno"
@@ -23,99 +18,23 @@ export type ProfileRole =
   | "recepção"
   | "administrativo";
 
-export type Profile = {
-  user_id: UUID; // uuid (PK, FK -> auth.users.id)
-  name: string | null; // text
-  phone: string | null; // text
-  email: string | null; // text
-  avatar_url: string | null; // text
-  role: ProfileRole; // text NOT NULL (default 'aluno')
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-};
+export type AuditActionDB = "INSERT" | "UPDATE" | "DELETE";
 
-// ============================================================================
-// ALUNOS
-// ============================================================================
+export type AvaliacaoTipo = "A1" | "A2" | "A3" | "REC";
 
-export type Aluno = {
-  user_id: UUID; // uuid (PK, FK -> profiles.user_id)
-  full_name: string | null; // text
-  date_of_birth: DateString | null; // date
-  age: number | null; // int4
-  cpf: string | null; // text
-  rg: string | null; // text
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-};
+export type AvisoScopeType = "turma" | "alunos";
 
-// ============================================================================
-// RESPONSÁVEIS
-// ============================================================================
+export type DocumentoStatus = "pending" | "delivered" | "rejected";
 
-export type Responsavel = {
-  id: UUID; // uuid
-  name: string; // text NOT NULL
-  cpf: string | null; // text
-  telefone: string | null; // text
-  email: string | null; // text
-  kinship: string | null; // text
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-};
+export type MensalidadeStatus =
+  | "pendente"
+  | "pago"
+  | "atrasado"
+  | "cancelado";
 
-export type AlunoResponsavel = {
-  id: UUID; // uuid
-  aluno_id: UUID; // uuid (FK -> alunos.user_id)
-  responsavel_id: UUID; // uuid (FK -> responsaveis.id)
-  is_primary: boolean; // bool NOT NULL default false
-  financial_responsible: boolean; // bool NOT NULL default true
-  created_at: Timestamp; // timestamptz
-};
-
-// ============================================================================
-// CURSOS E DISCIPLINAS
-// ============================================================================
-
-export type Curso = {
-  id: UUID; // uuid
-  name: string; // text NOT NULL
-  duration_months: number; // int4 NOT NULL
-  modules_count: number | null; // int4 nullable
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-};
-
-export type Disciplina = {
-  id: UUID; // uuid
-  curso_id: UUID | null; // uuid nullable (FK -> cursos.id)
-  name: string; // text NOT NULL
-  slug: string; // text NOT NULL UNIQUE
-  workload_hours: number | null; // int4 nullable
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-};
-
-// ============================================================================
-// TURMAS
-// ============================================================================
+export type FormaPagamentoDB = "dinheiro" | "pix" | "debito" | "credito";
 
 export type TurmaStatus = "ativa" | "finalizada";
-
-export type Turma = {
-  id: UUID; // uuid
-  disciplina_id: UUID; // uuid (FK -> disciplinas.id)
-  professor_id: UUID; // uuid (FK -> profiles.user_id)
-  tag: string; // text NOT NULL UNIQUE (ex: Primeiros_Socorros_2026.2)
-  period: string; // text NOT NULL
-  media_minima: number; // numeric NOT NULL default 7.0
-  start_date: DateString | null; // date nullable
-  end_date: DateString | null; // date nullable
-  status: TurmaStatus; // text NOT NULL default 'ativa'
-  created_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-};
 
 export type TurmaAlunoStatus =
   | "ativo"
@@ -123,236 +42,257 @@ export type TurmaAlunoStatus =
   | "transferido"
   | "concluido";
 
-export type TurmaAluno = {
-  id: UUID; // uuid
-  turma_id: UUID; // uuid (FK -> turmas.id)
-  aluno_id: UUID; // uuid (FK -> profiles.user_id)
-  status: TurmaAlunoStatus; // text NOT NULL default 'ativo'
-  joined_at: Timestamp; // timestamptz
+export type TurmaAlunoResultadoStatus = "incompleto" | "aprovado" | "reprovado";
+
+// --- Tabelas ---
+
+export type AlunoEtiqueta = {
+  id: UUID;
+  aluno_id: UUID;
+  etiqueta_id: UUID;
+  created_at: Timestamp;
 };
 
-// ============================================================================
-// AVALIAÇÕES E NOTAS
-// ============================================================================
+export type AlunoResponsavel = {
+  id: UUID;
+  aluno_id: UUID;
+  responsavel_id: UUID;
+  is_primary: boolean;
+  financial_responsible: boolean;
+  created_at: Timestamp;
+};
 
-export type AvaliacaoTipo = "A1" | "A2" | "A3" | "REC";
+export type Aluno = {
+  user_id: UUID;
+  full_name: string | null;
+  date_of_birth: DateString | null;
+  age: number | null;
+  cpf: string | null;
+  rg: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type AuditLog = {
+  id: number;
+  table_name: string;
+  action: AuditActionDB;
+  record_id: string | null;
+  actor_id: UUID | null;
+  acted_at: Timestamp;
+  old_data: unknown | null;
+  new_data: unknown | null;
+};
 
 export type Avaliacao = {
-  id: UUID; // uuid
-  turma_id: UUID; // uuid (FK -> turmas.id)
-  tipo: AvaliacaoTipo; // text NOT NULL
-  title: string | null; // text
-  nota_max: number; // numeric NOT NULL default 10
-  data_avaliacao: DateString | null; // date nullable
-  created_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-};
-
-export type Nota = {
-  id: UUID; // uuid
-  avaliacao_id: UUID; // uuid (FK -> avaliacoes.id)
-  aluno_id: UUID; // uuid (FK -> profiles.user_id)
-  nota: number; // numeric NOT NULL
-  observation: string | null; // text
-  released_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
-  released_at: Timestamp; // timestamptz NOT NULL default now()
-  updated_at: Timestamp; // timestamptz
-};
-
-export type ResultadoStatus = "incompleto" | "aprovado" | "reprovado";
-
-export type TurmaAlunoResultado = {
-  id: UUID; // uuid
-  turma_id: UUID; // uuid (FK -> turmas.id)
-  aluno_id: UUID; // uuid (FK -> profiles.user_id)
-  a1: number | null; // numeric
-  a2: number | null; // numeric
-  a3: number | null; // numeric
-  x: number | null; // numeric
-  rec: number | null; // numeric
-  final: number | null; // numeric
-  status: ResultadoStatus; // text NOT NULL default 'incompleto'
-  updated_at: Timestamp; // timestamptz
-};
-
-// ============================================================================
-// FINANCEIRO
-// ============================================================================
-
-export type MensalidadeStatus = "pendente" | "pago" | "atrasado" | "cancelado";
-
-export type Mensalidade = {
-  id: UUID; // uuid
-  aluno_id: UUID; // uuid (FK -> profiles.user_id)
-  turma_id: UUID | null; // uuid nullable (FK -> turmas.id)
-  competence_year: number; // int4
-  competence_month: number; // int4 (1-12)
-  due_date: DateString | null; // date nullable
-  status: MensalidadeStatus; // text NOT NULL default 'pendente'
-  predicted_value: number; // numeric NOT NULL
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-};
-
-export type TurmaPreco = {
-  id: UUID; // uuid
-  turma_id: UUID; // uuid (FK -> turmas.id)
-  duracao_meses: number; // int4
-  valor_mensalidade: number; // numeric
-  dia_vencimento: number; // int4
-  inicio_competencia: DateString | null; // date
-  ativo: boolean; // bool
-  created_by: UUID | null; // uuid (FK -> profiles.user_id)
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-};
-
-export type PaymentMethod = "dinheiro" | "pix" | "debito" | "credito";
-
-export type Pagamento = {
-  id: UUID; // uuid
-  mensalidade_id: UUID; // uuid (FK -> mensalidades.id)
-  amount_paid: number; // numeric NOT NULL
-  payment_method: PaymentMethod; // text NOT NULL
-  paid_at: Timestamp; // timestamptz NOT NULL default now()
-  received_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
-  observation: string | null; // text
-  created_at: Timestamp; // timestamptz
-};
-
-export type ReceiptCounter = {
-  year: number; // int4 (PK)
-  last_number: number; // int4 NOT NULL default 0
-};
-
-export type Recibo = {
-  id: UUID; // uuid
-  pagamento_id: UUID; // uuid NOT NULL UNIQUE (FK -> pagamentos.id)
-  receipt_number: string; // text NOT NULL UNIQUE
-  issued_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
-  issued_at: Timestamp; // timestamptz NOT NULL default now()
-  notes: string | null; // text
-};
-
-// ============================================================================
-// DOCUMENTOS
-// ============================================================================
-
-export type DocumentoTipo = {
-  id: UUID; // uuid
-  name: string; // text NOT NULL
-  required: boolean; // bool NOT NULL default true
-  active: boolean; // bool NOT NULL default true
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-};
-
-export type DocumentoStatus = "pending" | "delivered" | "rejected";
-
-export type DocumentoAluno = {
-  id: UUID; // uuid
-  aluno_id: UUID; // uuid (FK -> profiles.user_id)
-  document_type_id: UUID; // uuid (FK -> documento_tipos.id)
-  status: DocumentoStatus; // text NOT NULL default 'pending'
-  reviewed_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
-  reviewed_at: Timestamp | null; // timestamptz nullable
-  observation: string | null; // text nullable
-  rejected_reason: string | null; // text nullable
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-};
-
-// ============================================================================
-// AVISOS
-// ============================================================================
-
-export type AvisoScopeType = "turma" | "alunos";
-
-export type Aviso = {
-  id: UUID; // uuid
-  title: string; // text NOT NULL
-  message: string; // text NOT NULL
-  author_id: UUID; // uuid NOT NULL (FK -> profiles.user_id)
-  scope_type: AvisoScopeType; // text NOT NULL
-  turma_id: UUID | null; // uuid nullable (FK -> turmas.id)
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
+  id: UUID;
+  turma_id: UUID;
+  type: AvaliacaoTipo;
+  title: string | null;
+  nota_max: number;
+  data_avaliacao: DateString | null;
+  created_by: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
 };
 
 export type AvisoAluno = {
-  id: UUID; // uuid
-  aviso_id: UUID; // uuid (FK -> avisos.id)
-  aluno_id: UUID; // uuid (FK -> profiles.user_id)
-  created_at: Timestamp; // timestamptz
+  id: UUID;
+  aviso_id: UUID;
+  aluno_id: UUID;
+  created_at: Timestamp;
 };
 
-// ============================================================================
-// ETIQUETAS
-// ============================================================================
+export type Aviso = {
+  id: UUID;
+  title: string;
+  message: string;
+  author_id: UUID;
+  scope_type: AvisoScopeType;
+  turma_id: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type Curso = {
+  id: UUID;
+  name: string;
+  duration_months: number;
+  modules_count: number | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type Disciplina = {
+  id: UUID;
+  curso_id: UUID | null;
+  name: string;
+  slug: string;
+  workload_hours: number | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+  conteudo: string | null;
+};
+
+export type DocumentoTipo = {
+  id: UUID;
+  name: string;
+  required: boolean;
+  active: boolean;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+/** Linha de `documentos_aluno` */
+export type DocumentosAluno = {
+  id: UUID;
+  aluno_id: UUID;
+  document_type_id: UUID;
+  status: DocumentoStatus;
+  reviewed_by: UUID | null;
+  reviewed_at: Timestamp | null;
+  observation: string | null;
+  rejected_reason: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
 
 export type Etiqueta = {
-  id: UUID; // uuid
-  name: string; // text NOT NULL UNIQUE
-  color: string | null; // text
-  created_by: UUID | null; // uuid nullable (FK -> profiles.user_id)
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
+  id: UUID;
+  name: string;
+  color: string | null;
+  created_by: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
 };
 
-export type AlunoEtiqueta = {
-  id: UUID; // uuid
-  aluno_id: UUID; // uuid (FK -> profiles.user_id)
-  etiqueta_id: UUID; // uuid (FK -> etiquetas.id)
-  created_at: Timestamp; // timestamptz
+export type Mensalidade = {
+  id: UUID;
+  aluno_id: UUID;
+  competence_year: number;
+  competence_month: number;
+  due_date: DateString | null;
+  status: MensalidadeStatus;
+  predicted_value: number;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+  turma_id: UUID | null;
 };
 
-// ============================================================================
-// OBSERVAÇÕES PEDAGÓGICAS
-// ============================================================================
+export type Nota = {
+  id: UUID;
+  avaliacao_id: UUID;
+  aluno_id: UUID;
+  nota: number;
+  observation: string | null;
+  released_by: UUID | null;
+  released_at: Timestamp;
+  updated_at: Timestamp;
+};
 
 export type ObservacaoPedagogica = {
-  id: UUID; // uuid
-  aluno_id: UUID | null; // uuid nullable (FK -> profiles.user_id)
-  turma_id: UUID | null; // uuid nullable (FK -> turmas.id)
-  author_id: UUID; // uuid NOT NULL (FK -> profiles.user_id)
-  content: string; // text NOT NULL
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
+  id: UUID;
+  aluno_id: UUID | null;
+  turma_id: UUID | null;
+  author_id: UUID;
+  content: string;
+  created_at: Timestamp;
+  updated_at: Timestamp;
 };
 
-// ============================================================================
-// AUDITORIA (nova estrutura real do banco)
-// ============================================================================
-
-export type AuditActionDB = "INSERT" | "UPDATE" | "DELETE";
-
-export type AuditLog = {
-  id: number; // bigint identity
-  table_name: string; // text NOT NULL
-  action: AuditActionDB; // text NOT NULL
-  record_id: string | null; // text nullable
-  actor_id: UUID | null; // uuid nullable
-  acted_at: Timestamp; // timestamptz NOT NULL default now()
-  old_data: unknown | null; // jsonb
-  new_data: unknown | null; // jsonb
+export type Pagamento = {
+  id: UUID;
+  mensalidade_id: UUID;
+  amount_paid: number;
+  payment_method: FormaPagamentoDB;
+  paid_at: Timestamp;
+  received_by: UUID | null;
+  observation: string | null;
+  created_at: Timestamp;
 };
 
-// ============================================================================
-// VIEWS
-// ============================================================================
-// (se o Supabase continuar mostrando vw_alunos_live, você pode tipar assim.
-// Se ela não existir no banco, pode remover esse tipo sem medo.)
+export type Profile = {
+  user_id: UUID;
+  name: string | null;
+  phone: string | null;
+  email: string | null;
+  avatar_url: string | null;
+  role: ProfileRole;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
 
-export type VwAlunosLive = {
-  user_id: UUID; // uuid
-  full_name: string | null; // text
-  date_of_birth: DateString | null; // date
-  age: number | null; // int4
-  cpf: string | null; // text
-  rg: string | null; // text
-  created_at: Timestamp; // timestamptz
-  updated_at: Timestamp; // timestamptz
-  age_live: number | null; // int4 (calculado)
-  is_minor: boolean | null; // bool (calculado)
+export type ReceiptCounter = {
+  year: number;
+  last_number: number;
+};
+
+export type Recibo = {
+  id: UUID;
+  pagamento_id: UUID;
+  receipt_number: string;
+  issued_by: UUID | null;
+  issued_at: Timestamp;
+  notes: string | null;
+};
+
+export type Responsavel = {
+  id: UUID;
+  name: string;
+  cpf: string | null;
+  telefone: string | null;
+  email: string | null;
+  kinship: string | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type TurmaAlunoResultado = {
+  id: UUID;
+  turma_id: UUID;
+  aluno_id: UUID;
+  a1: number | null;
+  a2: number | null;
+  a3: number | null;
+  x: number | null;
+  rec: number | null;
+  final: number | null;
+  status: TurmaAlunoResultadoStatus;
+  updated_at: Timestamp;
+};
+
+export type TurmaAluno = {
+  id: UUID;
+  turma_id: UUID;
+  aluno_id: UUID;
+  status: TurmaAlunoStatus;
+  joined_at: Timestamp;
+};
+
+export type TurmaPreco = {
+  id: UUID;
+  turma_id: UUID;
+  duracao_meses: number;
+  valor_mensalidade: number;
+  dia_vencimento: number;
+  inicio_competencia: DateString | null;
+  ativo: boolean;
+  created_by: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
+export type Turma = {
+  id: UUID;
+  disciplina_id: UUID;
+  professor_id: UUID;
+  tag: string;
+  period: string;
+  media_minima: number;
+  start_date: DateString | null;
+  end_date: DateString | null;
+  status: TurmaStatus;
+  created_by: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
 };
