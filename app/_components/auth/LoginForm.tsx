@@ -93,7 +93,14 @@ export function LoginForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-3">
+      <form
+        method="post"
+        className="space-y-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void form.handleSubmit(handleSubmit)(e);
+        }}
+      >
         <FormField
           control={form.control}
           name="email"

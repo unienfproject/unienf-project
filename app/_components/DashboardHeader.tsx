@@ -9,7 +9,13 @@ export function DashboardHeader() {
 
   return (
     <header className="flex h-14 items-center border-b px-4">
-      <Button size="icon" variant="ghost" onClick={toggleSidebar}>
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        onClick={toggleSidebar}
+        aria-label="Abrir menu"
+      >
         <PanelLeft className="h-5 w-5" />
       </Button>
     </header>
