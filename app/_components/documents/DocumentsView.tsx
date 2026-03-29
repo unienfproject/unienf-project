@@ -9,18 +9,11 @@ import DocumentCard from "./DocumentCard";
 import Link from "next/link";
 
 type Props = {
-  title: string;
-  subtitle: string;
   canEdit: boolean;
   docs: DocumentItem[];
 };
 
-export default function DocumentsView({
-  title,
-  subtitle,
-  canEdit,
-  docs,
-}: Props) {
+export default function DocumentsView({ canEdit, docs }: Props) {
   const router = useRouter();
   const total = docs.filter((d) => d.required).length;
   const delivered = docs.filter(
@@ -87,58 +80,58 @@ export default function DocumentsView({
   }
 
   return (
-    <div className="bg-background flex gap-2 min-h-screen flex-col">
+    <div className="bg-background flex min-h-screen flex-col gap-2">
       <main className="p-6">
-      <div className="flex flex-col  p-4">
-        <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
-        <p className="text-slate-600">{subtitle}</p>
-      </div>
-
-      <div className="rounded-2xl border border-slate-200  bg-white p-6 shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-900">
-              Progresso da documentação
-            </h3>
-            <p className="text-sm text-slate-600">
-              {delivered} de {total} documentos entregues
-            </p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900">
+                Progresso da documentação
+              </h3>
+              <p className="text-sm text-slate-600">
+                {delivered} de {total} documentos entregues
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-3xl font-bold text-sky-600">{pct}%</span>
+            </div>
           </div>
-          <div className="text-right">
-            <span className="text-3xl font-bold text-sky-600">{pct}%</span>
+
+          <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
+            <div className="h-3 bg-sky-500" style={{ width: `${pct}%` }} />
           </div>
         </div>
-
-        <div className="mt-4 h-3 overflow-hidden rounded-full bg-slate-100">
-          <div className="h-3 bg-sky-500" style={{ width: `${pct}%` }} />
+        <div className="flex flex-col items-center justify-center text-center text-2xl font-bold">
+          <h2 className="">
+            EM CASO DE DÚVIDAS, ENTRE EM CONTATO COM A RECEPÇÃO:
+          </h2>
+          <p>
+            <strong className="text-sky-600 transition-colors hover:text-green-400">
+              {" "}
+              <Link href="https://wa.me/5511987654321" target="_blank">
+                VIA WHATSAPP: (22) 2621-1627{" "}
+              </Link>
+            </strong>
+          </p>
         </div>
-      </div>
-      <div className="text-2xl font-bold text-center flex flex-col items-center justify-center">
-        <h2 className="">
-          EM CASO DE DÚVIDAS, ENTRE EM CONTATO COM A RECEPÇÃO:
-        </h2>
-        <p>
-          <strong className="text-sky-600 hover:text-green-400 transition-colors"> <Link href="https://wa.me/5511987654321" target="_blank">VIA WHATSAPP: (22) 2621-1627 </Link></strong>
-        </p>
-      </div>
-      <div className="m-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-        {docs.map((doc) => (
-          <DocumentCard
-            key={doc.id}
-            doc={doc}
-            canEdit={canEdit}
-            onMarkDelivered={async (delivered) => {
-              await handleMarkDelivered(doc.id, delivered);
-            }}
-            onMarkRejected={async (rejected, notes) => {
-              await handleMarkRejected(doc.id, rejected, notes);
-            }}
-            onSaveNotes={async (notes) => {
-              await handleSaveNotes(doc.id, notes);
-            }}
-          />
-        ))}
-      </div>
+        <div className="m-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+          {docs.map((doc) => (
+            <DocumentCard
+              key={doc.id}
+              doc={doc}
+              canEdit={canEdit}
+              onMarkDelivered={async (delivered) => {
+                await handleMarkDelivered(doc.id, delivered);
+              }}
+              onMarkRejected={async (rejected, notes) => {
+                await handleMarkRejected(doc.id, rejected, notes);
+              }}
+              onSaveNotes={async (notes) => {
+                await handleSaveNotes(doc.id, notes);
+              }}
+            />
+          ))}
+        </div>
       </main>
     </div>
   );

@@ -13,27 +13,35 @@ export type StudentRow = {
   email: string;
 };
 
+function normalizeRole(role: string) {
+  return role
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 export async function canAccessDocuments(role: string) {
-  return (
-    role === "aluno" ||
-    role === "recepcao" ||
-    role === "coordenacao" ||
-    role === "administrativo"
+  const normalizedRole = normalizeRole(role);
+  return ["aluno", "recepcao", "coordenacao", "administrativo"].includes(
+    normalizedRole,
   );
 }
 
 export async function canEditDocuments(role: string) {
-  return (
-    role === "recepcao" || role === "coordenacao" || role === "administrativo"
+  const normalizedRole = normalizeRole(role);
+  return ["recepcao", "coordenacao", "administrativo"].includes(
+    normalizedRole,
   );
 }
 
 export async function canAccessFinance(role: string) {
-  return role === "aluno" || role === "recepcao" || role === "administrativo";
+  const normalizedRole = normalizeRole(role);
+  return ["aluno", "recepcao", "administrativo"].includes(normalizedRole);
 }
 
 export async function canEditFinance(role: string) {
-  return role === "recepcao" || role === "administrativo";
+  const normalizedRole = normalizeRole(role);
+  return ["recepcao", "administrativo"].includes(normalizedRole);
 }
 
 export async function isAdmin(role: string) {
