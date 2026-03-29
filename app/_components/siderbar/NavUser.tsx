@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@/app/_lib/supabase/client";
-import { LogOut, MoreVertical, UserCircle, X } from "lucide-react";
+import { LogOut, MoreVertical, UserCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -36,6 +36,28 @@ import {
   DialogTitle,
 } from "@/app/_components/ui/dialog";
 
+type NavUserProfile = {
+  name: string | null;
+  email: string | null;
+  telefone?: string | null;
+  cpf?: string | null;
+  avatar_url?: string | null;
+  role?: string | null;
+};
+
+function getRoleLabel(role?: string | null) {
+  const labels: Record<string, string> = {
+    administrativo: "Administrativo",
+    professor: "Professor",
+    aluno: "Aluno",
+    recepção: "Recepção",
+    coordenação: "Coordenador",
+  };
+
+  if (!role) return "Não informado";
+  return labels[role] ?? role;
+}
+
 export function NavUser({
   user,
 }: {
@@ -50,13 +72,7 @@ export function NavUser({
   const supabase = createClient();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [profile, setProfile] = useState<{
-    name: string | null;
-    email: string | null;
-    telefone?: string | null;
-    cpf?: string | null;
-    avatar_url?: string | null;
-  } | null>(null);
+  const [profile, setProfile] = useState<NavUserProfile | null>(null);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -83,16 +99,28 @@ export function NavUser({
 
       const { data } = await supabase
         .from("profiles")
-        .select("name, email, telefone, cpf, avatar_url")
+        .select("name, email, phone, cpf, avatar_url, role")
         .eq("user_id", authUser.id)
         .single();
 
       setProfile(
-        data ?? {
-          name: user.name,
-          email: user.email,
-          avatar_url: user.avatar_url,
-        },
+        data
+          ? {
+              name: data.name,
+              email: data.email,
+              telefone: data.phone,
+              cpf: data.cpf,
+              avatar_url: data.avatar_url,
+              role: data.role,
+            }
+          : {
+              name: user.name,
+              email: user.email,
+              avatar_url: user.avatar_url,
+              telefone: null,
+              cpf: null,
+              role: null,
+            },
       );
     };
 
@@ -198,18 +226,26 @@ export function NavUser({
                   <p className="text-muted-foreground text-sm">
                     {profile.email}
                   </p>
+                  <p className="text-muted-foreground text-sm">
+                    {getRoleLabel(profile.role)}
+                  </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
                 <div>
                   <p className="text-muted-foreground">Telefone</p>
-                  <p>{profile.telefone || "—"}</p>
+                  <p>{profile.telefone || "-"}</p>
                 </div>
 
                 <div>
                   <p className="text-muted-foreground">CPF</p>
-                  <p>{profile.cpf || "—"}</p>
+                  <p>{profile.cpf || "-"}</p>
+                </div>
+
+                <div>
+                  <p className="text-muted-foreground">Função</p>
+                  <p>{getRoleLabel(profile.role)}</p>
                 </div>
               </div>
             </div>
