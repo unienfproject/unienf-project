@@ -3,6 +3,7 @@
 import { generateMensalidadesForEnrollment } from "@/app/_lib/actions/pricing";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 
 type PickerItem = {
@@ -19,6 +20,14 @@ type ClassRow = {
   end_date: string;
   status: "ativa" | "finalizada";
 };
+
+function getAdminSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  return createAdminClient(url, serviceKey, {
+    auth: { persistSession: false },
+  });
+}
 
 function buildPeriodFromStartDate(startDate: string): string {
   const [yearStr, monthStr] = startDate.split("-");
@@ -138,9 +147,17 @@ export async function listSubjectsForPicker(): Promise<PickerItem[]> {
 }
 
 export async function listStudentsForPicker(): Promise<PickerItem[]> {
-  const supabase = await createServerSupabaseClient();
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
 
-  const { data, error } = await supabase
+  const allowedRoles = ["professor", "administrativo", "coordenação"];
+  if (!allowedRoles.includes(profile.role ?? "")) {
+    throw new Error("Sem permissão para listar alunos.");
+  }
+
+  const adminSupabase = getAdminSupabase();
+
+  const { data, error } = await adminSupabase
     .from("profiles")
     .select("user_id, name, email")
     .in("role", ["aluno", "Aluno"])
