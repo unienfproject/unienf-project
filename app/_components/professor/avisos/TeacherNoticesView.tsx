@@ -1,5 +1,8 @@
 "use client";
 
+import NoticeDetailsDialog, {
+  type NoticeDetailsData,
+} from "@/app/_components/avisos/NoticeDetailsDialog";
 import { useMemo, useState, useTransition } from "react";
 import { createNotice } from "@/app/_lib/actions/notices";
 import { NoticeRow } from "@/app/_lib/actions/notices";
@@ -324,6 +327,9 @@ export default function TeacherNoticesView({
     "todos",
   );
   const [openCreate, setOpenCreate] = useState(false);
+  const [selectedNotice, setSelectedNotice] = useState<NoticeDetailsData | null>(
+    null,
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -346,6 +352,14 @@ export default function TeacherNoticesView({
 
   return (
     <div className="flex flex-col gap-6">
+      <NoticeDetailsDialog
+        open={selectedNotice !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedNotice(null);
+        }}
+        notice={selectedNotice}
+      />
+
       <main className="p-4">
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
@@ -424,7 +438,7 @@ export default function TeacherNoticesView({
 
         <div className="divide-y gap-4">
           {filtered.map((n) => (
-            <div key={n.id} className="p-4 gap-4 flex flex-col">
+            <div key={n.id} className="flex flex-col gap-4 p-4">
               <div className="flex flex-col gap-1 md:flex-row md:items-start md:justify-between">
                 <div className="flex flex-col">
                   <h3 className="text-base font-semibold text-slate-900">
@@ -446,6 +460,24 @@ export default function TeacherNoticesView({
               <p className="mt-3 text-sm whitespace-pre-line text-slate-700">
                 {n.message}
               </p>
+
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    setSelectedNotice({
+                      title: n.title,
+                      message: n.message,
+                      authorName: n.author_name,
+                      authorRole: n.author_role,
+                      createdAt: n.created_at,
+                    })
+                  }
+                >
+                  Ver detalhes
+                </Button>
+              </div>
             </div>
           ))}
 

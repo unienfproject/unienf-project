@@ -1,10 +1,14 @@
 "use client";
 
 import EtiquetasView from "@/app/_components/aluno/EtiquetasView";
+import NoticeDetailsDialog, {
+  type NoticeDetailsData,
+} from "@/app/_components/avisos/NoticeDetailsDialog";
 import ObservacoesPedagogicasView from "@/app/_components/aluno/ObservacoesPedagogicasView";
 import DocumentsView from "@/app/_components/documents/DocumentsView";
 import EditDadosPessoais from "@/app/_components/recepcao/EditDadosPessoais";
 import FinanceiroAlunoView from "@/app/_components/recepcao/FinanceiroAlunoView";
+import { Button } from "@/app/_components/ui/button";
 import {
   Tabs,
   TabsContent,
@@ -17,6 +21,7 @@ import type { DocumentItem } from "@/app/_lib/actions/documents";
 import type { MensalidadeRow } from "@/app/_lib/actions/mensalidades";
 import type { NotasByTurmaForStaff } from "@/app/_lib/actions/notas";
 import { BookOpen, Calendar, Mail, User } from "lucide-react";
+import { useState } from "react";
 
 type Props = {
   alunoData: AlunoProfileData;
@@ -35,8 +40,21 @@ export default function AlunoProfileTabs({
   notas,
   studentId,
 }: Props) {
+  const [selectedNotice, setSelectedNotice] = useState<NoticeDetailsData | null>(
+    null,
+  );
+
   return (
-    <Tabs defaultValue="visao-geral" className="w-full">
+    <>
+      <NoticeDetailsDialog
+        open={selectedNotice !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedNotice(null);
+        }}
+        notice={selectedNotice}
+      />
+
+      <Tabs defaultValue="visao-geral" className="w-full">
       <TabsList className="grid w-full grid-cols-8">
         <TabsTrigger value="visao-geral">Visão Geral</TabsTrigger>
         <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
@@ -318,7 +336,7 @@ export default function AlunoProfileTabs({
                   key={aviso.id}
                   className="rounded-lg border border-slate-200 bg-slate-50 p-4"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <h4 className="text-sm font-semibold text-slate-900">
                         {aviso.title}
@@ -334,6 +352,22 @@ export default function AlunoProfileTabs({
                         {aviso.message}
                       </p>
                     </div>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        setSelectedNotice({
+                          title: aviso.title,
+                          message: aviso.message,
+                          authorName: aviso.authorName,
+                          authorRole: aviso.authorRole,
+                          createdAt: aviso.createdAt,
+                        })
+                      }
+                    >
+                      Ver detalhes
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -370,6 +404,7 @@ export default function AlunoProfileTabs({
           <ObservacoesPedagogicasView studentId={studentId} />
         </div>
       </TabsContent>
-    </Tabs>
+      </Tabs>
+    </>
   );
 }

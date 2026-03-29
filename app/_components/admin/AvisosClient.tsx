@@ -2,11 +2,13 @@
 "use client";
 
 import CreateAvisoDialog from "@/app/_components/admin/CreateAvisoDialog";
+import NoticeDetailsDialog, {
+  type NoticeDetailsData,
+} from "@/app/_components/avisos/NoticeDetailsDialog";
 import { Button } from "@/app/_components/ui/button";
 import { CircleCheckBig, CircleX, Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { AvisoListRow } from "@/app/_lib/actions/avisos";
-import { useRouter } from "next/navigation";
 
 function formatDateTimeBR(value: string) {
   const d = new Date(value);
@@ -45,13 +47,22 @@ export default function AvisosClient({
   initialAvisos: AvisoListRow[];
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const router = useRouter();
+  const [selectedNotice, setSelectedNotice] = useState<NoticeDetailsData | null>(
+    null,
+  );
 
   const avisos = useMemo(() => initialAvisos ?? [], [initialAvisos]);
 
   return (
     <main>
       <CreateAvisoDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      <NoticeDetailsDialog
+        open={selectedNotice !== null}
+        onOpenChange={(open) => {
+          if (!open) setSelectedNotice(null);
+        }}
+        notice={selectedNotice}
+      />
 
       <main className="p-6">
         <div className="space-y-6">
@@ -116,7 +127,14 @@ export default function AvisosClient({
                     </div>
 
                     <Button
-                      onClick={() => router.push(`/admin/avisos/${a.id}`)}
+                      onClick={() =>
+                        setSelectedNotice({
+                          title: a.titulo,
+                          message: a.mensagem,
+                          authorName: a.createdByName,
+                          createdAt: a.createdAt,
+                        })
+                      }
                       className="ring-offset-background focus-visible:ring-ring [&amp;_svg]:pointer-events-none [&amp;_svg]:size-4 [&amp;_svg]:shrink-0 hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50"
                     >
                       Ver detalhes
