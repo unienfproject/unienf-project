@@ -43,6 +43,8 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 2. Preencha **obrigatoriamente** os pares e-mail/senha para as roles `aluno`, `professor`, `recepção` e `administrativo`. A role **coordenação** é opcional (veja o exemplo).
 3. Se faltar qualquer credencial obrigatória, a execução **falha ao carregar a configuração do Playwright** (antes de subir o `webServer`) — não há skip silencioso para essas roles. O comando `playwright test --list` não exige credenciais.
 
+O inventário de rotas e CTAs por role está em [`e2e/CTAS_MAP.md`](e2e/CTAS_MAP.md), alinhado aos specs `e2e/*/pages-ctas.spec.ts` e `e2e/*/dialogs.spec.ts`.
+
 ### Comandos
 
 | Comando | Uso |
