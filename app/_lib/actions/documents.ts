@@ -129,6 +129,22 @@ export async function listStudentDocuments(
 
   const supabase = await createServerSupabaseClient();
 
+  const { data: tipos, error: tiposError } = await supabase
+    .from("documento_tipos")
+    .select("id, name, required")
+    .order("name");
+
+  if (tiposError) {
+    if (tiposError.code === "42P01") {
+      return [];
+    }
+    throw new Error(tiposError.message);
+  }
+
+  if (!tipos || tipos.length === 0) {
+    return [];
+  }
+
   const { data: documentos, error } = await supabase
     .from("documentos_aluno")
     .select(
@@ -151,13 +167,17 @@ export async function listStudentDocuments(
 
   if (error) {
     if (error.code === "42P01") {
-      return [];
+      return tipos.map((tipo) => ({
+        id: `missing:${studentId}:${String(tipo.id)}`,
+        documentTypeId: String(tipo.id),
+        documentTypeName: String(tipo.name ?? "Documento"),
+        required: Boolean(tipo.required),
+        status: "pending" as DocumentoStatus,
+        notes: null,
+        updatedAt: new Date().toISOString(),
+      }));
     }
     throw new Error(error.message);
-  }
-
-  if (!documentos || documentos.length === 0) {
-    return [];
   }
 
   type DocumentoRow = {
@@ -173,26 +193,42 @@ export async function listStudentDocuments(
       | null;
   };
 
-  return documentos.map((doc: DocumentoRow) => {
-    const tipo = Array.isArray(doc.documento_tipos)
-      ? doc.documento_tipos[0]
-      : doc.documento_tipos;
+  const mapByType = new Map<string, DocumentoRow>();
+  (documentos ?? []).forEach((doc: DocumentoRow) => {
+    const typeId = String(doc.document_type_id ?? "");
+    if (typeId) {
+      mapByType.set(typeId, doc);
+    }
+  });
+
+  return tipos.map((tipo) => {
+    const typeId = String(tipo.id);
+    const doc = mapByType.get(typeId);
+    const tipoDoc = doc
+      ? Array.isArray(doc.documento_tipos)
+        ? doc.documento_tipos[0]
+        : doc.documento_tipos
+      : null;
 
     const notes =
-      doc.status === "rejected" && doc.rejected_reason
+      doc?.status === "rejected" && doc.rejected_reason
         ? String(doc.rejected_reason)
-        : doc.observation
+        : doc?.observation
           ? String(doc.observation)
           : null;
 
     return {
-      id: String(doc.id),
-      documentTypeId: String(doc.document_type_id),
-      documentTypeName: tipo?.name ? String(tipo.name) : "Documento",
-      required: tipo?.required ? Boolean(tipo.required) : false,
-      status: doc.status as DocumentoStatus,
+      id: doc?.id ? String(doc.id) : `missing:${studentId}:${typeId}`,
+      documentTypeId: typeId,
+      documentTypeName: tipoDoc?.name
+        ? String(tipoDoc.name)
+        : String(tipo.name ?? "Documento"),
+      required: Boolean(tipo.required),
+      status: (doc?.status as DocumentoStatus) ?? ("pending" as DocumentoStatus),
       notes,
-      updatedAt: String(doc.updated_at),
+      updatedAt: doc?.updated_at
+        ? String(doc.updated_at)
+        : new Date().toISOString(),
     };
   });
 }
@@ -214,6 +250,63 @@ export async function updateDocumentStatus(input: {
 
   const supabase = await createServerSupabaseClient();
 
+  if (input.documentId.startsWith("missing:")) {
+    const [, alunoId, documentTypeId] = input.documentId.split(":");
+
+    if (!alunoId || !documentTypeId) {
+      throw new Error("Identificador de documento inválido.");
+    }
+
+    const insertData = {
+      aluno_id: alunoId,
+      document_type_id: documentTypeId,
+      status: input.status,
+      observation:
+        input.status === "rejected"
+          ? null
+          : input.observation
+            ? input.observation.trim()
+            : null,
+      rejected_reason:
+        input.status === "rejected"
+          ? input.rejectedReason
+            ? input.rejectedReason.trim()
+            : null
+          : null,
+      reviewed_by: profile.user_id,
+      reviewed_at: new Date().toISOString(),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    const { data: createdDoc, error: insertError } = await supabase
+      .from("documentos_aluno")
+      .insert(insertData)
+      .select("id")
+      .single();
+
+    if (insertError) throw new Error(insertError.message);
+
+    await logAudit({
+      action: "update",
+      entity: "documento",
+      entityId: createdDoc?.id ? String(createdDoc.id) : input.documentId,
+      oldValue: null,
+      newValue: insertData,
+      description: `Status do documento alterado para ${input.status} por ${profile.name ?? profile.email}`,
+    });
+
+    revalidatePath("/admin/alunos");
+    revalidatePath("/recepcao/documentos");
+    revalidatePath("/recepcao/alunos");
+    revalidatePath(`/recepcao/alunos/${alunoId}`);
+    revalidatePath(`/recepcao/alunos/${alunoId}/documentos`);
+    revalidatePath(`/admin/alunos/${alunoId}`);
+    revalidatePath(`/admin/alunos/${alunoId}/documentos`);
+    revalidatePath(`/aluno/documentos`);
+    return;
+  }
+
   const { data: currentDoc, error: fetchError } = await supabase
     .from("documentos_aluno")
     .select("id, aluno_id, status, observation, rejected_reason")
@@ -233,9 +326,13 @@ export async function updateDocumentStatus(input: {
     status: DocumentoStatus;
     observation?: string | null;
     rejected_reason?: string | null;
+    reviewed_by?: string | null;
+    reviewed_at?: string | null;
     updated_at: string;
   } = {
     status: input.status,
+    reviewed_by: profile.user_id,
+    reviewed_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
 
@@ -276,6 +373,11 @@ export async function updateDocumentStatus(input: {
   revalidatePath("/admin/alunos");
   revalidatePath("/recepcao/documentos");
   revalidatePath("/recepcao/alunos");
+  revalidatePath(`/recepcao/alunos/${currentDoc.aluno_id}`);
+  revalidatePath(`/recepcao/alunos/${currentDoc.aluno_id}/documentos`);
+  revalidatePath(`/admin/alunos/${currentDoc.aluno_id}`);
+  revalidatePath(`/admin/alunos/${currentDoc.aluno_id}/documentos`);
+  revalidatePath(`/aluno/documentos`);
 }
 
 export type PendingDocumentRow = {
