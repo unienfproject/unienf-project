@@ -17,7 +17,7 @@ test.describe("Aluno — páginas e CTAs (leitura)", () => {
     await page.goto("/aluno/documentos", { waitUntil: "load" });
     await expectMainVisible(page);
     await expect(
-      page.getByRole("heading", { name: "Meus Documentos" }),
+      page.getByRole("heading", { name: /Progresso da documenta/i }),
     ).toBeVisible();
     const send = page.getByRole("button", {
       name: /Enviar (Documento|Novamente)/,

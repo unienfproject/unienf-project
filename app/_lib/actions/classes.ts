@@ -44,6 +44,18 @@ function buildPeriodFromStartDate(startDate: string): string {
   return `${year}.${semester}`;
 }
 
+function mapTurmaCreationError(error: unknown): Error {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+
+  if (/column "tipo" of relation "avaliacoes" does not exist/i.test(message)) {
+    return new Error(
+      'O banco está com schema incompatível para criação de turma: a automação de avaliações ainda usa "avaliacoes.tipo", mas a tabela atual usa "type". Execute a migração `database/migrations/2026-04-22_fix_avaliacoes_tipo_compat.sql` no Supabase e tente novamente.',
+    );
+  }
+
+  return error instanceof Error ? error : new Error(message);
+}
+
 async function buildTurmaTag(params: {
   disciplinaId: string;
   professorId: string;
@@ -198,52 +210,56 @@ export async function createClass(input: {
   });
   const period = buildPeriodFromStartDate(input.startDate);
 
-  const { data: turma, error: turmaError } = await supabase
-    .from("turmas")
-    .insert({
-      tag,
-      period: period,
-      start_date: input.startDate,
-      end_date: input.endDate,
-      status: "ativa",
-      professor_id: input.teacherId,
-      disciplina_id: disciplinaId,
-      created_by: profile.user_id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .select("id")
-    .single();
+  try {
+    const { data: turma, error: turmaError } = await supabase
+      .from("turmas")
+      .insert({
+        tag,
+        period: period,
+        start_date: input.startDate,
+        end_date: input.endDate,
+        status: "ativa",
+        professor_id: input.teacherId,
+        disciplina_id: disciplinaId,
+        created_by: profile.user_id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
 
-  if (turmaError) throw new Error(turmaError.message);
-  if (!turma) throw new Error("Falha ao criar turma.");
+    if (turmaError) throw new Error(turmaError.message);
+    if (!turma) throw new Error("Falha ao criar turma.");
 
-  if (input.studentIds.length > 0) {
-    const turmaAlunos = input.studentIds.map((alunoId) => ({
-      turma_id: turma.id,
-      aluno_id: alunoId,
-      created_at: new Date().toISOString(),
-    }));
+    if (input.studentIds.length > 0) {
+      const turmaAlunos = input.studentIds.map((alunoId) => ({
+        turma_id: turma.id,
+        aluno_id: alunoId,
+        created_at: new Date().toISOString(),
+      }));
 
-    const { error: alunosError } = await supabase
-      .from("turma_alunos")
-      .insert(turmaAlunos);
+      const { error: alunosError } = await supabase
+        .from("turma_alunos")
+        .insert(turmaAlunos);
 
-    if (alunosError) throw new Error(alunosError.message);
+      if (alunosError) throw new Error(alunosError.message);
 
-    for (const studentId of input.studentIds) {
-      await generateMensalidadesForEnrollment({
-        turmaId: turma.id,
-        studentId,
-      });
+      for (const studentId of input.studentIds) {
+        await generateMensalidadesForEnrollment({
+          turmaId: turma.id,
+          studentId,
+        });
+      }
     }
-  }
 
-  revalidatePath("/professores/turmas");
-  revalidatePath("/admin/financeiro");
-  revalidatePath("/recepcao/financeiro");
-  revalidatePath("/aluno/financeiro");
-  return { turmaId: turma.id };
+    revalidatePath("/professores/turmas");
+    revalidatePath("/admin/financeiro");
+    revalidatePath("/recepcao/financeiro");
+    revalidatePath("/aluno/financeiro");
+    return { turmaId: turma.id };
+  } catch (error) {
+    throw mapTurmaCreationError(error);
+  }
 }
 
 export async function createTurmaAdmin(input: {
@@ -269,52 +285,56 @@ export async function createTurmaAdmin(input: {
   });
   const period = buildPeriodFromStartDate(input.startDate);
 
-  const { data: turma, error: turmaError } = await supabase
-    .from("turmas")
-    .insert({
-      tag,
-      period: period,
-      start_date: input.startDate,
-      end_date: input.endDate,
-      status: "ativa",
-      professor_id: input.professorId,
-      disciplina_id: input.disciplinaId,
-      created_by: profile.user_id,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .select("id")
-    .single();
+  try {
+    const { data: turma, error: turmaError } = await supabase
+      .from("turmas")
+      .insert({
+        tag,
+        period: period,
+        start_date: input.startDate,
+        end_date: input.endDate,
+        status: "ativa",
+        professor_id: input.professorId,
+        disciplina_id: input.disciplinaId,
+        created_by: profile.user_id,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
 
-  if (turmaError) throw new Error(turmaError.message);
-  if (!turma) throw new Error("Falha ao criar turma.");
+    if (turmaError) throw new Error(turmaError.message);
+    if (!turma) throw new Error("Falha ao criar turma.");
 
-  if (input.studentIds && input.studentIds.length > 0) {
-    const turmaAlunos = input.studentIds.map((alunoId) => ({
-      turma_id: turma.id,
-      aluno_id: alunoId,
-      created_at: new Date().toISOString(),
-    }));
+    if (input.studentIds && input.studentIds.length > 0) {
+      const turmaAlunos = input.studentIds.map((alunoId) => ({
+        turma_id: turma.id,
+        aluno_id: alunoId,
+        created_at: new Date().toISOString(),
+      }));
 
-    const { error: alunosError } = await supabase
-      .from("turma_alunos")
-      .insert(turmaAlunos);
+      const { error: alunosError } = await supabase
+        .from("turma_alunos")
+        .insert(turmaAlunos);
 
-    if (alunosError) throw new Error(alunosError.message);
+      if (alunosError) throw new Error(alunosError.message);
 
-    for (const studentId of input.studentIds) {
-      await generateMensalidadesForEnrollment({
-        turmaId: turma.id,
-        studentId,
-      });
+      for (const studentId of input.studentIds) {
+        await generateMensalidadesForEnrollment({
+          turmaId: turma.id,
+          studentId,
+        });
+      }
     }
-  }
 
-  revalidatePath("/admin/turmas");
-  revalidatePath("/admin/financeiro");
-  revalidatePath("/recepcao/financeiro");
-  revalidatePath("/aluno/financeiro");
-  return { turmaId: turma.id };
+    revalidatePath("/admin/turmas");
+    revalidatePath("/admin/financeiro");
+    revalidatePath("/recepcao/financeiro");
+    revalidatePath("/aluno/financeiro");
+    return { turmaId: turma.id };
+  } catch (error) {
+    throw mapTurmaCreationError(error);
+  }
 }
 
 export async function finalizeClass(input: {
