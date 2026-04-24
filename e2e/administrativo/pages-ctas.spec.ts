@@ -90,7 +90,7 @@ test.describe("Administrativo — páginas e CTAs (leitura)", () => {
     await page.goto("/admin/financeiro", { waitUntil: "load" });
     await expectMainVisible(page);
     await expect(
-      page.getByRole("heading", { name: "Financeiro" }),
+      page.getByRole("heading", { name: "Financeiro", exact: true }),
     ).toBeVisible();
     await expect(
       page.getByRole("button", { name: "Lançar custo" }),

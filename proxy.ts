@@ -6,13 +6,19 @@ const ROLE_REDIRECT_PATHS: Record<string, string> = {
   professor: "/professores",
   recepcao: "/recepcao",
   recepção: "/recepcao",
+  coordenacao: "/admin",
   coordenação: "/admin",
   admin: "/admin",
 };
 
 function getRedirectPathByRole(role: string | null | undefined): string | null {
   if (!role) return null;
-  return ROLE_REDIRECT_PATHS[role] ?? null;
+  const normalizedRole = role
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  return ROLE_REDIRECT_PATHS[role] ?? ROLE_REDIRECT_PATHS[normalizedRole] ?? null;
 }
 
 export async function proxy(request: NextRequest) {

@@ -14,7 +14,9 @@ test.describe("Recepção — páginas e CTAs (leitura)", () => {
   test("alunos e ficha quando houver link", async ({ page }) => {
     await page.goto("/recepcao/alunos", { waitUntil: "load" });
     await expectMainVisible(page);
-    await expect(page.getByRole("heading", { name: "Alunos" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Alunos", exact: true }),
+    ).toBeVisible();
 
     const ok = await followFirstHref(page, "/recepcao/alunos/");
     if (!ok) {
@@ -57,7 +59,9 @@ test.describe("Recepção — páginas e CTAs (leitura)", () => {
   test("avisos", async ({ page }) => {
     await page.goto("/recepcao/avisos", { waitUntil: "load" });
     await expectMainVisible(page);
-    await expect(page.getByRole("heading", { name: "Avisos" })).toBeVisible();
+    await expect(
+      page.getByRole("heading", { name: "Avisos", exact: true }),
+    ).toBeVisible();
   });
 
   test("documentos do aluno (subrota)", async ({ page }) => {

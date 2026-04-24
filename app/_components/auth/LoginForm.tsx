@@ -21,6 +21,13 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 
+function normalizeRole(role: string | null | undefined) {
+  return (role ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 const FormSchema = z.object({
   email: z.string().email({ message: "E-mail inválido." }),
   password: z
@@ -65,13 +72,13 @@ export function LoginForm() {
           .eq("user_id", data.user.id)
           .single();
 
-        const role = profileData?.role;
+        const role = normalizeRole(profileData?.role);
         let redirectPath = "/";
 
         if (role === "aluno") redirectPath = "/aluno";
         else if (role === "professor") redirectPath = "/professores";
-        else if (role === "recepção") redirectPath = "/recepcao";
-        else if (role === "administrativo" || role === "coordenação")
+        else if (role === "recepcao") redirectPath = "/recepcao";
+        else if (role === "administrativo" || role === "coordenacao")
           redirectPath = "/admin";
 
         Toast({

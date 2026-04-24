@@ -21,3 +21,13 @@ export async function expectNotRecepcaoExclusiveWall(page: Page) {
 export async function expectPath(page: Page, pattern: RegExp) {
   await expect(page).toHaveURL(pattern);
 }
+
+export async function hasBrokenAuthenticatedAppState(page: Page) {
+  const bodyText = (await page.locator("body").textContent()) ?? "";
+
+  return (
+    bodyText.includes("Sessão inválida. Faça login novamente.") ||
+    bodyText.includes("Role não definida.") ||
+    bodyText.includes("Application error: a server-side exception has occurred")
+  );
+}

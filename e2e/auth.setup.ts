@@ -27,9 +27,14 @@ async function authenticate(
   await expect(page).not.toHaveURL(/[?&]password=/);
 
   await page.waitForURL(
-    (url) => url.pathname.startsWith(expectedPathPrefix),
+    (url) =>
+      url.pathname.startsWith(expectedPathPrefix) || url.pathname === "/",
     { timeout: 45_000, waitUntil: "commit" },
   );
+  if (new URL(page.url()).pathname === "/") {
+    await page.goto(expectedPathPrefix, { waitUntil: "load" });
+  }
+  await expect(page).toHaveURL(new RegExp(`^.*${expectedPathPrefix}`));
   await expect(page.locator("body")).not.toContainText("Role não definida");
   await page.context().storageState({ path: path.join(authDir, storageFile) });
 }

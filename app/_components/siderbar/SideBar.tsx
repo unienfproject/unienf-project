@@ -33,6 +33,13 @@ import { useEffect, useState } from "react";
 import { NavMain } from "./NavMain";
 import { NavUser } from "./NavUser";
 
+function normalizeRole(role: string | null | undefined) {
+  return (role ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,7 +119,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       );
     }
 
-    const role = profile?.role;
+    const role = normalizeRole(profile?.role);
 
     const closeOnMobile = () => isMobile && setOpen(false);
 
@@ -120,7 +127,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       return <NavMain items={adminMenuItems} onNavigate={closeOnMobile} />;
     }
 
-    if (role === "coordenação") {
+    if (role === "coordenacao") {
       return <NavMain items={coordenacaoMenuItems} onNavigate={closeOnMobile} />;
     }
 
@@ -132,7 +139,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       return <NavMain items={professorMenuItems} onNavigate={closeOnMobile} />;
     }
 
-    if (role === "recepção") {
+    if (role === "recepcao") {
       return <NavMain items={recepcaoMenuItems} onNavigate={closeOnMobile} />;
     }
 
