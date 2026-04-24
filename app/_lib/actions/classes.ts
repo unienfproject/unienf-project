@@ -222,7 +222,7 @@ export async function createClass(input: {
     const turmaAlunos = input.studentIds.map((alunoId) => ({
       turma_id: turma.id,
       aluno_id: alunoId,
-      created_at: new Date().toISOString(),
+      joined_at: new Date().toISOString(),
     }));
 
     const { error: alunosError } = await supabase
@@ -293,7 +293,7 @@ export async function createTurmaAdmin(input: {
     const turmaAlunos = input.studentIds.map((alunoId) => ({
       turma_id: turma.id,
       aluno_id: alunoId,
-      created_at: new Date().toISOString(),
+      joined_at: new Date().toISOString(),
     }));
 
     const { error: alunosError } = await supabase
@@ -396,7 +396,7 @@ export async function addStudentToClass(input: {
   const { error: insertError } = await supabase.from("turma_alunos").insert({
     turma_id: input.classId,
     aluno_id: input.studentId,
-    created_at: new Date().toISOString(),
+    joined_at: new Date().toISOString(),
   });
 
   if (insertError) throw new Error(insertError.message);

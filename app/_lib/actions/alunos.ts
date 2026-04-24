@@ -238,7 +238,7 @@ export async function getMyProfile(): Promise<MyProfile> {
     `,
     )
     .eq("aluno_id", profile.user_id)
-    .order("created_at", { ascending: false })
+    .order("joined_at", { ascending: false })
     .limit(1)
     .single();
 
@@ -839,17 +839,20 @@ export async function getAlunoOverviewDashboard(): Promise<AlunoDashboardOvervie
       .select(
         `
         id,
-        value,
-        created_at,
+        nota,
+        released_at,
         updated_at,
         avaliacao_id,
         avaliacoes:avaliacoes!notas_avaliacao_id_fkey(
           id,
           type,
-          name,
+          title,
           turma_id,
-          turmas:turmas!avaliacoes_turma_id_fkey(id, tag),
-          disciplinas:disciplinas!avaliacoes_disciplina_id_fkey(name)
+          turmas:turmas!avaliacoes_turma_id_fkey(
+            id,
+            tag,
+            disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
+          )
         )
       `,
       )
@@ -863,7 +866,7 @@ export async function getAlunoOverviewDashboard(): Promise<AlunoDashboardOvervie
 
     // média simples com as notas existentes
     const valores = rows
-      .map((n) => (n.value == null ? null : Number(n.value)))
+      .map((n) => (n.nota == null ? null : Number(n.nota)))
       .filter((v) => typeof v === "number" && Number.isFinite(v)) as number[];
 
     if (valores.length) {
@@ -903,26 +906,27 @@ export async function getAlunoOverviewDashboard(): Promise<AlunoDashboardOvervie
         ? avaliacao.turmas[0]
         : avaliacao?.turmas;
 
-      const disciplinaObj = Array.isArray(avaliacao?.disciplinas)
-        ? avaliacao.disciplinas[0]
-        : avaliacao?.disciplinas;
+      const disciplinaNested = turmaObj?.disciplinas;
+      const disciplinaObj = Array.isArray(disciplinaNested)
+        ? disciplinaNested[0]
+        : disciplinaNested;
 
       const turmaLabel =
         (turmaObj?.tag ? String(turmaObj.tag) : null) ??
         (turmaAtualLabel ?? "Turma");
 
       const avaliacaoLabel =
-        (avaliacao?.name ? String(avaliacao.name) : null) ??
+        (avaliacao?.title ? String(avaliacao.title) : null) ??
         (avaliacao?.type ? String(avaliacao.type) : null) ??
         (disciplinaObj?.name ? String(disciplinaObj.name) : "Avaliação");
 
       const launchedAt =
         auditMap.get(String(n.id)) ??
-        (n.updated_at ? String(n.updated_at) : String(n.created_at));
+        (n.released_at ? String(n.released_at) : String(n.updated_at));
 
       return {
         id: String(n.id),
-        value: Number(n.value),
+        value: Number(n.nota),
         turmaId: turmaObj?.id ? String(turmaObj.id) : null,
         turmaLabel,
         avaliacaoLabel,

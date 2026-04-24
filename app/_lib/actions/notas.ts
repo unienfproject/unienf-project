@@ -594,7 +594,7 @@ export async function listAlunosComNotaByAvaliacao(input: {
   if (alunoIds.length) {
     const { data: notas, error: notasErr } = await supabase
       .from("notas")
-      .select("id, aluno_id, value")
+      .select("id, aluno_id, nota")
       .eq("avaliacao_id", input.avaliacaoId)
       .in("aluno_id", alunoIds);
 
@@ -603,7 +603,7 @@ export async function listAlunosComNotaByAvaliacao(input: {
     for (const n of notas ?? []) {
       notasMap.set(String((n as any).aluno_id), {
         notaId: String((n as any).id),
-        value: Number((n as any).value),
+        value: Number((n as any).nota),
       });
     }
   }
@@ -665,9 +665,10 @@ export async function upsertNotasBulk(input: {
     return {
       avaliacao_id: avaliacaoId,
       aluno_id: alunoId,
-      value,
+      nota: value,
+      released_by: profile.user_id,
+      released_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
-      created_at: new Date().toISOString(),
     };
   });
 
@@ -732,7 +733,7 @@ export async function listAssessmentsForClass(input: {
 
   const { data, error } = await supabase
     .from("avaliacoes")
-    .select("id, type, name")
+    .select("id, type, title")
     .eq("turma_id", input.turmaId)
     .order("created_at", { ascending: true });
 
@@ -740,11 +741,11 @@ export async function listAssessmentsForClass(input: {
 
   return (data ?? []).map((a: any) => {
     const type = (a.type ?? "").toString().trim();
-    const name = (a.name ?? "").toString().trim();
+    const title = (a.title ?? "").toString().trim();
 
     // label amigável (ex.: "A1", "Prova 1", etc.)
     const label =
-      name ||
+      title ||
       (type ? type : "Avaliação");
 
     return { id: String(a.id), label };
@@ -806,14 +807,17 @@ export async function listStudentsForGrades(input: {
   if (alunosIds.length > 0) {
     const { data: notas, error: notasErr } = await supabase
       .from("notas")
-      .select("aluno_id, value")
+      .select("aluno_id, nota")
       .eq("avaliacao_id", input.avaliacaoId)
       .in("aluno_id", alunosIds);
 
     if (notasErr) throw new Error(notasErr.message);
 
     for (const n of notas ?? []) {
-      notasMap.set(String(n.aluno_id), n.value == null ? null : Number(n.value));
+      notasMap.set(
+        String(n.aluno_id),
+        n.nota == null ? null : Number(n.nota),
+      );
     }
   }
 
