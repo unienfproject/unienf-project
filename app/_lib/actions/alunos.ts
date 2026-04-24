@@ -16,6 +16,26 @@ function getAdminSupabase() {
   });
 }
 
+async function waitForProfile(
+  admin: ReturnType<typeof getAdminSupabase>,
+  userId: string,
+) {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const { data, error } = await admin
+      .from("profiles")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (data?.user_id) return;
+    if (error) throw new Error(error.message);
+
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+
+  throw new Error("Perfil do aluno não foi criado automaticamente.");
+}
+
 function normalizeCpf(cpf: string) {
   return cpf.replace(/\D/g, "");
 }
@@ -77,6 +97,7 @@ export async function createAluno(input: {
       user_metadata: {
         name,
         phone: telefone,
+        role: "aluno",
       },
       app_metadata: {
         role: "aluno",
@@ -97,6 +118,29 @@ export async function createAluno(input: {
   if (!created.user) throw new Error("Falha ao criar usuário.");
 
   const userId = created.user.id;
+
+  await waitForProfile(admin, userId);
+
+  const { error: profileErr } = await admin
+    .from("profiles")
+    .update({
+      name,
+      phone: telefone,
+      email,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("user_id", userId);
+
+  if (profileErr) {
+    await saveDbErrorLog({
+      action: "admin/createAluno",
+      stage: "update.profile-details",
+      actorId: profile.user_id,
+      payload: { user_id: userId, email, role: "aluno" },
+      error: profileErr,
+    });
+    throw new Error(profileErr.message);
+  }
 
   const { error: alunoError } = await supabase.from("alunos").insert({
     user_id: userId,

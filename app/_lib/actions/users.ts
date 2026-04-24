@@ -33,6 +33,26 @@ function getAdminSupabase() {
   });
 }
 
+async function waitForProfile(
+  admin: ReturnType<typeof getAdminSupabase>,
+  userId: string,
+) {
+  for (let attempt = 0; attempt < 10; attempt++) {
+    const { data, error } = await admin
+      .from("profiles")
+      .select("user_id")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (data?.user_id) return;
+    if (error) throw new Error(error.message);
+
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+
+  throw new Error("Perfil do usuário não foi criado automaticamente.");
+}
+
 export async function createInternalUser(input: {
   name: string;
   cpf: string;
@@ -80,6 +100,7 @@ export async function createInternalUser(input: {
       user_metadata: {
         name,
         phone: telefone,
+        role,
       },
       app_metadata: {
         role,
@@ -101,6 +122,8 @@ export async function createInternalUser(input: {
 
   const userId = created.user.id;
 
+  await waitForProfile(admin, userId);
+
   const { error: profileErr } = await supabase
     .from("profiles")
     .update({
@@ -115,7 +138,7 @@ export async function createInternalUser(input: {
   if (profileErr) {
     await saveDbErrorLog({
       action: "admin/createInternalUser",
-      stage: "update.profiles",
+      stage: "update.profile-details",
       actorId: authData.user.id,
       payload: { user_id: userId, email, role },
       error: profileErr,

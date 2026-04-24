@@ -11,9 +11,11 @@ import Link from "next/link";
 type Props = {
   canEdit: boolean;
   docs: DocumentItem[];
+  title?: string;
+  subtitle?: string;
 };
 
-export default function DocumentsView({ canEdit, docs }: Props) {
+export default function DocumentsView({ canEdit, docs, title, subtitle }: Props) {
   const router = useRouter();
   const total = docs.filter((d) => d.required).length;
   const delivered = docs.filter(
@@ -82,6 +84,15 @@ export default function DocumentsView({ canEdit, docs }: Props) {
   return (
     <div className="bg-background flex min-h-screen flex-col gap-2">
       <main className="p-6">
+        {(title || subtitle) && (
+          <div className="mb-6">
+            {title && (
+              <h1 className="text-2xl font-bold text-slate-900">{title}</h1>
+            )}
+            {subtitle && <p className="text-sm text-slate-600">{subtitle}</p>}
+          </div>
+        )}
+
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between">
             <div>

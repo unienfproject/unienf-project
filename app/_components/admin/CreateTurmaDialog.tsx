@@ -199,7 +199,6 @@ export default function CreateTurmaDialog({
                 onValueChange={(value) =>
                   setForm({ ...form, professorId: value })
                 }
-                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione um professor" />
@@ -221,7 +220,6 @@ export default function CreateTurmaDialog({
                 onValueChange={(value) =>
                   setForm({ ...form, disciplinaId: value })
                 }
-                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma disciplina" />

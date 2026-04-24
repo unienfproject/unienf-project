@@ -32,7 +32,7 @@ begin
     and t.relname = 'mensalidades'
     and c.contype = 'u'
     and (
-      select array_agg(att.attname order by u.ord)
+      select array_agg(att.attname::text order by u.ord)
       from unnest(c.conkey) with ordinality as u(attnum, ord)
       join pg_attribute att on att.attrelid = c.conrelid and att.attnum = u.attnum
     ) = array['aluno_id','competence_year','competence_month'];
@@ -44,3 +44,20 @@ end $$;
 
 create unique index if not exists uq_mensalidades_aluno_turma_competencia
   on public.mensalidades (aluno_id, turma_id, competence_year, competence_month);
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint c
+    join pg_class t on t.oid = c.conrelid
+    join pg_namespace n on n.oid = t.relnamespace
+    where n.nspname = 'public'
+      and t.relname = 'mensalidades'
+      and c.conname = 'uq_mensalidades_aluno_turma_competencia'
+  ) then
+    alter table public.mensalidades
+      add constraint uq_mensalidades_aluno_turma_competencia
+      unique using index uq_mensalidades_aluno_turma_competencia;
+  end if;
+end $$;

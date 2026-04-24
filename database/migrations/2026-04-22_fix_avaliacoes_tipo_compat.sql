@@ -37,6 +37,19 @@ begin
       set tipo = coalesce(tipo, type)
       where tipo is distinct from coalesce(tipo, type);
     end if;
+
+    if not exists (
+      select 1
+      from pg_constraint c
+      join pg_class t on t.oid = c.conrelid
+      join pg_namespace n on n.oid = t.relnamespace
+      where n.nspname = 'public'
+        and t.relname = 'avaliacoes'
+        and c.conname = 'uq_avaliacoes_turma_tipo'
+    ) then
+      alter table public.avaliacoes
+        add constraint uq_avaliacoes_turma_tipo unique (turma_id, tipo);
+    end if;
   end if;
 end
 $$;

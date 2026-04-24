@@ -173,3 +173,112 @@ export async function listTurmasPaginated(params: {
 
   return { items, total, page, pageSize, totalPages };
 }
+
+export type TurmaDetailForStaff = {
+  id: string;
+  tag: string;
+  startDate: string;
+  endDate: string;
+  status: "ativa" | "finalizada" | string;
+  disciplinaName: string | null;
+  professorId: string | null;
+  professorName: string | null;
+  students: Array<{
+    id: string;
+    name: string;
+    email: string;
+  }>;
+};
+
+export async function getTurmaDetailForStaff(
+  turmaId: string,
+): Promise<TurmaDetailForStaff> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  const allowedRoles = ["administrativo", "coordenação"];
+  if (!allowedRoles.includes(profile.role ?? "")) {
+    throw new Error("Sem permissão para acessar turma.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: turma, error } = await supabase
+    .from("turmas")
+    .select(
+      `
+        id,
+        tag,
+        start_date,
+        end_date,
+        status,
+        professor_id,
+        disciplinas:disciplinas!turmas_disciplina_id_fkey(name),
+        professor_profile:profiles!turmas_professor_id_fkey(name, email)
+      `,
+    )
+    .eq("id", turmaId)
+    .single();
+
+  if (error) throw new Error(error.message);
+  if (!turma) throw new Error("Turma não encontrada.");
+
+  const { data: turmaAlunos, error: alunosError } = await supabase
+    .from("turma_alunos")
+    .select(
+      `
+        aluno_id,
+        profiles:profiles!turma_alunos_aluno_id_fkey(user_id, name, email)
+      `,
+    )
+    .eq("turma_id", turmaId);
+
+  if (alunosError) throw new Error(alunosError.message);
+
+  type JoinedName = { name: string | null; email?: string | null };
+  type TurmaDetailRow = {
+    id: string;
+    tag: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    status: string | null;
+    professor_id: string | null;
+    disciplinas: { name: string | null } | { name: string | null }[] | null;
+    professor_profile: JoinedName | JoinedName[] | null;
+  };
+  type TurmaAlunoDetailRow = {
+    aluno_id: string;
+    profiles: JoinedName | JoinedName[] | null;
+  };
+
+  const turmaRow = turma as TurmaDetailRow;
+  const disciplina = Array.isArray(turmaRow.disciplinas)
+    ? turmaRow.disciplinas[0]
+    : turmaRow.disciplinas;
+  const professor = Array.isArray(turmaRow.professor_profile)
+    ? turmaRow.professor_profile[0]
+    : turmaRow.professor_profile;
+
+  const students = ((turmaAlunos ?? []) as TurmaAlunoDetailRow[]).map((row) => {
+    const aluno = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+    return {
+      id: String(row.aluno_id),
+      name: String(aluno?.name ?? aluno?.email ?? "Aluno"),
+      email: String(aluno?.email ?? ""),
+    };
+  });
+
+  students.sort((a, b) => a.name.localeCompare(b.name));
+
+  return {
+    id: String(turmaRow.id),
+    tag: String(turmaRow.tag ?? ""),
+    startDate: String(turmaRow.start_date ?? ""),
+    endDate: String(turmaRow.end_date ?? ""),
+    status: String(turmaRow.status ?? ""),
+    disciplinaName: disciplina?.name ?? null,
+    professorId: turmaRow.professor_id ? String(turmaRow.professor_id) : null,
+    professorName: professor?.name ?? professor?.email ?? null,
+    students,
+  };
+}

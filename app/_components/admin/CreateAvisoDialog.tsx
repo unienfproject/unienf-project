@@ -188,7 +188,6 @@ export default function CreateAvisoDialog({
               <Select
                 value={form.turmaId}
                 onValueChange={(value) => setForm({ ...form, turmaId: value })}
-                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione uma turma" />

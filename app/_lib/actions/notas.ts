@@ -499,7 +499,9 @@ export type AvaliacaoPickerItem = {
   type: string;
 };
 
-export async function listAvaliacoesByTurma(turmaId: string): Promise<AvaliacaoPickerItem[]> {
+export async function listAvaliacoesByTurma(
+  turmaId: string,
+): Promise<AvaliacaoPickerItem[]> {
   const profile = await requireNoteEditPermission();
   const supabase = await createServerSupabaseClient();
 
@@ -514,7 +516,9 @@ export async function listAvaliacoesByTurma(turmaId: string): Promise<AvaliacaoP
   if (!turma) throw new Error("Turma não encontrada.");
 
   if (profile.role === "professor" && turma.professor_id !== profile.user_id) {
-    throw new Error("Você não tem permissão para acessar avaliações desta turma.");
+    throw new Error(
+      "Você não tem permissão para acessar avaliações desta turma.",
+    );
   }
 
   // Avaliações: você já usa "type" em listMyNotas (A1/A2/A3/REC)
@@ -566,7 +570,10 @@ export async function listAlunosComNotaByAvaliacao(input: {
   if (avaliacaoErr) throw new Error(avaliacaoErr.message);
   if (!avaliacao) throw new Error("Avaliação não encontrada.");
 
-  const turma = avaliacao.turmas as unknown as { id: string; professor_id: string };
+  const turma = avaliacao.turmas as unknown as {
+    id: string;
+    professor_id: string;
+  };
   const turmaId = String(avaliacao.turma_id);
 
   if (profile.role === "professor" && turma?.professor_id !== profile.user_id) {
@@ -744,9 +751,7 @@ export async function listAssessmentsForClass(input: {
     const title = (a.title ?? "").toString().trim();
 
     // label amigável (ex.: "A1", "Prova 1", etc.)
-    const label =
-      title ||
-      (type ? type : "Avaliação");
+    const label = title || (type ? type : "Avaliação");
 
     return { id: String(a.id), label };
   });
@@ -814,10 +819,7 @@ export async function listStudentsForGrades(input: {
     if (notasErr) throw new Error(notasErr.message);
 
     for (const n of notas ?? []) {
-      notasMap.set(
-        String(n.aluno_id),
-        n.nota == null ? null : Number(n.nota),
-      );
+      notasMap.set(String(n.aluno_id), n.nota == null ? null : Number(n.nota));
     }
   }
 
@@ -883,4 +885,158 @@ export async function upsertGradesBulk(input: {
   }
 
   revalidatePath("/professores/notas");
+}
+
+async function assertCanAccessTurmaGrades(turmaId: string) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  const allowedRoles = ["professor", "administrativo", "coordenação"];
+  if (!allowedRoles.includes(profile.role ?? "")) {
+    throw new Error("Sem permissão para acessar notas desta turma.");
+  }
+
+  const supabase = await createServerSupabaseClient();
+  const { data: turma, error } = await supabase
+    .from("turmas")
+    .select("id, professor_id")
+    .eq("id", turmaId)
+    .single();
+
+  if (error) throw new Error(error.message);
+  if (!turma) throw new Error("Turma não encontrada.");
+
+  if (
+    profile.role === "professor" &&
+    String((turma as { professor_id: string | null }).professor_id) !==
+      profile.user_id
+  ) {
+    throw new Error("Você não tem permissão para acessar esta turma.");
+  }
+
+  return { profile, supabase };
+}
+
+export async function listAssessmentsForTurmaAccess(
+  turmaId: string,
+): Promise<AssessmentItem[]> {
+  const { supabase } = await assertCanAccessTurmaGrades(turmaId);
+
+  const { data, error } = await supabase
+    .from("avaliacoes")
+    .select("id, type, title")
+    .eq("turma_id", turmaId)
+    .order("created_at", { ascending: true });
+
+  if (error) throw new Error(error.message);
+
+  type AssessmentRow = {
+    id: string;
+    type: string | null;
+    title: string | null;
+  };
+  return ((data ?? []) as AssessmentRow[]).map((a) => {
+    const type = String(a.type ?? "").trim();
+    const title = String(a.title ?? "").trim();
+    return { id: String(a.id), label: title || type || "Avaliação" };
+  });
+}
+
+export async function listStudentsForTurmaGradesAccess(input: {
+  turmaId: string;
+  avaliacaoId: string;
+}): Promise<StudentForGradesRow[]> {
+  const { supabase } = await assertCanAccessTurmaGrades(input.turmaId);
+
+  const { data: avaliacao, error: avaliacaoErr } = await supabase
+    .from("avaliacoes")
+    .select("id, turma_id")
+    .eq("id", input.avaliacaoId)
+    .single();
+
+  if (avaliacaoErr) throw new Error(avaliacaoErr.message);
+  if (!avaliacao) throw new Error("Avaliação não encontrada.");
+  if (
+    String((avaliacao as { turma_id: string }).turma_id) !==
+    String(input.turmaId)
+  ) {
+    throw new Error("Avaliação não pertence à turma selecionada.");
+  }
+
+  const { data: turmaAlunos, error: alunosErr } = await supabase
+    .from("turma_alunos")
+    .select(
+      `
+        aluno_id,
+        profiles:profiles!turma_alunos_aluno_id_fkey(name, email)
+      `,
+    )
+    .eq("turma_id", input.turmaId);
+
+  if (alunosErr) throw new Error(alunosErr.message);
+
+  type ProfileNameRow = { name: string | null; email: string | null };
+  type TurmaAlunoGradeRow = {
+    aluno_id: string;
+    profiles: ProfileNameRow | ProfileNameRow[] | null;
+  };
+  type NotaGradeRow = { aluno_id: string; nota: number | string | null };
+
+  const turmaAlunoRows = (turmaAlunos ?? []) as TurmaAlunoGradeRow[];
+  const alunosIds = turmaAlunoRows.map((row) => String(row.aluno_id));
+  const notasMap = new Map<string, number | null>();
+
+  if (alunosIds.length > 0) {
+    const { data: notas, error: notasErr } = await supabase
+      .from("notas")
+      .select("aluno_id, nota")
+      .eq("avaliacao_id", input.avaliacaoId)
+      .in("aluno_id", alunosIds);
+
+    if (notasErr) throw new Error(notasErr.message);
+
+    for (const nota of (notas ?? []) as NotaGradeRow[]) {
+      notasMap.set(
+        String(nota.aluno_id),
+        nota.nota == null ? null : Number(nota.nota),
+      );
+    }
+  }
+
+  const rows = turmaAlunoRows.map((row) => {
+    const aluno = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+    const alunoId = String(row.aluno_id);
+    return {
+      alunoId,
+      alunoName: String(aluno?.name ?? aluno?.email ?? "Aluno"),
+      etiquetas: null,
+      nota: notasMap.has(alunoId) ? (notasMap.get(alunoId) ?? null) : null,
+    };
+  });
+
+  rows.sort((a, b) => a.alunoName.localeCompare(b.alunoName));
+  return rows;
+}
+
+export async function upsertTurmaGradesAccess(input: {
+  turmaId: string;
+  avaliacaoId: string;
+  grades: Array<{ alunoId: string; nota: number | null }>;
+}) {
+  await assertCanAccessTurmaGrades(input.turmaId);
+
+  const payload = (input.grades ?? []).filter(
+    (grade) => grade.nota !== null && grade.nota !== undefined,
+  );
+
+  for (const grade of payload) {
+    await upsertNota({
+      avaliacaoId: input.avaliacaoId,
+      alunoId: grade.alunoId,
+      value: Number(grade.nota),
+    });
+  }
+
+  revalidatePath(`/professores/turmas/${input.turmaId}`);
+  revalidatePath(`/admin/turmas/${input.turmaId}`);
 }

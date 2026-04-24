@@ -174,7 +174,6 @@ export default function CreateUserDialog({
                 onValueChange={(value) =>
                   setForm({ ...form, role: value as Role })
                 }
-                required
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione a função" />

@@ -15,6 +15,7 @@
 /.auth/
 /test-results/
 /playwright-report/
+/logs/
 /blob-report/
 /playwright/.cache/
 # next.js
