@@ -18,6 +18,53 @@ async function requireNoteEditPermission() {
   return profile;
 }
 
+async function assertCanEditAvaliacao(input: {
+  avaliacaoId: string;
+  alunoId?: string;
+}) {
+  const profile = await requireNoteEditPermission();
+  const supabase = await createServerSupabaseClient();
+
+  const { data: avaliacao, error: avaliacaoErr } = await supabase
+    .from("avaliacoes")
+    .select("id, turma_id, nota_max, turmas!inner(professor_id)")
+    .eq("id", input.avaliacaoId)
+    .single();
+
+  if (avaliacaoErr) throw new Error(avaliacaoErr.message);
+  if (!avaliacao) throw new Error("Avaliacao nao encontrada.");
+
+  const turma = avaliacao.turmas as unknown as { professor_id: string | null };
+  const turmaId = String((avaliacao as { turma_id: string }).turma_id);
+
+  if (profile.role === "professor" && turma?.professor_id !== profile.user_id) {
+    throw new Error("Voce nao tem permissao para editar notas desta turma.");
+  }
+
+  if (input.alunoId) {
+    const { data: vinculo, error: vinculoErr } = await supabase
+      .from("turma_alunos")
+      .select("aluno_id")
+      .eq("turma_id", turmaId)
+      .eq("aluno_id", input.alunoId)
+      .maybeSingle();
+
+    if (vinculoErr) throw new Error(vinculoErr.message);
+    if (!vinculo) {
+      throw new Error("Aluno nao esta vinculado a turma desta avaliacao.");
+    }
+  }
+
+  return {
+    profile,
+    supabase,
+    turmaId,
+    notaMax: Number(
+      (avaliacao as { nota_max?: number | string }).nota_max ?? 10,
+    ),
+  };
+}
+
 export async function listNotasByAvaliacao(avaliacaoId: string) {
   const profile = await requireNoteEditPermission();
   const supabase = await createServerSupabaseClient();
@@ -73,34 +120,17 @@ export async function upsertNota(input: {
   alunoId: string;
   value: number;
 }) {
-  const profile = await requireNoteEditPermission();
-  const supabase = await createServerSupabaseClient();
-
   const avaliacaoId = String(input.avaliacaoId ?? "").trim();
   const alunoId = String(input.alunoId ?? "").trim();
   const value = Number(input.value);
-
   if (!avaliacaoId) throw new Error("avaliacaoId inválido.");
   if (!alunoId) throw new Error("alunoId inválido.");
-  if (isNaN(value) || value < 0 || value > 10) {
-    throw new Error("Nota inválida. Deve estar entre 0 e 10.");
-  }
-
-  // Verificar se o professor tem acesso à turma desta avaliação
-  if (profile.role === "professor") {
-    const { data: avaliacao, error: avaliacaoErr } = await supabase
-      .from("avaliacoes")
-      .select("turma_id, turmas!inner(professor_id)")
-      .eq("id", avaliacaoId)
-      .single();
-
-    if (avaliacaoErr) throw new Error(avaliacaoErr.message);
-    if (!avaliacao) throw new Error("Avaliação não encontrada.");
-
-    const turma = avaliacao.turmas as unknown as { professor_id: string };
-    if (turma?.professor_id !== profile.user_id) {
-      throw new Error("Você não tem permissão para editar notas desta turma.");
-    }
+  const { profile, supabase, turmaId, notaMax } = await assertCanEditAvaliacao({
+    avaliacaoId,
+    alunoId,
+  });
+  if (!Number.isFinite(value) || value < 0 || value > notaMax) {
+    throw new Error(`Nota inválida. Deve estar entre 0 e ${notaMax}.`);
   }
 
   const now = new Date().toISOString();
@@ -122,6 +152,7 @@ export async function upsertNota(input: {
       .from("notas")
       .update({
         nota: value,
+        released_by: profile.user_id,
         updated_at: now,
       })
       .eq("id", existing.id);
@@ -142,6 +173,10 @@ export async function upsertNota(input: {
   }
 
   revalidatePath("/professores/notas");
+  revalidatePath(`/professores/turmas/${turmaId}`);
+  revalidatePath(`/admin/turmas/${turmaId}`);
+  revalidatePath(`/admin/alunos/${alunoId}`);
+  revalidatePath("/aluno/notas");
   revalidatePath("/admin");
 }
 
@@ -156,12 +191,6 @@ export async function deleteNota(notaId: string) {
   }
 
   const supabase = await createServerSupabaseClient();
-
-  const { data: nota } = await supabase
-    .from("notas")
-    .select("id, nota, aluno_id, avaliacao_id")
-    .eq("id", notaId)
-    .single();
 
   const { error } = await supabase.from("notas").delete().eq("id", notaId);
 
@@ -681,13 +710,13 @@ export async function upsertNotasBulk(input: {
 
   if (!payload.length) return;
 
-  // IMPORTANTE: isso exige uma constraint unique(avaliacao_id, aluno_id) na tabela notas.
-  // Se não existir, me avise que eu adapto para fallback "select+update/insert".
-  const { error } = await supabase
-    .from("notas")
-    .upsert(payload, { onConflict: "avaliacao_id,aluno_id" });
-
-  if (error) throw new Error(error.message);
+  for (const grade of payload) {
+    await upsertNota({
+      avaliacaoId,
+      alunoId: String(grade.aluno_id),
+      value: Number(grade.nota),
+    });
+  }
 
   await logAudit({
     action: "update",
@@ -1023,7 +1052,22 @@ export async function upsertTurmaGradesAccess(input: {
   avaliacaoId: string;
   grades: Array<{ alunoId: string; nota: number | null }>;
 }) {
-  await assertCanAccessTurmaGrades(input.turmaId);
+  const { supabase } = await assertCanAccessTurmaGrades(input.turmaId);
+
+  const { data: avaliacao, error: avaliacaoErr } = await supabase
+    .from("avaliacoes")
+    .select("id, turma_id")
+    .eq("id", input.avaliacaoId)
+    .single();
+
+  if (avaliacaoErr) throw new Error(avaliacaoErr.message);
+  if (!avaliacao) throw new Error("Avaliacao nao encontrada.");
+  if (
+    String((avaliacao as { turma_id: string }).turma_id) !==
+    String(input.turmaId)
+  ) {
+    throw new Error("Avaliacao nao pertence a turma selecionada.");
+  }
 
   const payload = (input.grades ?? []).filter(
     (grade) => grade.nota !== null && grade.nota !== undefined,

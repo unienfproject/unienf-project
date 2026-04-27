@@ -174,7 +174,7 @@ export default function TeacherClassesView({
                       </Link>
 
                       <Link
-                        href={`/professores/turmas/${c.id}/notas`}
+                        href={`/professores/turmas/${c.id}`}
                         className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-900 hover:bg-slate-50"
                       >
                         Lançar Notas
