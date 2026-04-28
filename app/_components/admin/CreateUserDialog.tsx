@@ -20,6 +20,7 @@ import {
 } from "@/app/_components/ui/select";
 import { Textarea } from "@/app/_components/ui/textarea";
 import { createInternalUser } from "@/app/_lib/actions/users";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -101,7 +102,7 @@ export default function CreateUserDialog({
           observation: "",
         });
         onOpenChange(false);
-        router.refresh();
+        notifyDataChanged(router);
       } catch (err) {
         toast.error(
           err instanceof Error ? err.message : "Erro ao criar usuário.",

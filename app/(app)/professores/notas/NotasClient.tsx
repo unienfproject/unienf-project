@@ -24,6 +24,7 @@ import {
 import { Save } from "lucide-react";
 
 import { upsertGradesBulk, StudentForGradesRow } from "@/app/_lib/actions/notas";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 
 type TurmaItem = { id: string; name: string; tag: string };
 type AvaliacaoItem = { id: string; label: string };
@@ -97,8 +98,7 @@ export default function NotasClient(props: {
         grades: payload,
       });
 
-      // opcional: revalidar via server action e “atualizar” a página
-      router.refresh();
+      notifyDataChanged(router);
     });
   }
 

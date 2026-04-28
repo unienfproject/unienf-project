@@ -5,6 +5,7 @@ import {
   DocumentItem,
   updateDocumentStatus,
 } from "../../_lib/actions/documents";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import DocumentCard from "./DocumentCard";
 import Link from "next/link";
 
@@ -29,7 +30,7 @@ export default function DocumentsView({ canEdit, docs, title, subtitle }: Props)
         documentId,
         status: delivered ? "delivered" : "pending",
       });
-      router.refresh();
+      notifyDataChanged(router);
     } catch (error) {
       console.error("Erro ao atualizar status do documento:", error);
       alert(
@@ -51,7 +52,7 @@ export default function DocumentsView({ canEdit, docs, title, subtitle }: Props)
         status: rejected ? "rejected" : "pending",
         rejectedReason: rejected ? notes || null : null,
       });
-      router.refresh();
+      notifyDataChanged(router);
     } catch (error) {
       console.error("Erro ao atualizar status do documento:", error);
       alert(
@@ -72,7 +73,7 @@ export default function DocumentsView({ canEdit, docs, title, subtitle }: Props)
         status: currentDoc.status,
         observation: notes || null,
       });
-      router.refresh();
+      notifyDataChanged(router);
     } catch (error) {
       console.error("Erro ao salvar observação:", error);
       alert(

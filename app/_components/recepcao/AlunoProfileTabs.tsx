@@ -1,6 +1,7 @@
 "use client";
 
 import EtiquetasView from "@/app/_components/aluno/EtiquetasView";
+import FrequenciaTable from "@/app/_components/aluno/FrequenciaTable";
 import NoticeDetailsDialog, {
   type NoticeDetailsData,
 } from "@/app/_components/avisos/NoticeDetailsDialog";
@@ -19,6 +20,7 @@ import type { AlunoProfileData } from "@/app/_lib/actions/alunos";
 import type { AvisoForStudent } from "@/app/_lib/actions/avisos";
 import type { DocumentItem } from "@/app/_lib/actions/documents";
 import type { MensalidadeRow } from "@/app/_lib/actions/mensalidades";
+import type { FrequenciaTurmaSummary } from "@/app/_lib/actions/frequencias";
 import type { NotasByTurmaForStaff } from "@/app/_lib/actions/notas";
 import { BookOpen, Calendar, Mail, User } from "lucide-react";
 import { useState } from "react";
@@ -29,6 +31,7 @@ type Props = {
   mensalidades: MensalidadeRow[];
   avisos: AvisoForStudent[];
   notas: NotasByTurmaForStaff[];
+  frequencias: FrequenciaTurmaSummary[];
   studentId: string;
 };
 
@@ -38,6 +41,7 @@ export default function AlunoProfileTabs({
   mensalidades,
   avisos,
   notas,
+  frequencias,
   studentId,
 }: Props) {
   const [selectedNotice, setSelectedNotice] = useState<NoticeDetailsData | null>(
@@ -236,6 +240,7 @@ export default function AlunoProfileTabs({
             )}
           </div>
 
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="mb-4 text-base font-semibold text-slate-900">
               Notas
@@ -307,6 +312,9 @@ export default function AlunoProfileTabs({
                 </table>
               </div>
             )}
+          </div>
+
+          <FrequenciaTable frequencias={frequencias} />
           </div>
         </div>
       </TabsContent>

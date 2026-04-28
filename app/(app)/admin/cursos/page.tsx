@@ -17,6 +17,7 @@ import {
   deleteCurso,
   CursoRow,
 } from "@/app/_lib/actions/cursos";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 
 import {
   Table,
@@ -105,7 +106,8 @@ export default function CursosPage() {
     });
 
     setCreateOpen(false);
-    loadCursos();
+    await loadCursos();
+    notifyDataChanged();
   }
 
   async function handleEdit() {
@@ -119,7 +121,8 @@ export default function CursosPage() {
 
     setEditOpen(false);
     setSelectedCurso(null);
-    loadCursos();
+    await loadCursos();
+    notifyDataChanged();
   }
 
   async function handleDelete(curso: CursoRow) {
@@ -129,7 +132,8 @@ export default function CursosPage() {
     if (!confirm) return;
 
     await deleteCurso({ id: curso.id });
-    loadCursos();
+    await loadCursos();
+    notifyDataChanged();
   }
 
   return (

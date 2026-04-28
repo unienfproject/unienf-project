@@ -7,6 +7,8 @@ import {
   TableRow,
 } from "@/app/_components/ui/table";
 import { Award, TrendingUp } from "lucide-react";
+import FrequenciaTable from "@/app/_components/aluno/FrequenciaTable";
+import { listMyFrequencias } from "@/app/_lib/actions/frequencias";
 import { listMyNotas } from "@/app/_lib/actions/notas";
 
 export const dynamic = 'force-dynamic';
@@ -60,6 +62,7 @@ export default async function Notas() {
   }
 
   const notasPorTurma = await listMyNotas();
+  const frequencias = await listMyFrequencias();
 
   // Calcular média geral (média das médias das turmas)
   const mediasComValor = notasPorTurma
@@ -236,6 +239,8 @@ export default async function Notas() {
               </div>
             </div>
           )}
+
+          <FrequenciaTable frequencias={frequencias} />
         </div>
       </main>
     </div>

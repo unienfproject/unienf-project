@@ -23,6 +23,7 @@ import type {
   MensalidadeRow,
 } from "@/app/_lib/actions/finance";
 import { markMensalidadeAsPaid } from "@/app/_lib/actions/mensalidades";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { CreditCard } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -84,7 +85,7 @@ export default function FinanceiroAlunoView({
           dataPagamento,
         });
         toast.success("Pagamento registrado com sucesso!");
-        router.refresh();
+        notifyDataChanged(router);
       } catch (error) {
         toast.error(
           error instanceof Error

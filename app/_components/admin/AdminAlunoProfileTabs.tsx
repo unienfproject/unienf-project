@@ -1,6 +1,7 @@
 "use client";
 
 import DocumentsView from "@/app/_components/documents/DocumentsView";
+import FrequenciaTable from "@/app/_components/aluno/FrequenciaTable";
 import FinanceiroAlunoView from "@/app/_components/recepcao/FinanceiroAlunoView";
 import {
   Tabs,
@@ -11,6 +12,7 @@ import {
 import type { AlunoProfileData } from "@/app/_lib/actions/alunos";
 import type { DocumentItem } from "@/app/_lib/actions/documents";
 import type { MensalidadeRow } from "@/app/_lib/actions/mensalidades";
+import type { FrequenciaTurmaSummary } from "@/app/_lib/actions/frequencias";
 import type { NotasByTurmaForStaff } from "@/app/_lib/actions/notas";
 import { BookOpen, Calendar, Mail, Phone, User } from "lucide-react";
 
@@ -19,6 +21,7 @@ type Props = {
   docs: DocumentItem[];
   mensalidades: MensalidadeRow[];
   notas: NotasByTurmaForStaff[];
+  frequencias: FrequenciaTurmaSummary[];
   studentId: string;
 };
 
@@ -27,6 +30,7 @@ export default function AdminAlunoProfileTabs({
   docs,
   mensalidades,
   notas,
+  frequencias,
   studentId,
 }: Props) {
   return (
@@ -147,6 +151,7 @@ export default function AdminAlunoProfileTabs({
             )}
           </div>
 
+          <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="mb-4 text-base font-semibold text-slate-900">
               Notas
@@ -218,6 +223,9 @@ export default function AdminAlunoProfileTabs({
                 </table>
               </div>
             )}
+          </div>
+
+          <FrequenciaTable frequencias={frequencias} />
           </div>
         </div>
       </TabsContent>

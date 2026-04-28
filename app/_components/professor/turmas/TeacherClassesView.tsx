@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../ui/table";
+import AttendanceModal from "./AttendanceModal";
 import CreateClassModal from "./CreateClassmodal";
 
 type ClassRow = {
@@ -52,6 +53,7 @@ export default function TeacherClassesView({
 }) {
   const [query, setQuery] = useState("");
   const [openCreate, setOpenCreate] = useState(false);
+  const [attendanceClass, setAttendanceClass] = useState<ClassRow | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
@@ -180,12 +182,14 @@ export default function TeacherClassesView({
                         Lançar Notas
                       </Link>
 
-                      <Link
-                        href={`/professores/turmas/${c.id}/frequencia`}
-                        className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-900 hover:bg-slate-50"
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setAttendanceClass(c)}
+                        className="h-auto rounded-md px-3 py-2 text-xs"
                       >
                         Frequência
-                      </Link>
+                      </Button>
 
                       <Button
                         type="button"
@@ -231,6 +235,13 @@ export default function TeacherClassesView({
         teacherName={teacherName}
         subjects={subjects}
         students={students}
+      />
+      <AttendanceModal
+        turma={attendanceClass}
+        open={attendanceClass !== null}
+        onOpenChange={(open) => {
+          if (!open) setAttendanceClass(null);
+        }}
       />
     </div>
   );

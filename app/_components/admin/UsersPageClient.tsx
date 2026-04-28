@@ -2,24 +2,10 @@
 
 import CreateUserDialog from "@/app/_components/admin/CreateUserDialog";
 import { Button } from "@/app/_components/ui/button";
-import { Plus, UserPlus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { UserPlus } from "lucide-react";
 import { useState } from "react";
 
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  telefone: string;
-  role: string;
-};
-
-interface UsersPageClientProps {
-  users: User[];
-}
-
-export default function UsersPageClient({ users }: UsersPageClientProps) {
-  const router = useRouter();
+export default function UsersPageClient() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
@@ -36,12 +22,7 @@ export default function UsersPageClient({ users }: UsersPageClientProps) {
 
       <CreateUserDialog
         open={dialogOpen}
-        onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) {
-            router.refresh();
-          }
-        }}
+        onOpenChange={setDialogOpen}
       />
     </>
   );

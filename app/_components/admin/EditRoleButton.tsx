@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/app/_components/ui/select";
 import { updateUserRole } from "@/app/_lib/actions/users";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { Pencil } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -53,7 +54,7 @@ export default function EditRoleButton({
         toast.success(
           `Role de ${userName} alterada de "${currentRole}" para "${selectedRole}".`,
         );
-        router.refresh();
+        notifyDataChanged(router);
         setIsOpen(false);
       } catch (err) {
         toast.error(

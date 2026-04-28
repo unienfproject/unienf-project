@@ -7,6 +7,7 @@ import {
   listDisciplinas,
   updateDisciplina,
 } from "@/app/_lib/actions/disciplinas";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
@@ -96,13 +97,15 @@ export default function DisciplinasPage() {
     }
 
     setModalOpen(false);
-    load();
+    await load();
+    notifyDataChanged();
   }
 
   async function handleDelete(id: string) {
     if (!confirm("Tem certeza que deseja excluir esta disciplina?")) return;
     await deleteDisciplina(id);
-    load();
+    await load();
+    notifyDataChanged();
   }
 
   function openInfo(disciplina: Disciplina) {

@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { Button } from "@/app/_components/ui/button";
 import { removeStudentFromClass } from "@/app/_lib/actions/classes";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { useRouter } from "next/navigation";
 
 export default function RemoveStudentButton({
@@ -29,7 +30,7 @@ export default function RemoveStudentButton({
           studentId,
           teacherId,
         });
-        router.refresh();
+        notifyDataChanged(router);
       } catch (error) {
         alert(error instanceof Error ? error.message : "Erro ao remover aluno.");
       }

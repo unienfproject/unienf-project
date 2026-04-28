@@ -4,6 +4,7 @@ import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
 import { Label } from "@/app/_components/ui/label";
 import { updateStudentProfile } from "@/app/_lib/actions/recepcao";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { Check, Pencil, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -47,7 +48,7 @@ export default function EditDadosPessoais({
         });
         toast.success("Dados atualizados com sucesso!");
         setIsEditing(false);
-        router.refresh();
+        notifyDataChanged(router);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Erro ao atualizar dados.",

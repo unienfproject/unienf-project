@@ -23,6 +23,7 @@ import {
   listStudentsForPicker,
   listSubjectsForPicker,
 } from "@/app/_lib/actions/classes";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { listProfessoresForPicker } from "@/app/_lib/actions/turmas";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
@@ -130,7 +131,7 @@ export default function CreateTurmaDialog({
         });
         setSelectedAlunoIds([]);
         onOpenChange(false);
-        router.refresh();
+        notifyDataChanged(router);
       } catch (err) {
         toast.error(err instanceof Error ? err.message : "Erro ao criar turma.");
       }

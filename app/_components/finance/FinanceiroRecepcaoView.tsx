@@ -7,6 +7,7 @@ import {
   type PaymentMethod,
   type MensalidadeRow,
 } from "@/app/_lib/actions/mensalidades";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -172,8 +173,8 @@ export default function FinanceiroRecepcaoView() {
                         formaPagamento: data.paymentMethod,
                         dataPagamento: data.paidAt,
                       });
-                      router.refresh();
                       await load();
+                      notifyDataChanged(router);
                     } catch (error) {
                       console.error(
                         "Erro ao marcar mensalidade como paga:",

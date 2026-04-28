@@ -46,6 +46,7 @@ import {
   deleteProfessor,
   type ProfessorRow,
 } from "@/app/_lib/actions/professores";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { Label } from "@/app/_components/ui/label";
 
 const PAGE_SIZE = 10;
@@ -86,6 +87,7 @@ export default function Professores() {
 
       setIsEditOpen(false);
       setEditingProfessor(null);
+      notifyDataChanged(router);
     } finally {
       setSaving(false);
     }
@@ -99,6 +101,7 @@ export default function Professores() {
     if (!confirmed) return;
 
     await deleteProfessor(professor.id);
+    notifyDataChanged(router);
   }
 
   return (

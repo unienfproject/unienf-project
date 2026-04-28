@@ -12,6 +12,7 @@ import {
 import { Input } from "@/app/_components/ui/input";
 import { Label } from "@/app/_components/ui/label";
 import { createCurso } from "@/app/_lib/actions/cursos";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -56,7 +57,7 @@ export default function CreateCursoDialog({
           durationMonths: "",
         });
         onOpenChange(false);
-        router.refresh();
+        notifyDataChanged(router);
       } catch (err) {
         toast.error(
           err instanceof Error ? err.message : "Erro ao criar curso.",

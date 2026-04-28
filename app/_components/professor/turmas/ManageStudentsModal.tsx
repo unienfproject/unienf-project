@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
 import { addStudentToClass, removeStudentFromClass } from "@/app/_lib/actions/classes";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { useRouter } from "next/navigation";
 import { X, Plus, Search } from "lucide-react";
 
@@ -49,7 +50,7 @@ export default function ManageStudentsModal({
           studentId,
           teacherId,
         });
-        router.refresh();
+        notifyDataChanged(router);
       } catch (error) {
         alert(error instanceof Error ? error.message : "Erro ao adicionar aluno.");
       }
@@ -68,7 +69,7 @@ export default function ManageStudentsModal({
           studentId,
           teacherId,
         });
-        router.refresh();
+        notifyDataChanged(router);
       } catch (error) {
         alert(error instanceof Error ? error.message : "Erro ao remover aluno.");
       }

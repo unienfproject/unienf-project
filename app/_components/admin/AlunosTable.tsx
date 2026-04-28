@@ -38,6 +38,7 @@ import {
   updateAlunoProfile,
   type AlunoRow,
 } from "@/app/_lib/actions/alunos";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 
 const PAGE_SIZE = 10;
 
@@ -76,6 +77,7 @@ export default function AlunosTable() {
 
       setIsEditOpen(false);
       setEditingAluno(null);
+      notifyDataChanged(router);
     } finally {
       setSaving(false);
     }

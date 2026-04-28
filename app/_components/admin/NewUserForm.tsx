@@ -20,6 +20,7 @@ import {
 } from "@/app/_components/ui/select";
 
 import { createInternalUser } from "@/app/_lib/actions/users";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 
 type Role = "recepção" | "coordenação" | "administrativo" | "professor";
 
@@ -82,7 +83,7 @@ export default function NewUserForm() {
         });
 
         toast.success("Usuário criado com sucesso.");
-        router.refresh();
+        notifyDataChanged(router);
 
         setForm({
           name: "",

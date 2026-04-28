@@ -4,6 +4,7 @@ import { Button } from "@/app/_components/ui/button";
 import { Input } from "@/app/_components/ui/input";
 import { Textarea } from "@/app/_components/ui/textarea";
 import { createDisciplina } from "@/app/_lib/actions/disciplinas";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -32,7 +33,7 @@ export default function DisciplinaForm() {
         toast.success("Disciplina criada com sucesso.");
         setName("");
         setConteudo("");
-        router.refresh();
+        notifyDataChanged(router);
       } catch (error) {
         toast.error(
           error instanceof Error ? error.message : "Erro ao criar disciplina.",

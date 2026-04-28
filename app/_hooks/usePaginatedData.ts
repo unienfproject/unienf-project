@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { DATA_REFRESH_EVENT } from "@/app/_lib/client/dataRefresh";
 import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 
 type Fetcher<T> = (params: {
@@ -38,6 +39,18 @@ export function usePaginatedData<T>(fetcher: Fetcher<T>, pageSize = 10) {
     load(1, "");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    function handleDataRefresh() {
+      load(safePage, search);
+    }
+
+    window.addEventListener(DATA_REFRESH_EVENT, handleDataRefresh);
+    return () => {
+      window.removeEventListener(DATA_REFRESH_EVENT, handleDataRefresh);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [safePage, search]);
 
   function onSearchChange(value: string) {
     setSearch(value);

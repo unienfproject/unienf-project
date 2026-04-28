@@ -4,6 +4,7 @@ import { Button } from "@/app/_components/ui/button";
 import { getAlunoProfile } from "@/app/_lib/actions/alunos";
 import { listAvisosForStudent } from "@/app/_lib/actions/avisos";
 import { listStudentDocuments } from "@/app/_lib/actions/documents";
+import { listFrequenciasByStudent } from "@/app/_lib/actions/frequencias";
 import { listMensalidadesByStudent } from "@/app/_lib/actions/mensalidades";
 import { listNotasByStudent } from "@/app/_lib/actions/notas";
 import { getUserProfile } from "@/app/_lib/actions/profile";
@@ -63,6 +64,7 @@ export default async function RecepcaoAlunoProfilePage({
   const mensalidades = await listMensalidadesByStudent(studentId);
   const avisos = await listAvisosForStudent(studentId);
   const notas = await listNotasByStudent(studentId);
+  const frequencias = await listFrequenciasByStudent(studentId);
 
   return (
     <div className="flex flex-col">
@@ -94,6 +96,7 @@ export default async function RecepcaoAlunoProfilePage({
           mensalidades={mensalidades}
           avisos={avisos}
           notas={notas}
+          frequencias={frequencias}
           studentId={studentId}
         />
       </div>

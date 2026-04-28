@@ -12,6 +12,7 @@ import {
 import { Input } from "@/app/_components/ui/input";
 import { Label } from "@/app/_components/ui/label";
 import { createAluno } from "@/app/_lib/actions/alunos";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
@@ -88,7 +89,7 @@ export default function CreateAlunoDialog({
           dateOfBirth: "",
         });
         onOpenChange(false);
-        router.refresh();
+        notifyDataChanged(router);
       } catch (err) {
         toast.error(
           err instanceof Error ? err.message : "Erro ao matricular aluno.",

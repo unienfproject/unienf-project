@@ -190,6 +190,22 @@ export type Nota = {
   updated_at: Timestamp;
 };
 
+export type FrequenciaTipo = "diaria" | "periodo";
+
+export type Frequencia = {
+  id: UUID;
+  turma_id: UUID;
+  aluno_id: UUID;
+  tipo: FrequenciaTipo;
+  data: DateString | null;
+  total_aulas: number;
+  faltas: number;
+  presente: boolean | null;
+  released_by: UUID | null;
+  created_at: Timestamp;
+  updated_at: Timestamp;
+};
+
 export type ObservacaoPedagogica = {
   id: UUID;
   aluno_id: UUID | null;

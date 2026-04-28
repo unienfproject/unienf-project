@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/app/_components/ui/select";
 import { createClass } from "@/app/_lib/actions/classes";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -98,7 +99,7 @@ export default function CreateClassModal({
         toast.success("Turma criada com sucesso!");
         resetForm();
         onOpenChange(false);
-        router.refresh();
+        notifyDataChanged(router);
       } catch (err) {
         toast.error(
           err instanceof Error ? err.message : "Erro ao criar turma.",

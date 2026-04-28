@@ -2,26 +2,10 @@
 
 import CreateAlunoDialog from "@/app/_components/admin/CreateAlunoDialog";
 import { Button } from "@/app/_components/ui/button";
-import { Plus, UserPlus } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { UserPlus } from "lucide-react";
 import { useState } from "react";
 
-type Aluno = {
-  id: string;
-  name: string;
-  email: string;
-  telefone: string | null;
-  age?: number | null;
-  dateOfBirth?: string | null;
-  createdAt: string;
-};
-
-interface AlunosPageClientProps {
-  alunos: Aluno[];
-}
-
-export default function AlunosPageClient({ alunos }: AlunosPageClientProps) {
-  const router = useRouter();
+export default function AlunosPageClient() {
   const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
@@ -41,12 +25,7 @@ export default function AlunosPageClient({ alunos }: AlunosPageClientProps) {
 
       <CreateAlunoDialog
         open={dialogOpen}
-        onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) {
-            router.refresh();
-          }
-        }}
+        onOpenChange={setDialogOpen}
       />
     </>
   );

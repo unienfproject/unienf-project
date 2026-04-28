@@ -232,7 +232,7 @@ export async function listNotasByStudent(
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
 
-  const allowedRoles = ["recepção", "administrativo", "coordenação"];
+  const allowedRoles = ["recepção", "administrativo", "coordenação", "professor"];
   if (!allowedRoles.includes(profile.role ?? "")) {
     throw new Error("Sem permissão para listar notas do aluno.");
   }
@@ -257,7 +257,7 @@ export async function listNotasByStudent(
   const turmaIds = turmaAlunos.map((ta) => ta.turma_id);
 
   // Buscar dados das turmas
-  const { data: turmas, error: turmasDataError } = await supabase
+  let turmasQuery = supabase
     .from("turmas")
     .select(
       `
@@ -268,6 +268,12 @@ export async function listNotasByStudent(
     `,
     )
     .in("id", turmaIds);
+
+  if (profile.role === "professor") {
+    turmasQuery = turmasQuery.eq("professor_id", profile.user_id);
+  }
+
+  const { data: turmas, error: turmasDataError } = await turmasQuery;
 
   if (turmasDataError) {
     console.warn(

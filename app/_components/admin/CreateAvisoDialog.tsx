@@ -25,6 +25,7 @@ import {
   listTurmasForAvisoPicker,
 } from "@/app/_lib/actions/avisos";
 import { createAvisoAdmin } from "@/app/_lib/actions/notices";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
 import { toast } from "sonner";
@@ -115,7 +116,7 @@ export default function CreateAvisoDialog({
         });
         setSelectedAlunoIds([]);
         onOpenChange(false);
-        router.refresh();
+        notifyDataChanged(router);
       } catch (err) {
         toast.error(
           err instanceof Error ? err.message : "Erro ao criar aviso.",

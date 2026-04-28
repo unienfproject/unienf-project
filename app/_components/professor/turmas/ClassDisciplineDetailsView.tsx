@@ -34,6 +34,7 @@ import {
 } from "@/app/_components/ui/table";
 import { upsertTurmaGradesAccess } from "@/app/_lib/actions/notas";
 import type { StudentForGradesRow } from "@/app/_lib/actions/notas";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import ManageStudentsModal from "@/app/_components/professor/turmas/ManageStudentsModal";
 import RemoveStudentButton from "@/app/_components/professor/turmas/RemoveStudentButton";
 
@@ -133,7 +134,7 @@ export default function ClassDisciplineDetailsView({
         grades,
       });
 
-      router.refresh();
+      notifyDataChanged(router);
     });
   }
 
