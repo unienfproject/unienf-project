@@ -76,6 +76,8 @@ test.describe.serial("Administrativo - fluxos reais de criacao", () => {
     await page.locator("#email").fill(`e2e.aluno.${run}@example.com`);
     await page.locator("#dateOfBirth").fill("2000-01-15");
     await page.locator("#password").fill(password);
+    await page.locator("#valorTotalCurso").fill("2400");
+    await page.locator("#quantidadeParcelas").fill("12");
     await submitDialog(page, /Realizar Matr/i);
 
     await expectDialogClosed(page);

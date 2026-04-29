@@ -96,6 +96,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const professorMenuItems = [
     { title: "Visão Geral", url: "/professores", icon: LayoutDashboard },
     { title: "Minhas Turmas", url: "/professores/turmas", icon: FolderOpen },
+    { title: "Meus Alunos", url: "/professores/alunos", icon: Users },
     { title: "Disciplinas", url: "/professores/disciplinas", icon: Book },
     { title: "Lançar Notas", url: "/professores/notas", icon: ClipboardList },
     { title: "Avisos", url: "/professores/avisos", icon: Bell },

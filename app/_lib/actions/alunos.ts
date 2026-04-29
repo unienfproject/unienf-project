@@ -55,6 +55,73 @@ function calculateAge(dateOfBirth: string): number {
   return age;
 }
 
+function normalizeMoney(value: unknown) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return null;
+  return Math.round(n * 100) / 100;
+}
+
+function addMonthsUTC(date: Date, months: number) {
+  return new Date(
+    Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + months, 1),
+  );
+}
+
+function toISODateUTC(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
+
+function buildParcelas(valorTotal: number, quantidadeParcelas: number) {
+  const totalCents = Math.round(valorTotal * 100);
+  const baseCents = Math.floor(totalCents / quantidadeParcelas);
+  const remainder = totalCents % quantidadeParcelas;
+
+  return Array.from({ length: quantidadeParcelas }, (_, index) => {
+    const cents = baseCents + (index < remainder ? 1 : 0);
+    return cents / 100;
+  });
+}
+
+async function generateMensalidadesFromAlunoPlan(input: {
+  admin: ReturnType<typeof getAdminSupabase>;
+  alunoId: string;
+  valorTotalCurso: number;
+  quantidadeParcelas: number;
+}) {
+  const now = new Date().toISOString();
+  const today = new Date();
+  const firstCompetence = new Date(
+    Date.UTC(today.getFullYear(), today.getMonth(), 1),
+  );
+  const valores = buildParcelas(input.valorTotalCurso, input.quantidadeParcelas);
+
+  const rows = valores.map((valor, index) => {
+    const competenceDate = addMonthsUTC(firstCompetence, index);
+    const dueDate = new Date(
+      Date.UTC(
+        competenceDate.getUTCFullYear(),
+        competenceDate.getUTCMonth(),
+        10,
+      ),
+    );
+
+    return {
+      aluno_id: input.alunoId,
+      turma_id: null,
+      competence_year: competenceDate.getUTCFullYear(),
+      competence_month: competenceDate.getUTCMonth() + 1,
+      due_date: toISODateUTC(dueDate),
+      status: "pendente",
+      predicted_value: valor,
+      created_at: now,
+      updated_at: now,
+    };
+  });
+
+  const { error } = await input.admin.from("mensalidades").insert(rows);
+  if (error) throw new Error(error.message);
+}
+
 export async function createAluno(input: {
   name: string;
   cpf: string;
@@ -62,6 +129,8 @@ export async function createAluno(input: {
   email: string;
   password: string;
   dateOfBirth: string;
+  valorTotalCurso: number;
+  quantidadeParcelas: number;
 }) {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
@@ -77,6 +146,8 @@ export async function createAluno(input: {
   const email = input.email.trim().toLowerCase();
   const password = input.password;
   const dateOfBirth = input.dateOfBirth;
+  const valorTotalCurso = normalizeMoney(input.valorTotalCurso);
+  const quantidadeParcelas = Number(input.quantidadeParcelas);
 
   if (!name) throw new Error("Nome é obrigatório.");
   if (cpf.length !== 11) throw new Error("CPF inválido.");
@@ -84,6 +155,17 @@ export async function createAluno(input: {
   if (!isValidEmail(email)) throw new Error("E-mail inválido.");
   if (password.length < 6) throw new Error("Senha muito curta.");
   if (!dateOfBirth) throw new Error("Data de nascimento é obrigatória.");
+
+  if (valorTotalCurso === null || valorTotalCurso <= 0) {
+    throw new Error("Valor total do curso deve ser maior que zero.");
+  }
+  if (
+    !Number.isInteger(quantidadeParcelas) ||
+    quantidadeParcelas < 1 ||
+    quantidadeParcelas > 120
+  ) {
+    throw new Error("Quantidade de parcelas deve estar entre 1 e 120.");
+  }
 
   const age = calculateAge(dateOfBirth);
 
@@ -146,6 +228,8 @@ export async function createAluno(input: {
     user_id: userId,
     age,
     date_of_birth: dateOfBirth,
+    valor_total_curso: valorTotalCurso,
+    quantidade_parcelas: quantidadeParcelas,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   });
@@ -164,11 +248,25 @@ export async function createAluno(input: {
     throw new Error(alunoError.message);
   }
 
+  await generateMensalidadesFromAlunoPlan({
+    admin,
+    alunoId: userId,
+    valorTotalCurso,
+    quantidadeParcelas,
+  });
+
   await logAudit({
     action: "create",
     entity: "user",
     entityId: userId,
-    newValue: { name, email, role: "aluno", dateOfBirth },
+    newValue: {
+      name,
+      email,
+      role: "aluno",
+      dateOfBirth,
+      valorTotalCurso,
+      quantidadeParcelas,
+    },
     description: `Aluno ${name} matriculado`,
   });
 
@@ -333,6 +431,8 @@ export type AlunoProfileData = {
   telefone: string | null;
   age: number | null;
   dateOfBirth: string | null;
+  valorTotalCurso: number | null;
+  quantidadeParcelas: number | null;
   turmas: Array<{
     id: string;
     name: string;
@@ -497,7 +597,7 @@ export async function getAlunoProfile(
       phone,
       created_at,
       updated_at,
-      alunos:alunos!alunos_user_id_fkey(age, date_of_birth)
+      alunos:alunos!alunos_user_id_fkey(age, date_of_birth, valor_total_curso, quantidade_parcelas)
     `,
     )
     .eq("user_id", id)
@@ -584,6 +684,14 @@ export async function getAlunoProfile(
     telefone: profileData.phone,
     age: dadosAluno?.age ?? null,
     dateOfBirth: dadosAluno?.date_of_birth ?? null,
+    valorTotalCurso:
+      dadosAluno?.valor_total_curso != null
+        ? Number(dadosAluno.valor_total_curso)
+        : null,
+    quantidadeParcelas:
+      dadosAluno?.quantidade_parcelas != null
+        ? Number(dadosAluno.quantidade_parcelas)
+        : null,
     turmas,
     createdAt: profileData.created_at,
     updatedAt: profileData.updated_at,
@@ -724,6 +832,164 @@ export async function updateAlunoProfile(input: {
 
   revalidatePath("/admin/alunos");
   revalidatePath("/admin");
+}
+
+export async function updateAlunoPlanoFinanceiro(input: {
+  alunoId: string;
+  valorTotalCurso: number;
+  quantidadeParcelas: number;
+}) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("SessÃ£o invÃ¡lida.");
+  if (profile.role !== "administrativo") {
+    throw new Error("Sem permissÃ£o para editar financeiro de alunos.");
+  }
+
+  const alunoId = String(input.alunoId ?? "").trim();
+  if (!alunoId) throw new Error("Aluno invÃ¡lido.");
+
+  const valorTotalCurso = normalizeMoney(input.valorTotalCurso);
+  const quantidadeParcelas = Number(input.quantidadeParcelas);
+
+  if (valorTotalCurso === null || valorTotalCurso <= 0) {
+    throw new Error("Valor total do curso deve ser maior que zero.");
+  }
+  if (
+    !Number.isInteger(quantidadeParcelas) ||
+    quantidadeParcelas < 1 ||
+    quantidadeParcelas > 120
+  ) {
+    throw new Error("Quantidade de parcelas deve estar entre 1 e 120.");
+  }
+
+  const admin = getAdminSupabase();
+  const now = new Date().toISOString();
+
+  const { data: alunoAtual, error: alunoAtualError } = await admin
+    .from("alunos")
+    .select("user_id, valor_total_curso, quantidade_parcelas")
+    .eq("user_id", alunoId)
+    .single();
+
+  if (alunoAtualError) throw new Error(alunoAtualError.message);
+  if (!alunoAtual) throw new Error("Aluno nÃ£o encontrado.");
+
+  const { error: updateAlunoError } = await admin
+    .from("alunos")
+    .update({
+      valor_total_curso: valorTotalCurso,
+      quantidade_parcelas: quantidadeParcelas,
+      updated_at: now,
+    })
+    .eq("user_id", alunoId);
+
+  if (updateAlunoError) throw new Error(updateAlunoError.message);
+
+  const { data: mensalidadesAtuais, error: mensalidadesError } = await admin
+    .from("mensalidades")
+    .select("id, competence_year, competence_month, status")
+    .eq("aluno_id", alunoId)
+    .is("turma_id", null)
+    .order("competence_year", { ascending: true })
+    .order("competence_month", { ascending: true });
+
+  if (mensalidadesError) throw new Error(mensalidadesError.message);
+
+  const mensalidadeIds = (mensalidadesAtuais ?? []).map((m) => String(m.id));
+  const mensalidadesComPagamento = new Set<string>();
+
+  if (mensalidadeIds.length > 0) {
+    const { data: pagamentos, error: pagamentosError } = await admin
+      .from("pagamentos")
+      .select("mensalidade_id")
+      .in("mensalidade_id", mensalidadeIds);
+
+    if (pagamentosError) throw new Error(pagamentosError.message);
+    for (const pagamento of pagamentos ?? []) {
+      mensalidadesComPagamento.add(String(pagamento.mensalidade_id));
+    }
+  }
+
+  const today = new Date();
+  const firstCompetence = new Date(
+    Date.UTC(today.getFullYear(), today.getMonth(), 1),
+  );
+  const valores = buildParcelas(valorTotalCurso, quantidadeParcelas);
+  const existingByIndex = mensalidadesAtuais ?? [];
+
+  for (let index = 0; index < valores.length; index++) {
+    const competenceDate = addMonthsUTC(firstCompetence, index);
+    const dueDate = new Date(
+      Date.UTC(
+        competenceDate.getUTCFullYear(),
+        competenceDate.getUTCMonth(),
+        10,
+      ),
+    );
+    const existing = existingByIndex[index];
+
+    if (existing) {
+      const { error } = await admin
+        .from("mensalidades")
+        .update({
+          competence_year: competenceDate.getUTCFullYear(),
+          competence_month: competenceDate.getUTCMonth() + 1,
+          due_date: toISODateUTC(dueDate),
+          predicted_value: valores[index],
+          status: existing.status === "cancelado" ? "pendente" : existing.status,
+          updated_at: now,
+        })
+        .eq("id", existing.id);
+
+      if (error) throw new Error(error.message);
+      continue;
+    }
+
+    const { error } = await admin.from("mensalidades").insert({
+      aluno_id: alunoId,
+      turma_id: null,
+      competence_year: competenceDate.getUTCFullYear(),
+      competence_month: competenceDate.getUTCMonth() + 1,
+      due_date: toISODateUTC(dueDate),
+      status: "pendente",
+      predicted_value: valores[index],
+      created_at: now,
+      updated_at: now,
+    });
+
+    if (error) throw new Error(error.message);
+  }
+
+  const extras = existingByIndex.slice(valores.length);
+  for (const extra of extras) {
+    const hasPayment = mensalidadesComPagamento.has(String(extra.id));
+    const query = admin.from("mensalidades");
+    const { error } = hasPayment
+      ? await query
+          .update({ status: "cancelado", updated_at: now })
+          .eq("id", extra.id)
+      : await query.delete().eq("id", extra.id);
+
+    if (error) throw new Error(error.message);
+  }
+
+  await logAudit({
+    action: "update",
+    entity: "aluno",
+    entityId: alunoId,
+    oldValue: {
+      valorTotalCurso: alunoAtual.valor_total_curso,
+      quantidadeParcelas: alunoAtual.quantidade_parcelas,
+    },
+    newValue: { valorTotalCurso, quantidadeParcelas },
+    description: `Plano financeiro do aluno atualizado por ${profile.name ?? profile.email}`,
+  });
+
+  revalidatePath(`/admin/alunos/${alunoId}`);
+  revalidatePath(`/recepcao/alunos/${alunoId}`);
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/recepcao/financeiro");
+  revalidatePath("/aluno/financeiro");
 }
 
 export async function listAlunosPaginated(params: {

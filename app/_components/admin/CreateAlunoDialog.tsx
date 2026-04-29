@@ -38,6 +38,8 @@ export default function CreateAlunoDialog({
     email: "",
     password: "",
     dateOfBirth: "",
+    valorTotalCurso: "",
+    quantidadeParcelas: "",
   });
 
   function handleSubmit(e: React.FormEvent) {
@@ -68,6 +70,21 @@ export default function CreateAlunoDialog({
       return;
     }
 
+    const valorTotalCurso = Number(form.valorTotalCurso.replace(",", "."));
+    if (!Number.isFinite(valorTotalCurso) || valorTotalCurso <= 0) {
+      toast.error("Valor total do curso deve ser maior que zero.");
+      return;
+    }
+    const quantidadeParcelas = Number(form.quantidadeParcelas);
+    if (
+      !Number.isInteger(quantidadeParcelas) ||
+      quantidadeParcelas < 1 ||
+      quantidadeParcelas > 120
+    ) {
+      toast.error("Quantidade de parcelas deve estar entre 1 e 120.");
+      return;
+    }
+
     startTransition(async () => {
       try {
         await createAluno({
@@ -77,6 +94,8 @@ export default function CreateAlunoDialog({
           email: form.email.trim(),
           password: form.password,
           dateOfBirth: form.dateOfBirth,
+          valorTotalCurso,
+          quantidadeParcelas,
         });
 
         toast.success("Aluno matriculado com sucesso!");
@@ -87,6 +106,8 @@ export default function CreateAlunoDialog({
           email: "",
           password: "",
           dateOfBirth: "",
+          valorTotalCurso: "",
+          quantidadeParcelas: "",
         });
         onOpenChange(false);
         notifyDataChanged(router);
@@ -194,6 +215,39 @@ export default function CreateAlunoDialog({
                   )}
                 </button>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="valorTotalCurso">Valor total do curso</Label>
+              <Input
+                id="valorTotalCurso"
+                type="number"
+                min="0.01"
+                step="0.01"
+                value={form.valorTotalCurso}
+                onChange={(e) =>
+                  setForm({ ...form, valorTotalCurso: e.target.value })
+                }
+                placeholder="Ex.: 2400.00"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quantidadeParcelas">Quantidade de parcelas</Label>
+              <Input
+                id="quantidadeParcelas"
+                type="number"
+                min="1"
+                max="120"
+                step="1"
+                value={form.quantidadeParcelas}
+                onChange={(e) =>
+                  setForm({ ...form, quantidadeParcelas: e.target.value })
+                }
+                placeholder="Ex.: 12"
+                required
+              />
             </div>
           </div>
 

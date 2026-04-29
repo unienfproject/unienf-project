@@ -3,6 +3,8 @@
 import DocumentsView from "@/app/_components/documents/DocumentsView";
 import FrequenciaTable from "@/app/_components/aluno/FrequenciaTable";
 import FinanceiroAlunoView from "@/app/_components/recepcao/FinanceiroAlunoView";
+import { Button } from "@/app/_components/ui/button";
+import { Input } from "@/app/_components/ui/input";
 import {
   Tabs,
   TabsContent,
@@ -14,7 +16,13 @@ import type { DocumentItem } from "@/app/_lib/actions/documents";
 import type { MensalidadeRow } from "@/app/_lib/actions/mensalidades";
 import type { FrequenciaTurmaSummary } from "@/app/_lib/actions/frequencias";
 import type { NotasByTurmaForStaff } from "@/app/_lib/actions/notas";
+import { updateAlunoPlanoFinanceiro } from "@/app/_lib/actions/alunos";
+import { notifyDataChanged } from "@/app/_lib/client/dataRefresh";
 import { BookOpen, Calendar, Mail, Phone, User } from "lucide-react";
+import { useRouter } from "next/navigation";
+import type { FormEvent } from "react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 type Props = {
   alunoData: AlunoProfileData;
@@ -293,11 +301,135 @@ export default function AdminAlunoProfileTabs({
       </TabsContent>
 
       <TabsContent value="financeiro" className="mt-6">
+        <PlanoFinanceiroForm alunoData={alunoData} studentId={studentId} />
         <FinanceiroAlunoView
           mensalidades={mensalidades}
           studentId={studentId}
         />
       </TabsContent>
     </Tabs>
+  );
+}
+
+function PlanoFinanceiroForm({
+  alunoData,
+  studentId,
+}: {
+  alunoData: AlunoProfileData;
+  studentId: string;
+}) {
+  const router = useRouter();
+  const [pending, startTransition] = useTransition();
+  const [valorTotalCurso, setValorTotalCurso] = useState(
+    alunoData.valorTotalCurso?.toString() ?? "",
+  );
+  const [quantidadeParcelas, setQuantidadeParcelas] = useState(
+    alunoData.quantidadeParcelas?.toString() ?? "",
+  );
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+
+    const valor = Number(valorTotalCurso.replace(",", "."));
+    const parcelas = Number(quantidadeParcelas);
+
+    if (!Number.isFinite(valor) || valor <= 0) {
+      toast.error("Valor total do curso deve ser maior que zero.");
+      return;
+    }
+
+    if (!Number.isInteger(parcelas) || parcelas < 1 || parcelas > 120) {
+      toast.error("Quantidade de parcelas deve estar entre 1 e 120.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        await updateAlunoPlanoFinanceiro({
+          alunoId: studentId,
+          valorTotalCurso: valor,
+          quantidadeParcelas: parcelas,
+        });
+        toast.success("Plano financeiro atualizado.");
+        notifyDataChanged(router);
+      } catch (error) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Erro ao atualizar plano financeiro.",
+        );
+      }
+    });
+  }
+
+  const valorParcela =
+    Number(valorTotalCurso.replace(",", ".")) / Number(quantidadeParcelas);
+
+  return (
+    <form
+      onSubmit={handleSubmit}
+      className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+    >
+      <div className="flex flex-col gap-1">
+        <h3 className="text-base font-semibold text-slate-900">
+          Plano financeiro
+        </h3>
+        <p className="text-sm text-slate-600">
+          Alterar estes dados recalcula as parcelas mensais do aluno.
+        </p>
+      </div>
+
+      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-[1fr_1fr_auto] md:items-end">
+        <div className="space-y-2">
+          <label
+            htmlFor="valorTotalCurso"
+            className="text-sm font-medium text-slate-700"
+          >
+            Valor total do curso
+          </label>
+          <Input
+            id="valorTotalCurso"
+            type="number"
+            min="0.01"
+            step="0.01"
+            value={valorTotalCurso}
+            onChange={(e) => setValorTotalCurso(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label
+            htmlFor="quantidadeParcelas"
+            className="text-sm font-medium text-slate-700"
+          >
+            Quantidade de parcelas
+          </label>
+          <Input
+            id="quantidadeParcelas"
+            type="number"
+            min="1"
+            max="120"
+            step="1"
+            value={quantidadeParcelas}
+            onChange={(e) => setQuantidadeParcelas(e.target.value)}
+            required
+          />
+        </div>
+
+        <Button type="submit" disabled={pending}>
+          {pending ? "Salvando..." : "Salvar plano"}
+        </Button>
+      </div>
+
+      {Number.isFinite(valorParcela) && valorParcela > 0 ? (
+        <p className="mt-3 text-sm text-slate-600">
+          Valor aproximado por parcela:{" "}
+          <span className="font-medium text-slate-900">
+            R$ {valorParcela.toFixed(2)}
+          </span>
+        </p>
+      ) : null}
+    </form>
   );
 }

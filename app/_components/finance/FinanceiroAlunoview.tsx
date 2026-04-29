@@ -73,6 +73,9 @@ export default async function FinanceiroAlunoView({
                     Valor pago
                   </th>
                   <th className="p-3 text-left font-semibold text-slate-700">
+                    Faltante
+                  </th>
+                  <th className="p-3 text-left font-semibold text-slate-700">
                     Forma
                   </th>
                   <th className="p-3 text-left font-semibold text-slate-700">
@@ -108,6 +111,9 @@ export default async function FinanceiroAlunoView({
                       {r.valorPago ? `R$ ${r.valorPago.toFixed(2)}` : "-"}
                     </td>
                     <td className="p-3 text-slate-700">
+                      R$ {r.valorFaltante.toFixed(2)}
+                    </td>
+                    <td className="p-3 text-slate-700">
                       {r.formaPagamento ?? "-"}
                     </td>
                     <td className="p-3 text-slate-700">
@@ -117,7 +123,7 @@ export default async function FinanceiroAlunoView({
                 ))}
                 {!rows.length ? (
                   <tr>
-                    <td colSpan={7} className="p-6 text-center text-slate-500">
+                    <td colSpan={8} className="p-6 text-center text-slate-500">
                       Sem mensalidades geradas.
                     </td>
                   </tr>

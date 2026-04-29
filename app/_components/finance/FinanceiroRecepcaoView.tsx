@@ -149,6 +149,9 @@ export default function FinanceiroRecepcaoView() {
                   Valor
                 </th>
                 <th className="p-3 text-left font-semibold text-slate-700">
+                  Faltante
+                </th>
+                <th className="p-3 text-left font-semibold text-slate-700">
                   Forma
                 </th>
                 <th className="p-3 text-left font-semibold text-slate-700">
@@ -192,7 +195,7 @@ export default function FinanceiroRecepcaoView() {
 
               {!filtered.length ? (
                 <tr>
-                  <td colSpan={6} className="p-6 text-center text-slate-500">
+                  <td colSpan={7} className="p-6 text-center text-slate-500">
                     Sem registros no período.
                   </td>
                 </tr>
@@ -221,7 +224,9 @@ function Row({
     paymentMethod: PaymentMethod;
   }) => Promise<void>;
 }) {
-  const [amount, setAmount] = useState(row.valorPago ?? 350);
+  const [amount, setAmount] = useState(
+    row.valorFaltante > 0 ? row.valorFaltante : row.valor_mensalidade,
+  );
   const [date, setDate] = useState(
     row.dataPagamento ?? new Date().toISOString().slice(0, 10),
   );
@@ -253,6 +258,10 @@ function Row({
             onChange={(e) => setAmount(Number(e.target.value))}
           />
         )}
+      </td>
+
+      <td className="p-3 text-slate-700">
+        R$ {row.valorFaltante.toFixed(2)}
       </td>
 
       <td className="p-3">

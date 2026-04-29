@@ -168,6 +168,9 @@ export default async function RecepcaoFinanceiroPage({
                   Valor pago
                 </TableHead>
                 <TableHead className="p-3 text-left font-semibold text-slate-700">
+                  Faltante
+                </TableHead>
+                <TableHead className="p-3 text-left font-semibold text-slate-700">
                   Forma
                 </TableHead>
                 <TableHead className="p-3 text-left font-semibold text-slate-700">
@@ -182,7 +185,7 @@ export default async function RecepcaoFinanceiroPage({
             <TableBody>
               {mensalidades.map((m: MensalidadeRow) => {
                 const competence = `${monthLabel(m.competenceMonth)}/${m.competenceYear}`;
-                const isPaid = m.status === "pago";
+                const isPaid = m.status === "pago" || m.valorFaltante <= 0;
                 const defaultDate = new Date().toISOString().slice(0, 10);
 
                 return (
@@ -212,6 +215,9 @@ export default async function RecepcaoFinanceiroPage({
                       R$ {Number(m.valorPago ?? 0).toFixed(2)}
                     </TableCell>
                     <TableCell className="p-3 text-slate-700">
+                      R$ {Number(m.valorFaltante ?? 0).toFixed(2)}
+                    </TableCell>
+                    <TableCell className="p-3 text-slate-700">
                       {m.formaPagamento ?? "-"}
                     </TableCell>
                     <TableCell className="p-3 text-slate-700">
@@ -236,7 +242,11 @@ export default async function RecepcaoFinanceiroPage({
                             </span>
                             <Input
                               name="valor_pago"
-                              defaultValue={String(m.valor_mensalidade)}
+                              defaultValue={String(
+                                m.valorFaltante > 0
+                                  ? m.valorFaltante
+                                  : m.valor_mensalidade,
+                              )}
                               className="h-9 w-[120px] rounded-md border border-slate-200 px-2 text-sm"
                             />
                           </div>
@@ -299,7 +309,7 @@ export default async function RecepcaoFinanceiroPage({
               {!mensalidades.length ? (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
+                    colSpan={9}
                     className="p-6 text-center text-slate-500"
                   >
                     Nenhuma mensalidade encontrada.

@@ -1,15 +1,21 @@
+import ProfessorDisciplinasView from "@/app/_components/professor/disciplinas/ProfessorDisciplinasView";
+import { listProfessorDisciplinas } from "@/app/_lib/actions/disciplinas";
+import { getUserProfile } from "@/app/_lib/actions/profile";
 
-import DisciplinaForm from "@/app/_components/disciplinas/DisciplinaForm";
+export const dynamic = "force-dynamic";
 
-export default function NovaDisciplinaPage() {
-  return (
-    <div className="p-6 max-w-3xl">
-      <h1 className="text-2xl font-semibold">Nova Disciplina</h1>
-      <p className="text-sm text-muted-foreground mt-1">
-        Cadastre uma disciplina para reutilização em diferentes turmas.
-      </p>
+export default async function ProfessorDisciplinasPage() {
+  const profile = await getUserProfile();
 
-      <DisciplinaForm />
-    </div>
-  );
+  if (!profile) {
+    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+  }
+
+  if (profile.role !== "professor") {
+    return <div className="p-6">Sem acesso.</div>;
+  }
+
+  const disciplinas = await listProfessorDisciplinas();
+
+  return <ProfessorDisciplinasView disciplinas={disciplinas} />;
 }

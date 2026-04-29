@@ -630,7 +630,6 @@ export async function listStudentsFromMyClasses(
         email,
         phone
       ),
-      alunos:alunos!turma_alunos_aluno_id_fkey(age, date_of_birth),
       turmas:turmas!turma_alunos_turma_id_fkey(id, tag)
     `,
     )
@@ -641,6 +640,34 @@ export async function listStudentsFromMyClasses(
       return [];
     }
     throw new Error(alunosError.message);
+  }
+
+  const alunoIds = Array.from(
+    new Set((turmaAlunos ?? []).map((row) => String(row.aluno_id))),
+  );
+  const alunoMetaById = new Map<
+    string,
+    { age: number | null; date_of_birth: string | null }
+  >();
+
+  if (alunoIds.length > 0) {
+    const { data: alunosMeta, error: alunosMetaError } = await supabase
+      .from("alunos")
+      .select("user_id, age, date_of_birth")
+      .in("user_id", alunoIds);
+
+    if (alunosMetaError) {
+      if (alunosMetaError.code !== "42P01") {
+        throw new Error(alunosMetaError.message);
+      }
+    } else {
+      for (const aluno of alunosMeta ?? []) {
+        alunoMetaById.set(String(aluno.user_id), {
+          age: aluno.age ?? null,
+          date_of_birth: aluno.date_of_birth ?? null,
+        });
+      }
+    }
   }
 
   type TurmaAlunoCompletoRow = {
@@ -659,9 +686,6 @@ export async function listStudentsFromMyClasses(
           email: string | null;
           phone: string | null;
         }[];
-    alunos:
-      | { age: number | null; date_of_birth: string | null }
-      | { age: number | null; date_of_birth: string | null }[];
     turmas: { id: string; tag: string } | { id: string; tag: string }[];
   };
 
@@ -672,9 +696,7 @@ export async function listStudentsFromMyClasses(
     const profileAluno = Array.isArray(turmaAluno.profiles)
       ? turmaAluno.profiles[0]
       : turmaAluno.profiles;
-    const dadosAluno = Array.isArray(turmaAluno.alunos)
-      ? turmaAluno.alunos[0]
-      : turmaAluno.alunos;
+    const dadosAluno = alunoMetaById.get(alunoId);
     const turma = Array.isArray(turmaAluno.turmas)
       ? turmaAluno.turmas[0]
       : turmaAluno.turmas;

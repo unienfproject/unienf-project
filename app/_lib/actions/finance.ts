@@ -22,6 +22,7 @@ export type MensalidadeRow = {
   valor_mensalidade: number;
 
   valorPago: number | null;
+  valorFaltante: number;
   formaPagamento: FormaPagamento | null;
 
   dataVencimento: string | null;
@@ -88,8 +89,9 @@ export async function getMonthlySummary(
     const { data: mensalidades, error: mensalidadesError } = await supabase
       .from("mensalidades")
       .select("id, status")
-      .eq("competence_year", y)
-      .eq("competence_month", m);
+    .eq("competence_year", y)
+      .eq("competence_month", m)
+      .neq("status", "cancelado");
 
     if (mensalidadesError) {
       console.warn("[getMonthlySummary] erro:", mensalidadesError.message);
@@ -100,19 +102,16 @@ export async function getMonthlySummary(
       return 0;
     }
 
-    // Buscar pagamentos relacionados apenas das mensalidades pagas
-    const mensalidadeIdsPagas = mensalidades
-      .filter((m) => m.status === "pago")
-      .map((m) => m.id);
+    const mensalidadeIds = mensalidades.map((m) => m.id);
 
-    if (mensalidadeIdsPagas.length === 0) {
+    if (mensalidadeIds.length === 0) {
       return 0;
     }
 
     const { data: pagamentos, error: pagamentosError } = await supabase
       .from("pagamentos")
       .select("amount_paid")
-      .in("mensalidade_id", mensalidadeIdsPagas);
+      .in("mensalidade_id", mensalidadeIds);
 
     if (pagamentosError) {
       console.warn("[getMonthlySummary] erro pagamentos:", pagamentosError.message);
@@ -174,6 +173,7 @@ export async function getMensalidadesByMonth(
     )
     .eq("competence_year", year)
     .eq("competence_month", month)
+    .neq("status", "cancelado")
     .order("status", { ascending: true });
 
   if (error) {
@@ -206,12 +206,15 @@ export async function getMensalidadesByMonth(
         paid_at: unknown;
       }[]) {
         const mid = String(p.mensalidade_id);
-        if (!pagamentoMap.has(mid)) {
+        const current = pagamentoMap.get(mid);
+        if (!current) {
           pagamentoMap.set(mid, {
             amount_paid: safeNumber(p.amount_paid),
             payment_method: p.payment_method as FormaPagamento,
             paid_at: String(p.paid_at),
           });
+        } else {
+          current.amount_paid += safeNumber(p.amount_paid);
         }
       }
     }
@@ -234,6 +237,9 @@ export async function getMensalidadesByMonth(
         ? new Date(pagamento.paid_at).toISOString().split("T")[0]
         : null;
 
+      const valorMensalidade = safeNumber(m.predicted_value);
+      const valorPago = pagamento?.amount_paid ?? null;
+
       return {
         id: String(m.id),
         studentId: String(m.aluno_id),
@@ -241,8 +247,9 @@ export async function getMensalidadesByMonth(
         competenceYear: safeNumber(m.competence_year),
         competenceMonth: safeNumber(m.competence_month),
         status: (m.status as MensalidadeStatus) ?? "pendente",
-        valor_mensalidade: safeNumber(m.predicted_value),
-        valorPago: pagamento?.amount_paid ?? null,
+        valor_mensalidade: valorMensalidade,
+        valorPago,
+        valorFaltante: Math.max(0, valorMensalidade - (valorPago ?? 0)),
         formaPagamento: pagamento?.payment_method ?? null,
         dataVencimento: (m.due_date ?? null) as string | null,
         dataPagamento: paidAtDate,

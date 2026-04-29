@@ -116,6 +116,8 @@ export default function FinanceiroAlunoView({
                 <TableRow>
                   <TableHead>Competência</TableHead>
                   <TableHead>Valor Mensalidade</TableHead>
+                  <TableHead>Valor Pago</TableHead>
+                  <TableHead>Faltante</TableHead>
                   <TableHead>Vencimento</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Ações</TableHead>
@@ -147,6 +149,7 @@ export default function FinanceiroAlunoView({
                 <TableRow>
                   <TableHead>Competência</TableHead>
                   <TableHead>Valor Pago</TableHead>
+                  <TableHead>Faltante</TableHead>
                   <TableHead>Forma</TableHead>
                   <TableHead>Data Pagamento</TableHead>
                   <TableHead>Status</TableHead>
@@ -161,6 +164,7 @@ export default function FinanceiroAlunoView({
                     <TableCell>
                       R$ {m.valorPago?.toFixed(2) ?? "0.00"}
                     </TableCell>
+                    <TableCell>R$ {m.valorFaltante.toFixed(2)}</TableCell>
                     <TableCell>
                       {m.formaPagamento
                         ? (FormaPagamentoOptions.find(
@@ -209,7 +213,10 @@ function MensalidadeRow({
   pending: boolean;
 }) {
   const [valorPago, setValorPago] = useState(
-    mensalidade.valor_mensalidade.toString(),
+    (mensalidade.valorFaltante > 0
+      ? mensalidade.valorFaltante
+      : mensalidade.valor_mensalidade
+    ).toString(),
   );
   const [formaPagamento, setFormaPagamento] = useState<FormaPagamento>("pix");
   const [dataPagamento, setDataPagamento] = useState(
@@ -232,6 +239,8 @@ function MensalidadeRow({
         {monthLabel(mensalidade.competenceMonth)}/{mensalidade.competenceYear}
       </TableCell>
       <TableCell>R$ {mensalidade.valor_mensalidade.toFixed(2)}</TableCell>
+      <TableCell>R$ {(mensalidade.valorPago ?? 0).toFixed(2)}</TableCell>
+      <TableCell>R$ {mensalidade.valorFaltante.toFixed(2)}</TableCell>
       <TableCell>
         {mensalidade.dataVencimento
           ? new Date(mensalidade.dataVencimento).toLocaleDateString("pt-BR")

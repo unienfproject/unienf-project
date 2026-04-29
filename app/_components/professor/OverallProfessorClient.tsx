@@ -3,6 +3,7 @@
 import StatCard from "@/app/_components/StatCard";
 import { Button } from "@/app/_components/ui/button";
 import { ArrowRight, BookOpen, Users } from "lucide-react";
+import Link from "next/link";
 
 type TurmaResumo = {
   id: string;
@@ -56,11 +57,13 @@ export default function OverallProfessorClient(props: {
                   Minhas Turmas
                 </h3>
                 <Button
+                  asChild
                   className="hover:bg-accent hover:text-accent-foreground inline-flex h-9 cursor-pointer items-center justify-center gap-2 rounded-md px-3 text-sm font-medium"
-                  onClick={() => (window.location.href = "/professor/turmas")}
                 >
-                  Ver todas
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <Link href="/professores/turmas">
+                    Ver todas
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
                 </Button>
               </div>
 
@@ -71,12 +74,10 @@ export default function OverallProfessorClient(props: {
                   </div>
                 ) : (
                   turmas.map((t) => (
-                    <div
+                    <Link
                       key={t.id}
+                      href={`/professores/turmas/${t.id}`}
                       className="bg-muted/30 hover:bg-muted/50 flex cursor-pointer items-center justify-between rounded-xl p-4 transition-colors"
-                      onClick={() =>
-                        (window.location.href = `/professor/turmas/${t.id}`)
-                      }
                     >
                       <div className="flex items-center gap-4">
                         <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-xl">
@@ -98,7 +99,7 @@ export default function OverallProfessorClient(props: {
                         </p>
                         <p className="text-muted-foreground text-xs">alunos</p>
                       </div>
-                    </div>
+                    </Link>
                   ))
                 )}
               </div>

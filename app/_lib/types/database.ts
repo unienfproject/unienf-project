@@ -69,6 +69,8 @@ export type Aluno = {
   age: number | null;
   cpf: string | null;
   rg: string | null;
+  valor_total_curso: number | null;
+  quantidade_parcelas: number | null;
   created_at: Timestamp;
   updated_at: Timestamp;
 };
@@ -129,6 +131,7 @@ export type Disciplina = {
   name: string;
   slug: string;
   workload_hours: number | null;
+  created_by: UUID | null;
   created_at: Timestamp;
   updated_at: Timestamp;
   conteudo: string | null;

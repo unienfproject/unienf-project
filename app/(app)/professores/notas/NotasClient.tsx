@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/app/_components/ui/button";
@@ -52,14 +52,13 @@ export default function NotasClient(props: {
     return initial;
   });
 
-  useMemo(() => {
+  useEffect(() => {
     const next: Record<string, string> = {};
     for (const a of props.alunos ?? []) {
       next[a.alunoId] = a.nota == null ? "" : String(a.nota);
     }
     setDraft(next);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.turmaId, props.avaliacaoId]);
+  }, [props.alunos, props.turmaId, props.avaliacaoId]);
 
   const filledCount = useMemo(() => {
     return Object.values(draft).filter((v) => v.trim() !== "").length;
@@ -80,6 +79,14 @@ export default function NotasClient(props: {
     if (nextTurmaId) params.set("turmaId", nextTurmaId);
     if (nextAvaliacaoId) params.set("avaliacaoId", nextAvaliacaoId);
     router.push(`/professores/notas?${params.toString()}`);
+  }
+
+  function handleTurmaChange(nextTurmaId: string) {
+    setQuery(nextTurmaId);
+  }
+
+  function handleAvaliacaoChange(nextAvaliacaoId: string) {
+    setQuery(props.turmaId, nextAvaliacaoId);
   }
 
   function handleSave() {
@@ -114,21 +121,25 @@ export default function NotasClient(props: {
           </div>
 
           <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-6">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="flex flex-col gap-5">
               <div className="space-y-2">
                 <Label className="text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                   Turma
                 </Label>
                 <Select
                   value={props.turmaId || undefined}
-                  onValueChange={(value) => setQuery(value)}
+                  onValueChange={handleTurmaChange}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full min-w-0 overflow-hidden">
                     <SelectValue placeholder="Selecione a turma" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-w-[min(92vw,900px)]">
                     {props.turmas.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>
+                      <SelectItem
+                        key={t.id}
+                        value={t.id}
+                        className="max-w-[min(86vw,860px)]"
+                      >
                         {t.name} {t.tag ? `- ${t.tag}` : ""}
                       </SelectItem>
                     ))}
@@ -142,20 +153,29 @@ export default function NotasClient(props: {
                 </Label>
                 <Select
                   value={props.avaliacaoId || undefined}
-                  onValueChange={(value) => setQuery(props.turmaId, value)}
+                  onValueChange={handleAvaliacaoChange}
                   disabled={!props.turmaId}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full min-w-0 overflow-hidden">
                     <SelectValue placeholder="Selecione a avaliação" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-w-[min(92vw,700px)]">
                     {props.avaliacoes.map((a) => (
-                      <SelectItem key={a.id} value={a.id}>
+                      <SelectItem
+                        key={a.id}
+                        value={a.id}
+                        className="max-w-[min(86vw,660px)]"
+                      >
                         {a.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                <div className="font-medium text-slate-900">{turmaTitle}</div>
+                <div className="mt-1">{avaliacaoTitle}</div>
               </div>
             </div>
           </div>

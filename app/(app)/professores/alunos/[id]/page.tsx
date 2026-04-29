@@ -6,6 +6,12 @@ import FrequenciaTable from "@/app/_components/aluno/FrequenciaTable";
 import Link from "next/link";
 import { ArrowLeft, User, Mail, Phone, Calendar, BookOpen } from "lucide-react";
 import { Button } from "@/app/_components/ui/button";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/app/_components/ui/tabs";
 
 function formatNota(value: number | null) {
   return value === null ? "-" : value.toFixed(1);
@@ -82,7 +88,14 @@ export default async function StudentDetailsPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 p-6 md:grid-cols-2">
+      <Tabs defaultValue="dados-pessoais" className="px-6 pb-6">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
+          <TabsTrigger value="academico">AcadÃªmico</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="dados-pessoais" className="mt-6">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-slate-900">
             Informações Pessoais
@@ -173,7 +186,10 @@ export default async function StudentDetailsPage({
         </div>
       </div>
 
-      <div className="p-6">
+        </TabsContent>
+
+        <TabsContent value="academico" className="mt-6">
+      <div>
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <h2 className="mb-4 text-lg font-semibold text-slate-900">
@@ -243,6 +259,8 @@ export default async function StudentDetailsPage({
           <FrequenciaTable frequencias={frequencias ?? []} />
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
