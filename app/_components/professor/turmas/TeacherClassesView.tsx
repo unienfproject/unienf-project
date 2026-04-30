@@ -1,9 +1,7 @@
 "use client";
 
-import { finalizeClass } from "@/app/_lib/actions/classes";
-import { Plus } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 
 function Kpi({ title, value }: { title: string; value: string }) {
   return (
@@ -25,7 +23,6 @@ import {
   TableRow,
 } from "../../ui/table";
 import AttendanceModal from "./AttendanceModal";
-import CreateClassModal from "./CreateClassmodal";
 
 type ClassRow = {
   id: string;
@@ -36,25 +33,15 @@ type ClassRow = {
   status: "ativa" | "finalizada";
 };
 
-type PickerItem = { id: string; label: string; description?: string | null };
-
 export default function TeacherClassesView({
-  teacherId,
   teacherName,
   classes,
-  subjects,
-  students,
 }: {
-  teacherId: string;
   teacherName: string;
   classes: ClassRow[];
-  subjects: PickerItem[];
-  students: PickerItem[];
 }) {
   const [query, setQuery] = useState("");
-  const [openCreate, setOpenCreate] = useState(false);
   const [attendanceClass, setAttendanceClass] = useState<ClassRow | null>(null);
-  const [isPending, startTransition] = useTransition();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -71,7 +58,7 @@ export default function TeacherClassesView({
           <h1 className="text-2xl font-bold text-slate-900">Minhas Turmas</h1>
           <p className="text-slate-600">
             Professor: {teacherName}. <br />
-            Aqui você gerencia turmas, alunos, notas e frequência.
+            Consulte suas turmas, lance notas e registre frequência.
           </p>
         </div>
 
@@ -86,10 +73,6 @@ export default function TeacherClassesView({
             />
           </div>
 
-          <Button type="button" onClick={() => setOpenCreate(true)}>
-            <Plus className="h-4 w-4" />
-            Nova Turma
-          </Button>
         </div>
       </div>
 
@@ -191,18 +174,6 @@ export default function TeacherClassesView({
                         Frequência
                       </Button>
 
-                      <Button
-                        type="button"
-                        disabled={isPending || c.status === "finalizada"}
-                        onClick={() => {
-                          startTransition(async () => {
-                            await finalizeClass({ classId: c.id, teacherId });
-                          });
-                        }}
-                        className="rounded-md bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-60"
-                      >
-                        Finalizar
-                      </Button>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -228,14 +199,6 @@ export default function TeacherClassesView({
         </div>
       </div>
 
-      <CreateClassModal
-        open={openCreate}
-        onOpenChange={setOpenCreate}
-        teacherId={teacherId}
-        teacherName={teacherName}
-        subjects={subjects}
-        students={students}
-      />
       <AttendanceModal
         turma={attendanceClass}
         open={attendanceClass !== null}

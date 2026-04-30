@@ -1,10 +1,6 @@
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import TeacherClassesView from "@/app/_components/professor/turmas/TeacherClassesView";
-import {
-  listTeacherClasses,
-  listStudentsForPicker,
-  listSubjectsForPicker,
-} from "@/app/_lib/actions/classes";
+import { listTeacherClasses } from "@/app/_lib/actions/classes";
 
 export const dynamic = 'force-dynamic';
 
@@ -25,18 +21,11 @@ export default async function ProfessorTurmasPage() {
 
   const classes = await listTeacherClasses(profile.user_id);
 
-  const subjects = await listSubjectsForPicker();
-
-  const students = await listStudentsForPicker();
-
   return (
     <div className="flex flex-col">
       <TeacherClassesView
-        teacherId={profile.user_id}
         teacherName={profile.name ?? profile.email ?? "Professor"}
         classes={classes}
-        subjects={subjects}
-        students={students}
       />
     </div>
   );

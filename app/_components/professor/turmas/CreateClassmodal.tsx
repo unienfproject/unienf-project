@@ -32,14 +32,12 @@ export default function CreateClassModal({
   teacherId,
   teacherName,
   subjects,
-  students,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   teacherId: string;
   teacherName: string;
   subjects: PickerItem[];
-  students: PickerItem[];
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -49,15 +47,6 @@ export default function CreateClassModal({
     endDate: "",
     disciplinaId: "",
   });
-  const [selectedAlunoIds, setSelectedAlunoIds] = useState<string[]>([]);
-  const [alunoQuery, setAlunoQuery] = useState("");
-
-  const filteredAlunos = useMemo(() => {
-    const q = alunoQuery.trim().toLowerCase();
-    if (!q) return students;
-    return students.filter((a) => a.label.toLowerCase().includes(q));
-  }, [alunoQuery, students]);
-
   const autoTag = useMemo(() => {
     const disciplinaNome =
       subjects.find((d) => d.id === form.disciplinaId)?.label ?? "";
@@ -74,8 +63,6 @@ export default function CreateClassModal({
       endDate: "",
       disciplinaId: "",
     });
-    setSelectedAlunoIds([]);
-    setAlunoQuery("");
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -93,7 +80,7 @@ export default function CreateClassModal({
           startDate: form.startDate,
           endDate: form.endDate || form.startDate,
           subjectIds: [form.disciplinaId],
-          studentIds: selectedAlunoIds,
+          studentIds: [],
         });
 
         toast.success("Turma criada com sucesso!");
@@ -106,12 +93,6 @@ export default function CreateClassModal({
         );
       }
     });
-  }
-
-  function toggleAluno(id: string) {
-    setSelectedAlunoIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
   }
 
   return (
@@ -195,44 +176,6 @@ export default function CreateClassModal({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Alunos (opcional)</Label>
-            <Input
-              value={alunoQuery}
-              onChange={(e) => setAlunoQuery(e.target.value)}
-              placeholder="Buscar alunos..."
-              className="mb-2"
-            />
-            <div className="max-h-40 space-y-1 overflow-auto rounded-md border p-2">
-              {filteredAlunos.length > 0 ? (
-                filteredAlunos.map((aluno) => {
-                  const selected = selectedAlunoIds.includes(aluno.id);
-                  return (
-                    <Button
-                      key={aluno.id}
-                      type="button"
-                      variant={selected ? "default" : "outline"}
-                      onClick={() => toggleAluno(aluno.id)}
-                      className="w-full justify-start"
-                    >
-                      {aluno.label}
-                      {selected && " ✓"}
-                    </Button>
-                  );
-                })
-              ) : (
-                <p className="py-2 text-center text-sm text-slate-500">
-                  Nenhum aluno encontrado
-                </p>
-              )}
-            </div>
-            {selectedAlunoIds.length > 0 && (
-              <p className="text-xs text-slate-600">
-                {selectedAlunoIds.length} aluno(s) selecionado(s)
-              </p>
-            )}
           </div>
 
           <DialogFooter>

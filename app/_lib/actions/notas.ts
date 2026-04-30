@@ -926,7 +926,7 @@ async function assertCanAccessTurmaGrades(turmaId: string) {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
 
-  const allowedRoles = ["professor", "administrativo", "coordenação"];
+  const allowedRoles = ["professor", "recepção", "administrativo", "coordenação"];
   if (!allowedRoles.includes(profile.role ?? "")) {
     throw new Error("Sem permissão para acessar notas desta turma.");
   }
@@ -1058,7 +1058,11 @@ export async function upsertTurmaGradesAccess(input: {
   avaliacaoId: string;
   grades: Array<{ alunoId: string; nota: number | null }>;
 }) {
-  const { supabase } = await assertCanAccessTurmaGrades(input.turmaId);
+  const { profile, supabase } = await assertCanAccessTurmaGrades(input.turmaId);
+
+  if (profile.role !== "professor") {
+    throw new Error("Apenas professores podem lançar notas.");
+  }
 
   const { data: avaliacao, error: avaliacaoErr } = await supabase
     .from("avaliacoes")

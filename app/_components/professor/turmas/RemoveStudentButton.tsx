@@ -13,7 +13,7 @@ export default function RemoveStudentButton({
 }: {
   classId: string;
   studentId: string;
-  teacherId: string;
+  teacherId?: string;
 }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();

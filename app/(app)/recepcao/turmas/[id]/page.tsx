@@ -1,13 +1,13 @@
 import ClassDisciplineDetailsView from "@/app/_components/professor/turmas/ClassDisciplineDetailsView";
-import { getUserProfile } from "@/app/_lib/actions/profile";
-import { getTurmaDetailForStaff } from "@/app/_lib/actions/turmas";
+import { listStudentsForPicker } from "@/app/_lib/actions/classes";
 import {
   listAssessmentsForTurmaAccess,
   listStudentsForTurmaGradesAccess,
 } from "@/app/_lib/actions/notas";
-import { listStudentsForPicker } from "@/app/_lib/actions/classes";
+import { getUserProfile } from "@/app/_lib/actions/profile";
+import { getTurmaDetailForStaff } from "@/app/_lib/actions/turmas";
 
-export default async function AdminTurmaDetailsPage({
+export default async function RecepcaoTurmaDetailsPage({
   params,
   searchParams,
 }: {
@@ -22,8 +22,7 @@ export default async function AdminTurmaDetailsPage({
     return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
   }
 
-  const allowedRoles = ["administrativo", "coordenação"];
-  if (!allowedRoles.includes(profile.role ?? "")) {
+  if (profile.role !== "recepção") {
     return <div className="p-6">Sem acesso a esta turma.</div>;
   }
 
@@ -58,9 +57,9 @@ export default async function AdminTurmaDetailsPage({
       assessments={assessments}
       selectedAssessmentId={selectedAssessmentId}
       gradeRows={gradeRows}
-      backHref="/admin/turmas"
-      profileHrefPrefix="/admin/alunos"
-      baseHref={`/admin/turmas/${id}`}
+      backHref="/recepcao/turmas"
+      profileHrefPrefix="/recepcao/alunos"
+      baseHref={`/recepcao/turmas/${id}`}
       teacherId={turma.professorId ?? undefined}
       allStudents={allStudents}
       canManageStudents

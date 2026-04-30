@@ -162,7 +162,12 @@ export async function listStudentsForPicker(): Promise<PickerItem[]> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
 
-  const allowedRoles = ["professor", "administrativo", "coordenação"];
+  const allowedRoles = [
+    "professor",
+    "recepção",
+    "administrativo",
+    "coordenação",
+  ];
   if (!allowedRoles.includes(profile.role ?? "")) {
     throw new Error("Sem permissão para listar alunos.");
   }
@@ -190,76 +195,11 @@ export async function createClass(input: {
   subjectIds: string[];
   studentIds: string[];
 }): Promise<{ turmaId: string }> {
+  if (!input) throw new Error("Dados da turma não informados.");
+
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
-  if (profile.role !== "professor") throw new Error("Sem permissão.");
-  if (profile.user_id !== input.teacherId) throw new Error("Acesso inválido.");
-
-  const supabase = await createServerSupabaseClient();
-
-  const disciplinaId = input.subjectIds[0];
-  if (!disciplinaId) {
-    throw new Error("Selecione uma disciplina.");
-  }
-
-  const tag = await buildTurmaTag({
-    disciplinaId,
-    professorId: input.teacherId,
-    startDate: input.startDate,
-    endDate: input.endDate,
-  });
-  const period = buildPeriodFromStartDate(input.startDate);
-
-  try {
-    const { data: turma, error: turmaError } = await supabase
-      .from("turmas")
-      .insert({
-        tag,
-        period: period,
-        start_date: input.startDate,
-        end_date: input.endDate,
-        status: "ativa",
-        professor_id: input.teacherId,
-        disciplina_id: disciplinaId,
-        created_by: profile.user_id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .select("id")
-      .single();
-
-    if (turmaError) throw new Error(turmaError.message);
-    if (!turma) throw new Error("Falha ao criar turma.");
-
-    if (input.studentIds.length > 0) {
-      const turmaAlunos = input.studentIds.map((alunoId) => ({
-        turma_id: turma.id,
-        aluno_id: alunoId,
-        joined_at: new Date().toISOString(),
-      }));
-
-      const { error: alunosError } = await supabase
-        .from("turma_alunos")
-        .insert(turmaAlunos);
-
-      if (alunosError) throw new Error(alunosError.message);
-
-      for (const studentId of input.studentIds) {
-        await generateMensalidadesForEnrollment({
-          turmaId: turma.id,
-          studentId,
-        });
-      }
-    }
-
-    revalidatePath("/professores/turmas");
-    revalidatePath("/admin/financeiro");
-    revalidatePath("/recepcao/financeiro");
-    revalidatePath("/aluno/financeiro");
-    return { turmaId: turma.id };
-  } catch (error) {
-    throw mapTurmaCreationError(error);
-  }
+  throw new Error("Turmas devem ser criadas pela administração ou coordenação.");
 }
 
 export async function createTurmaAdmin(input: {
@@ -376,28 +316,26 @@ export async function finalizeClass(input: {
 export async function addStudentToClass(input: {
   classId: string;
   studentId: string;
-  teacherId: string;
+  teacherId?: string;
 }): Promise<void> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
-  if (profile.role !== "professor") throw new Error("Sem permissão.");
-  if (profile.user_id !== input.teacherId) throw new Error("Acesso inválido.");
+
+  const allowedRoles = ["recepção", "administrativo", "coordenação"];
+  if (!allowedRoles.includes(profile.role ?? "")) {
+    throw new Error("Sem permissão para adicionar alunos em turmas.");
+  }
 
   const supabase = await createServerSupabaseClient();
 
   const { data: turma, error: turmaError } = await supabase
     .from("turmas")
-    .select("id, professor_id, status")
+    .select("id, status")
     .eq("id", input.classId)
     .single();
 
   if (turmaError) throw new Error(turmaError.message);
   if (!turma) throw new Error("Turma não encontrada.");
-  if (turma.professor_id !== input.teacherId) {
-    throw new Error(
-      "Você não tem permissão para adicionar alunos nesta turma.",
-    );
-  }
   if (turma.status === "finalizada") {
     throw new Error("Não é possível adicionar alunos em turma finalizada.");
   }
@@ -427,7 +365,11 @@ export async function addStudentToClass(input: {
   });
 
   revalidatePath(`/professores/turmas/${input.classId}`);
+  revalidatePath(`/admin/turmas/${input.classId}`);
+  revalidatePath(`/recepcao/turmas/${input.classId}`);
   revalidatePath("/professores/turmas");
+  revalidatePath("/admin/turmas");
+  revalidatePath("/recepcao/turmas");
   revalidatePath("/admin/financeiro");
   revalidatePath("/recepcao/financeiro");
   revalidatePath("/aluno/financeiro");
@@ -436,26 +378,26 @@ export async function addStudentToClass(input: {
 export async function removeStudentFromClass(input: {
   classId: string;
   studentId: string;
-  teacherId: string;
+  teacherId?: string;
 }): Promise<void> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
-  if (profile.role !== "professor") throw new Error("Sem permissão.");
-  if (profile.user_id !== input.teacherId) throw new Error("Acesso inválido.");
+
+  const allowedRoles = ["recepção", "administrativo", "coordenação"];
+  if (!allowedRoles.includes(profile.role ?? "")) {
+    throw new Error("Sem permissão para remover alunos de turmas.");
+  }
 
   const supabase = await createServerSupabaseClient();
 
   const { data: turma, error: turmaError } = await supabase
     .from("turmas")
-    .select("id, professor_id, status")
+    .select("id, status")
     .eq("id", input.classId)
     .single();
 
   if (turmaError) throw new Error(turmaError.message);
   if (!turma) throw new Error("Turma não encontrada.");
-  if (turma.professor_id !== input.teacherId) {
-    throw new Error("Você não tem permissão para remover alunos desta turma.");
-  }
   if (turma.status === "finalizada") {
     throw new Error("Não é possível remover alunos de turma finalizada.");
   }
@@ -469,7 +411,11 @@ export async function removeStudentFromClass(input: {
   if (deleteError) throw new Error(deleteError.message);
 
   revalidatePath(`/professores/turmas/${input.classId}`);
+  revalidatePath(`/admin/turmas/${input.classId}`);
+  revalidatePath(`/recepcao/turmas/${input.classId}`);
   revalidatePath("/professores/turmas");
+  revalidatePath("/admin/turmas");
+  revalidatePath("/recepcao/turmas");
 }
 
 export async function getClassDetails(input: {

@@ -33,7 +33,13 @@ import { listTurmasPaginated } from "@/app/_lib/actions/turmas";
 
 const PAGE_SIZE = 10;
 
-export default function Turmas() {
+export function TurmasPageContent({
+  basePath = "/admin/turmas",
+  canCreate = true,
+}: {
+  basePath?: string;
+  canCreate?: boolean;
+}) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const router = useRouter();
 
@@ -51,7 +57,9 @@ export default function Turmas() {
 
   return (
     <div className="flex flex-col">
-      <CreateTurmaDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      {canCreate ? (
+        <CreateTurmaDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+      ) : null}
 
       <main className="p-6">
         <div className="space-y-6">
@@ -65,13 +73,15 @@ export default function Turmas() {
               </p>
             </div>
 
-            <Button
-              onClick={() => setDialogOpen(true)}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all duration-200 hover:shadow-md"
-            >
-              <FolderPlus />
-              Nova Disciplina
-            </Button>
+            {canCreate ? (
+              <Button
+                onClick={() => setDialogOpen(true)}
+                className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all duration-200 hover:shadow-md"
+              >
+                <FolderPlus />
+                Nova Disciplina
+              </Button>
+            ) : null}
           </div>
 
           <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-4">
@@ -193,7 +203,7 @@ export default function Turmas() {
                                   <DropdownMenuItem
                                     className="cursor-pointer"
                                     onClick={() =>
-                                      router.push(`/admin/turmas/${turma.id}`)
+                                      router.push(`${basePath}/${turma.id}`)
                                     }
                                   >
                                     <Eye className="mr-2 h-4 w-4" />
@@ -248,4 +258,8 @@ export default function Turmas() {
       </main>
     </div>
   );
+}
+
+export default function Turmas() {
+  return <TurmasPageContent />;
 }

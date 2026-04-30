@@ -105,6 +105,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const recepcaoMenuItems = [
     { title: "Visão Geral", url: "/recepcao", icon: LayoutDashboard },
     { title: "Alunos", url: "/recepcao/alunos", icon: Users },
+    { title: "Turmas", url: "/recepcao/turmas", icon: FolderOpen },
     { title: "Documentos", url: "/recepcao/documentos", icon: FileText },
     { title: "Valores", url: "/recepcao/precos", icon: CircleDollarSign },
     { title: "Financeiro", url: "/recepcao/financeiro", icon: WalletCards },

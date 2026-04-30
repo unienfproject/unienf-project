@@ -196,7 +196,7 @@ export async function getTurmaDetailForStaff(
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
 
-  const allowedRoles = ["administrativo", "coordenação"];
+  const allowedRoles = ["recepção", "administrativo", "coordenação"];
   if (!allowedRoles.includes(profile.role ?? "")) {
     throw new Error("Sem permissão para acessar turma.");
   }

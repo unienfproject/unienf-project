@@ -23,7 +23,7 @@ export default function ManageStudentsModal({
   allStudents,
 }: {
   classId: string;
-  teacherId: string;
+  teacherId?: string;
   currentStudents: Student[];
   allStudents: PickerItem[];
 }) {

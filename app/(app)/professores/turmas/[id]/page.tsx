@@ -1,8 +1,5 @@
 import { getUserProfile } from "@/app/_lib/actions/profile";
-import {
-  getClassDetails,
-  listStudentsForPicker,
-} from "@/app/_lib/actions/classes";
+import { getClassDetails } from "@/app/_lib/actions/classes";
 import {
   listAssessmentsForTurmaAccess,
   listStudentsForTurmaGradesAccess,
@@ -48,10 +45,7 @@ export default async function ClassDetailsPage({
     );
   }
 
-  const [allStudents, assessments] = await Promise.all([
-    listStudentsForPicker(),
-    listAssessmentsForTurmaAccess(id),
-  ]);
+  const assessments = await listAssessmentsForTurmaAccess(id);
   const selectedAssessmentId = query?.avaliacaoId || assessments[0]?.id || "";
   const gradeRows = selectedAssessmentId
     ? await listStudentsForTurmaGradesAccess({
@@ -80,8 +74,6 @@ export default async function ClassDetailsPage({
       profileHrefPrefix="/professores/alunos"
       baseHref={`/professores/turmas/${id}`}
       teacherId={profile.user_id}
-      allStudents={allStudents}
-      canManageStudents
     />
   );
 }

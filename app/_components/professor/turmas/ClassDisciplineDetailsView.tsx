@@ -86,6 +86,7 @@ export default function ClassDisciplineDetailsView({
   teacherId,
   allStudents = [],
   canManageStudents = false,
+  canEditGrades = true,
 }: {
   details: ClassDetails;
   assessments: AssessmentItem[];
@@ -97,6 +98,7 @@ export default function ClassDisciplineDetailsView({
   teacherId?: string;
   allStudents?: PickerItem[];
   canManageStudents?: boolean;
+  canEditGrades?: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -119,6 +121,8 @@ export default function ClassDisciplineDetailsView({
   }
 
   function handleSave() {
+    if (!canEditGrades) return;
+
     startTransition(async () => {
       const grades = gradeRows
         .map((row) => ({
@@ -222,7 +226,7 @@ export default function ClassDisciplineDetailsView({
                 Clique no perfil para consultar os dados do aluno.
               </p>
             </div>
-            {canManageStudents && teacherId && details.status === "ativa" ? (
+            {canManageStudents && details.status === "ativa" ? (
               <ManageStudentsModal
                 classId={details.id}
                 teacherId={teacherId}
@@ -277,9 +281,7 @@ export default function ClassDisciplineDetailsView({
                               Ver Perfil
                             </Button>
                           </Link>
-                          {canManageStudents &&
-                          teacherId &&
-                          details.status === "ativa" ? (
+                          {canManageStudents && details.status === "ativa" ? (
                             <RemoveStudentButton
                               classId={details.id}
                               studentId={student.id}
@@ -374,6 +376,7 @@ export default function ClassDisciplineDetailsView({
                             placeholder="0.0"
                             className="h-9 text-center"
                             value={valueForRow(row)}
+                            disabled={!canEditGrades}
                             onChange={(event) =>
                               setDraftByAssessment((prev) => ({
                                 ...prev,
@@ -405,6 +408,7 @@ export default function ClassDisciplineDetailsView({
                   !selectedAssessmentId ||
                   gradeRows.length === 0 ||
                   details.status === "finalizada"
+                  || !canEditGrades
                 }
               >
                 <Save className="h-4 w-4" />
