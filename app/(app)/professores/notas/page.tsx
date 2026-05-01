@@ -19,10 +19,10 @@ export default async function NotasPage({
   const resolvedSearchParams = await searchParams;
   const profile = await getUserProfile();
   if (!profile) {
-    return <div className="flex-1 p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div className="flex-1">Sessão inválida. Faça login novamente.</div>;
   }
   if (profile.role !== "professor") {
-    return <div className="flex-1 p-6">Sem permissão.</div>;
+    return <div className="flex-1">Sem permissão.</div>;
   }
 
   const teacherId = profile.user_id;

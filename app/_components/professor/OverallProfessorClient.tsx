@@ -24,7 +24,7 @@ export default function OverallProfessorClient(props: {
 
   return (
     <div className="flex-1">
-      <main className="p-6">
+      <main className="flex flex-1 flex-col">
         <div className="space-y-6">
           <div>
             <h1 className="text-foreground text-2xl font-bold">

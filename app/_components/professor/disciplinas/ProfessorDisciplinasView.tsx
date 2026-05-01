@@ -88,7 +88,7 @@ export default function ProfessorDisciplinasView({ disciplinas }: Props) {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-4 p-6 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Disciplinas</h1>
           <p className="text-slate-600">
@@ -102,7 +102,7 @@ export default function ProfessorDisciplinasView({ disciplinas }: Props) {
         </Button>
       </div>
 
-      <div className="m-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b p-4">
           <h2 className="font-semibold text-slate-900">Minhas disciplinas</h2>
           <p className="text-sm text-slate-600">

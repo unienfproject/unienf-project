@@ -53,9 +53,9 @@ export default async function RecepcaoFinanceiroPage({
   const profile = await getUserProfile();
 
   if (!profile)
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   if (profile.role !== "recepção")
-    return <div className="p-6">Sem acesso.</div>;
+    return <div>Sem acesso.</div>;
 
   const filterStatus = (searchParams?.status ?? "pendente") as
     | "pendente"
@@ -95,9 +95,8 @@ export default async function RecepcaoFinanceiroPage({
   const receiptData = receiptDataRaw ? safeParseReceipt(receiptDataRaw) : null;
 
   return (
-    <div className="flex flex-col">
-      <main className="p-4">
-      <div className="flex flex-col gap-4 p-4">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <h1 className="text-2xl font-bold text-slate-900">Financeiro</h1>
         <p className="text-slate-600">
           Filtre pendentes/pagos. Registre pagamento com valor, forma e data.
@@ -386,9 +385,7 @@ export default async function RecepcaoFinanceiroPage({
           </div>
         </section>
       ) : null}
-    </main>
     </div>
-    
   );
 }
 

@@ -31,18 +31,14 @@ export default async function FinanceiroAlunoView({
 
   return (
     <div className="flex flex-col">
-      <main className="p-4">
-        <div>
-          <h1 className="gap-4 p-4 text-2xl font-bold text-slate-900">
-            Financeiro
-          </h1>
-          <p className="gap-4 p-4 text-xl text-slate-600">
+      <main className="flex flex-col gap-6">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold text-slate-900">Financeiro</h1>
+          <p className="text-xl text-slate-600">
             Aluno:{" "}
             <span className="font-medium text-slate-900">{studentName}</span>
           </p>
-          <p className="px-4 pb-2 text-sm text-slate-500">
-            Matrícula: {studentId}
-          </p>
+          <p className="text-sm text-slate-500">Matrícula: {studentId}</p>
         </div>
 
         <div className="gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

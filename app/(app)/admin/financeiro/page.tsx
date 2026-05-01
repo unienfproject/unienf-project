@@ -11,13 +11,13 @@ export default async function FinanceiroPage(props: Props) {
 
   if (!profile) {
     return (
-      <div className="flex-1 p-6">Sessão inválida. Faça login novamente.</div>
+      <div className="flex-1">Sessão inválida. Faça login novamente.</div>
     );
   }
 
   if (profile.role !== "administrativo") {
     return (
-      <div className="flex-1 p-6">Sem acesso ao Financeiro administrativo.</div>
+      <div className="flex-1">Sem acesso ao Financeiro administrativo.</div>
     );
   }
 

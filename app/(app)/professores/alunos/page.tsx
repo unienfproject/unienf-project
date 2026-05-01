@@ -16,14 +16,12 @@ export default async function ProfessorAlunosPage() {
   const profile = await getUserProfile();
 
   if (!profile) {
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   }
 
   if (profile.role !== "professor") {
     return (
-      <div className="p-6">
-        Sem acesso. Esta página é exclusiva do professor.
-      </div>
+      <div>Sem acesso. Esta página é exclusiva do professor.</div>
     );
   }
 
@@ -32,7 +30,7 @@ export default async function ProfessorAlunosPage() {
     students = await listStudentsFromMyClasses(profile.user_id);
   } catch (error) {
     return (
-      <div className="p-6">
+      <div>
         <p className="text-red-600">
           {error instanceof Error ? error.message : "Erro ao carregar alunos."}
         </p>
@@ -42,7 +40,7 @@ export default async function ProfessorAlunosPage() {
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-3 p-6">
+      <div className="flex flex-col gap-3">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Meus Alunos</h1>
           <p className="text-slate-600">
@@ -52,7 +50,7 @@ export default async function ProfessorAlunosPage() {
         </div>
       </div>
 
-      <div className="m-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+      <div className="mt-6 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="border-b p-4">
           <h2 className="font-semibold text-slate-900">Lista de Alunos</h2>
           <p className="text-sm text-slate-600">

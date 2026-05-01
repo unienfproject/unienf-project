@@ -8,14 +8,12 @@ export default async function ProfessorTurmasPage() {
   const profile = await getUserProfile();
 
   if (!profile) {
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   }
 
   if (profile.role !== "professor") {
     return (
-      <div className="p-6">
-        Sem acesso. Esta página é exclusiva do professor.
-      </div>
+      <div>Sem acesso. Esta página é exclusiva do professor.</div>
     );
   }
 

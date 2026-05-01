@@ -8,18 +8,18 @@ export default async function DocumentosPage() {
   const profile = await getUserProfile();
 
   if (!profile) {
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   }
 
   const hasAccess = await canAccessDocuments(profile.role ?? "");
 
   if (!hasAccess) {
-    return <div className="p-6">Sem acesso a Documentos.</div>;
+    return <div>Sem acesso a Documentos.</div>;
   }
 
   if (profile.role !== "aluno") {
     return (
-      <div className="p-6">
+      <div>
         Esta rota é destinada ao aluno. Para staff, acesse o perfil do aluno em
         {" /dashboard/alunos/[id]/documentos."}
       </div>

@@ -19,7 +19,7 @@ export default async function OverallAlunoPage() {
 
   return (
     <div className="bg-background flex min-h-screen flex-col">
-      <main className="p-6">
+      <main className="flex flex-1 flex-col">
         <div className="space-y-6">
           <div>
             <h1 className="text-foreground text-2xl font-bold">Olá, {ov.alunoName}!</h1>

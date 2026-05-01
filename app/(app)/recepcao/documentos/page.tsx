@@ -11,16 +11,15 @@ export default async function RecepcaoDocumentosPage() {
   const profile = await getUserProfile();
 
   if (!profile)
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   if (profile.role !== "recepção")
-    return <div className="p-6">Sem acesso.</div>;
+    return <div>Sem acesso.</div>;
 
   const students = await listStudentsForRecepcao(); // TODO SUPABASE
 
   return (
-    <div className="flex flex-col">
-      <main className="p-4">
-      <div className="flex flex-col gap-3 p-6">
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-3">
         <h1 className="text-2xl font-bold text-slate-900">Documentos</h1>
         <p className="text-slate-600">
           A recepção pode marcar documentos como entregues/pendentes dentro do
@@ -67,7 +66,6 @@ export default async function RecepcaoDocumentosPage() {
           ) : null}
         </div>
       </section>
-      </main>
     </div>
   );
 }

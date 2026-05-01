@@ -19,7 +19,7 @@ export default async function AdminAlunoProfilePage({
 
   if (!studentId || studentId === "undefined" || studentId === "null") {
     return (
-      <div className="p-6">
+      <div>
         <p className="text-red-600">ID do aluno inválido.</p>
         <Link href="/admin/alunos" className="mt-4 inline-block">
           <Button variant="outline">Voltar</Button>
@@ -31,12 +31,12 @@ export default async function AdminAlunoProfilePage({
   const profile = await getUserProfile();
 
   if (!profile) {
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   }
 
   if (profile.role !== "administrativo" && profile.role !== "coordenação") {
     return (
-      <div className="p-6">
+      <div>
         Sem acesso. Esta página é exclusiva para administrativo e coordenação.
       </div>
     );
@@ -47,7 +47,7 @@ export default async function AdminAlunoProfilePage({
     alunoData = await getAlunoProfile(studentId);
   } catch (error) {
     return (
-      <div className="p-6">
+      <div>
         <p className="text-red-600">
           {error instanceof Error ? error.message : "Erro ao carregar aluno."}
         </p>
@@ -65,7 +65,7 @@ export default async function AdminAlunoProfilePage({
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-3 p-6">
+      <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <Link href="/admin/alunos">
             <Button variant="ghost" size="icon" className="h-10 w-10">
@@ -81,7 +81,7 @@ export default async function AdminAlunoProfilePage({
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="mt-6">
         <AdminAlunoProfileTabs
           alunoData={alunoData}
           docs={docs}

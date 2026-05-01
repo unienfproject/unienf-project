@@ -78,11 +78,8 @@ export default function RecepcaoAlunosPage() {
   }
 
   return (
-    <div className="flex flex-col">
-      <main className="p-4">
-      <div className="p-6">
-        <h1 className="text-3xl font-bold text-slate-900">Alunos</h1>
-      </div>
+    <div className="flex flex-col gap-6">
+      <h1 className="text-3xl font-bold text-slate-900">Alunos</h1>
       <section className="gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="border-b p-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -202,7 +199,6 @@ export default function RecepcaoAlunosPage() {
           </Table>
         </div>
       </section>
-      </main>
     </div>
   );
 }

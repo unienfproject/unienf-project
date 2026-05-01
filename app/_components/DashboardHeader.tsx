@@ -8,7 +8,8 @@ export function DashboardHeader() {
   const { toggleSidebar } = useSidebar();
 
   return (
-    <header className="flex h-14 items-center border-b px-4">
+    <header className="flex h-14 shrink-0 items-center border-b px-4 sm:px-6">
+      <div className="mx-auto flex w-full max-w-7xl items-center">
       <Button
         type="button"
         size="icon"
@@ -18,6 +19,7 @@ export function DashboardHeader() {
       >
         <PanelLeft className="h-5 w-5" />
       </Button>
+      </div>
     </header>
   );
 }

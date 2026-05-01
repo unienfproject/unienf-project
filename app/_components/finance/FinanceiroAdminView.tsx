@@ -136,7 +136,7 @@ export default async function FinanceiroAdminView({
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-4 p-4">
+      <div className="flex flex-col gap-4">
         <main className="flex flex-col md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Financeiro</h1>

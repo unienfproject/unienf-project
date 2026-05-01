@@ -52,13 +52,11 @@ export default async function Notas() {
   const profile = await getUserProfile();
 
   if (!profile) {
-    return (
-      <div className="p-6">Sessão inválida. Faça login novamente.</div>
-    );
+    return <div>Sessão inválida. Faça login novamente.</div>;
   }
 
   if (profile.role !== "aluno") {
-    return <div className="p-6">Sem acesso às notas do aluno.</div>;
+    return <div>Sem acesso às notas do aluno.</div>;
   }
 
   const notasPorTurma = await listMyNotas();
@@ -75,7 +73,7 @@ export default async function Notas() {
 
   return (
     <div className="flex-1">
-      <main className="p-6">
+      <main className="flex flex-1 flex-col">
         <div className="space-y-6">
           <div>
             <h1 className="text-foreground text-2xl font-bold">Minhas Notas</h1>

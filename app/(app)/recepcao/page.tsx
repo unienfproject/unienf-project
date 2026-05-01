@@ -27,9 +27,9 @@ export default async function RecepcaoHomePage() {
   const profile = await getUserProfile();
 
   if (!profile)
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   if (profile.role !== "recepção")
-    return <div className="p-6">Sem acesso. Rota exclusiva da recepção.</div>;
+    return <div>Sem acesso. Rota exclusiva da recepção.</div>;
 
   const notices = await listNoticesReadOnly();
   const students = await listStudentsForRecepcao();
@@ -46,7 +46,7 @@ export default async function RecepcaoHomePage() {
   return (
     <div className="flex flex-col">
       <main className="p-3">
-      <div className="flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between">
+      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Recepção</h1>
           <p className="text-slate-600">

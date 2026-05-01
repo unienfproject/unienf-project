@@ -14,15 +14,15 @@ export default async function DocumentosAlunoStaffPage({
   const profile = await getUserProfile();
 
   if (!profile) {
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   }
 
   if (!canAccessDocuments(profile.role ?? "")) {
-    return <div className="p-6">Sem acesso a Documentos.</div>;
+    return <div>Sem acesso a Documentos.</div>;
   }
 
   if (!canEditDocuments(profile.role ?? "")) {
-    return <div className="p-6">Sem permissão para editar documentos.</div>;
+    return <div>Sem permissão para editar documentos.</div>;
   }
 
   const docs = await listStudentDocuments(params.studentId);

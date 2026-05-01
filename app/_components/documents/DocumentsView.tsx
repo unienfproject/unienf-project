@@ -84,7 +84,7 @@ export default function DocumentsView({ canEdit, docs, title, subtitle }: Props)
 
   return (
     <div className="bg-background flex min-h-screen flex-col gap-2">
-      <main className="p-6">
+      <main className="flex flex-1 flex-col">
         {(title || subtitle) && (
           <div className="mb-6">
             {title && (

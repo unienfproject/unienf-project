@@ -11,7 +11,7 @@ export default async function SchemaPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="flex flex-col gap-6">
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-slate-900">
           Schema do Banco de Dados

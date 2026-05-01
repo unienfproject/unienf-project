@@ -51,7 +51,7 @@ export default async function TurmaPricingView({ basePath, canEdit }: Props) {
   }
 
   return (
-    <div className="flex flex-col p-6">
+    <div className="flex flex-col">
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Valores por Turma</h1>

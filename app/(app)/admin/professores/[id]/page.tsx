@@ -15,7 +15,7 @@ export default async function AdminProfessorProfilePage({
 
   if (!professorId || professorId === "undefined" || professorId === "null") {
     return (
-      <div className="p-6">
+      <div>
         <p className="text-red-600">ID do professor inválido.</p>
         <Link href="/admin/professores" className="mt-4 inline-block">
           <Button variant="outline">Voltar</Button>
@@ -27,12 +27,12 @@ export default async function AdminProfessorProfilePage({
   const profile = await getUserProfile();
 
   if (!profile) {
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   }
 
   if (profile.role !== "administrativo" && profile.role !== "coordenação") {
     return (
-      <div className="p-6">
+      <div>
         Sem acesso. Esta página é exclusiva para administrativo e coordenação.
       </div>
     );
@@ -43,7 +43,7 @@ export default async function AdminProfessorProfilePage({
     professorData = await getProfessorProfile(professorId);
   } catch (error) {
     return (
-      <div className="p-6">
+      <div>
         <p className="text-red-600">
           {error instanceof Error
             ? error.message
@@ -58,7 +58,7 @@ export default async function AdminProfessorProfilePage({
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-3 p-6">
+      <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <Link href="/admin/professores">
             <Button variant="ghost" size="icon" className="h-10 w-10">
@@ -74,7 +74,7 @@ export default async function AdminProfessorProfilePage({
         </div>
       </div>
 
-      <div className="p-6">
+      <div className="mt-6">
         <AdminProfessorProfileTabs professorData={professorData} />
       </div>
     </div>

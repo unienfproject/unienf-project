@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 export default async function Alunos() {
   return (
     <div className="flex flex-col">
-      <main className="p-6">
+      <main className="flex flex-1 flex-col">
         <div className="space-y-6">
           <AlunosPageClient />
           <AlunosTable />

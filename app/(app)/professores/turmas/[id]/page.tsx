@@ -18,14 +18,12 @@ export default async function ClassDetailsPage({
   const profile = await getUserProfile();
 
   if (!profile) {
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   }
 
   if (profile.role !== "professor") {
     return (
-      <div className="p-6">
-        Sem acesso. Esta página é exclusiva do professor.
-      </div>
+      <div>Sem acesso. Esta página é exclusiva do professor.</div>
     );
   }
 
@@ -37,7 +35,7 @@ export default async function ClassDetailsPage({
     });
   } catch (error) {
     return (
-      <div className="p-6">
+      <div>
         <p className="text-red-600">
           {error instanceof Error ? error.message : "Erro ao carregar turma."}
         </p>

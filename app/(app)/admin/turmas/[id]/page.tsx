@@ -19,12 +19,12 @@ export default async function AdminTurmaDetailsPage({
   const profile = await getUserProfile();
 
   if (!profile) {
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   }
 
   const allowedRoles = ["administrativo", "coordenação"];
   if (!allowedRoles.includes(profile.role ?? "")) {
-    return <div className="p-6">Sem acesso a esta turma.</div>;
+    return <div>Sem acesso a esta turma.</div>;
   }
 
   let turma;
@@ -32,7 +32,7 @@ export default async function AdminTurmaDetailsPage({
     turma = await getTurmaDetailForStaff(id);
   } catch (error) {
     return (
-      <div className="p-6">
+      <div>
         <p className="text-red-600">
           {error instanceof Error ? error.message : "Erro ao carregar turma."}
         </p>

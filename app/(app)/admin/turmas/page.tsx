@@ -61,7 +61,7 @@ export function TurmasPageContent({
         <CreateTurmaDialog open={dialogOpen} onOpenChange={setDialogOpen} />
       ) : null}
 
-      <main className="p-6">
+      <main className="flex flex-1 flex-col">
         <div className="space-y-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>

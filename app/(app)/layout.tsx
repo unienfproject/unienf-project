@@ -8,6 +8,7 @@ import {
   useSidebar,
 } from "@/app/_components/ui/sidebar";
 import { DashboardHeader } from "@/app/_components/DashboardHeader";
+import { AppPageContent } from "@/app/_components/layout/AppPageContent";
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
 
@@ -27,7 +28,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
       <div className="flex flex-1 flex-col">
         <DashboardHeader />
-        <SidebarInset>{children}</SidebarInset>
+        <SidebarInset>
+          <AppPageContent>{children}</AppPageContent>
+        </SidebarInset>
       </div>
     </div>
   );

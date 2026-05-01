@@ -37,14 +37,12 @@ export default async function StudentDetailsPage({
   const profile = await getUserProfile();
 
   if (!profile) {
-    return <div className="p-6">Sessão inválida. Faça login novamente.</div>;
+    return <div>Sessão inválida. Faça login novamente.</div>;
   }
 
   if (profile.role !== "professor") {
     return (
-      <div className="p-6">
-        Sem acesso. Esta página é exclusiva do professor.
-      </div>
+      <div>Sem acesso. Esta página é exclusiva do professor.</div>
     );
   }
 
@@ -57,7 +55,7 @@ export default async function StudentDetailsPage({
     frequencias = await listFrequenciasByStudent(params.id);
   } catch (error) {
     return (
-      <div className="p-6">
+      <div>
         <p className="text-red-600">
           {error instanceof Error ? error.message : "Erro ao carregar aluno."}
         </p>
@@ -70,7 +68,7 @@ export default async function StudentDetailsPage({
 
   return (
     <div className="flex flex-col">
-      <div className="flex flex-col gap-3 p-6">
+      <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <Link href="/professores/alunos">
             <Button variant="ghost" size="icon" className="h-10 w-10">
@@ -88,7 +86,7 @@ export default async function StudentDetailsPage({
         </div>
       </div>
 
-      <Tabs defaultValue="dados-pessoais" className="px-6 pb-6">
+      <Tabs defaultValue="dados-pessoais" className="mt-6 pb-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
           <TabsTrigger value="academico">AcadÃªmico</TabsTrigger>

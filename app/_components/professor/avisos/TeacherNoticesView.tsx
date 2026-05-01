@@ -360,7 +360,7 @@ export default function TeacherNoticesView({
         notice={selectedNotice}
       />
 
-      <main className="p-4">
+      <main className="flex flex-col">
       <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Avisos</h1>

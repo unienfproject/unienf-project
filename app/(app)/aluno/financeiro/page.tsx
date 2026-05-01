@@ -13,7 +13,7 @@ export default async function Financeiro() {
   }
 
   if (profile.role !== "aluno") {
-    return <div className="flex-1 p-6">Sem acesso ao Financeiro do aluno.</div>;
+    return <div className="flex-1">Sem acesso ao Financeiro do aluno.</div>;
   }
 
   return (
