@@ -9,7 +9,6 @@ const MENU: [string, RegExp][] = [
   ["Visão Geral", /\/recepcao$/],
   ["Alunos", /\/recepcao\/alunos/],
   ["Documentos", /\/recepcao\/documentos/],
-  ["Valores", /\/recepcao\/precos/],
   ["Financeiro", /\/recepcao\/financeiro/],
   ["Avisos", /\/recepcao\/avisos/],
 ];

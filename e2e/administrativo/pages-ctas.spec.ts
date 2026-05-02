@@ -78,14 +78,6 @@ test.describe("Administrativo — páginas e CTAs (leitura)", () => {
     await expect(page.getByRole("button", { name: "Novo Curso" })).toBeVisible();
   });
 
-  test("valores", async ({ page }) => {
-    await page.goto("/admin/precos", { waitUntil: "load" });
-    await expectMainVisible(page);
-    await expect(
-      page.getByRole("heading", { name: "Valores por Turma" }),
-    ).toBeVisible();
-  });
-
   test("financeiro", async ({ page }) => {
     await page.goto("/admin/financeiro", { waitUntil: "load" });
     await expectMainVisible(page);

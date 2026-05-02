@@ -9,16 +9,16 @@ export function DashboardHeader() {
 
   return (
     <header className="flex h-14 shrink-0 items-center border-b px-4 sm:px-6">
-      <div className="mx-auto flex w-full max-w-7xl items-center">
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        onClick={toggleSidebar}
-        aria-label="Abrir menu"
-      >
-        <PanelLeft className="h-5 w-5" />
-      </Button>
+      <div className="flex w-full items-center">
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          onClick={toggleSidebar}
+          aria-label="Abrir menu"
+        >
+          <PanelLeft className="h-5 w-5" />
+        </Button>
       </div>
     </header>
   );

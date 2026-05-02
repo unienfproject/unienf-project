@@ -13,7 +13,6 @@ const MENU: [string, RegExp][] = [
   ["Usuários", /\/admin\/users/],
   ["Turmas", /\/admin\/turmas/],
   ["Cursos", /\/admin\/cursos/],
-  ["Valores", /\/admin\/precos/],
   ["Financeiro", /\/admin\/financeiro/],
   ["Avisos", /\/admin\/avisos/],
 ];

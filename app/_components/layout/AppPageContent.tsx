@@ -8,10 +8,7 @@ type AppPageContentProps = {
 export function AppPageContent({ children, className }: AppPageContentProps) {
   return (
     <div
-      className={cn(
-        "mx-auto w-full max-w-7xl px-4 py-6 sm:px-6",
-        className,
-      )}
+      className={cn("w-full px-4 py-6 sm:px-6 lg:px-8", className)}
     >
       {children}
     </div>

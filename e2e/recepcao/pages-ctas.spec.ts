@@ -37,17 +37,6 @@ test.describe("Recepção — páginas e CTAs (leitura)", () => {
     ).toBeVisible();
   });
 
-  test("valores por turma", async ({ page }) => {
-    await page.goto("/recepcao/precos", { waitUntil: "load" });
-    await expectMainVisible(page);
-    await expect(
-      page.getByRole("heading", { name: "Valores por Turma" }),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("button", { name: /Salvar Valor da Turma/i }),
-    ).toBeVisible();
-  });
-
   test("financeiro", async ({ page }) => {
     await page.goto("/recepcao/financeiro", { waitUntil: "load" });
     await expectMainVisible(page);

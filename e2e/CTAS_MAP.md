@@ -50,7 +50,6 @@ Referência para os specs por role: `e2e/<role>/pages-ctas.spec.ts` (headings e 
 | `/recepcao/alunos/[id]` | nome aluno | **Editar**, **Salvar**, **Registrar Pagamento** |
 | `/recepcao/documentos` | Documentos | **Salvar Observação** (contexto) |
 | `/recepcao/alunos/[id]/documentos` | Documentos | idem |
-| `/recepcao/precos` | Valores por Turma | **Salvar Valor da Turma** |
 | `/recepcao/financeiro` | Financeiro | **Buscar aluno**, **Registrar** |
 | `/recepcao/avisos` | Avisos | leitura |
 
@@ -70,7 +69,6 @@ Referência para os specs por role: `e2e/<role>/pages-ctas.spec.ts` (headings e 
 | `/admin/users` | usuários | **Novo Usuário**, **Buscar** |
 | `/admin/turmas` | (UI mista: título “Disciplinas Cadastradas”) | botão **Nova Disciplina** abre dialog **Nova Turma** |
 | `/admin/cursos` | Cursos | **Novo Curso** |
-| `/admin/precos` | Valores por Turma | **Salvar Valor da Turma** |
 | `/admin/financeiro` | Financeiro | **Novo custo interno** |
 | `/admin/avisos` | Avisos e Comunicados | **Novo Aviso** |
 | `/admin/schema` | Schema do Banco de Dados | satélite (sem menu) |
@@ -89,6 +87,6 @@ Mesmas rotas de menu que `coordenacaoMenuItems` em `SideBar.tsx` (sem **Usuário
 - **Coordenação:** [`coordenacao/dialogs.spec.ts`](./coordenacao/dialogs.spec.ts)
 - **Professor:** [`professor/dialogs.spec.ts`](./professor/dialogs.spec.ts)
 - **Aluno:** [`aluno/dialogs.spec.ts`](./aluno/dialogs.spec.ts) (perfil, se houver **Editar**)
-- **Recepção:** CTAs em página cheia (ex.: **Salvar Valor da Turma**); ver [`recepcao/pages-ctas.spec.ts`](./recepcao/pages-ctas.spec.ts).
+- **Recepção:** CTAs em páginas cheias; ver [`recepcao/pages-ctas.spec.ts`](./recepcao/pages-ctas.spec.ts).
 
 Para fluxos que **criam** registros de verdade no banco, use ambiente isolado e dados descartáveis (futuro `E2E_ENABLE_WRITE` ou projeto dedicado).

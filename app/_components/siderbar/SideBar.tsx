@@ -22,7 +22,6 @@ import {
   Book,
   Users,
   WalletCards,
-  CircleDollarSign,
 } from "lucide-react";
 
 import Image from "next/image";
@@ -70,7 +69,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: "Usuários", url: "/admin/users", icon: Users },
     { title: "Turmas", url: "/admin/turmas", icon: FolderOpen },
     { title: "Cursos", url: "/admin/cursos", icon: GraduationCap },
-    { title: "Valores", url: "/admin/precos", icon: CircleDollarSign },
     { title: "Financeiro", url: "/admin/financeiro", icon: WalletCards },
     { title: "Avisos", url: "/admin/avisos", icon: Bell },
   ];
@@ -107,7 +105,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     { title: "Alunos", url: "/recepcao/alunos", icon: Users },
     { title: "Turmas", url: "/recepcao/turmas", icon: FolderOpen },
     { title: "Documentos", url: "/recepcao/documentos", icon: FileText },
-    { title: "Valores", url: "/recepcao/precos", icon: CircleDollarSign },
     { title: "Financeiro", url: "/recepcao/financeiro", icon: WalletCards },
     { title: "Avisos", url: "/recepcao/avisos", icon: Bell },
   ];
