@@ -10,6 +10,7 @@ export type MyAccountProfile = {
   name: string | null;
   email: string | null;
   telefone: string | null;
+  cpf: string | null;
   avatarUrl: string | null;
   createdAt: string | null;
 };
@@ -29,12 +30,25 @@ export async function getMyAccountProfile(): Promise<MyAccountProfile> {
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Perfil não encontrado.");
 
+  let cpf: string | null = null;
+
+  if (data.role === "aluno") {
+    const { data: alunoData } = await supabase
+      .from("alunos")
+      .select("cpf")
+      .eq("user_id", profile.user_id)
+      .maybeSingle();
+
+    cpf = alunoData?.cpf ? String(alunoData.cpf) : null;
+  }
+
   return {
     userId: String(data.user_id),
     role: String(data.role ?? ""),
     name: data.name ?? null,
     email: data.email ?? null,
     telefone: data.phone ?? null,
+    cpf,
     avatarUrl: data.avatar_url ?? null,
     createdAt: data.created_at ?? null,
   };

@@ -180,6 +180,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             user={{
               name: profile.name,
               email: profile.email,
+              telefone: profile.phone,
+              role: profile.role,
               avatar_url: profile.avatar_url,
             }}
           />

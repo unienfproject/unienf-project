@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { getMyAccountProfile } from "@/app/_lib/actions/me";
 import { createClient } from "@/app/_lib/supabase/client";
 import { LogOut, MoreVertical, UserCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -46,16 +47,21 @@ type NavUserProfile = {
 };
 
 function getRoleLabel(role?: string | null) {
+  const normalized = (role ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
   const labels: Record<string, string> = {
     administrativo: "Administrativo",
     professor: "Professor",
     aluno: "Aluno",
-    recepção: "Recepção",
-    coordenação: "Coordenador",
+    recepcao: "Recepção",
+    coordenacao: "Coordenação",
   };
 
-  if (!role) return "Não informado";
-  return labels[role] ?? role;
+  if (!normalized) return "Não informado";
+  return labels[normalized] ?? role ?? "Não informado";
 }
 
 export function NavUser({
@@ -64,6 +70,9 @@ export function NavUser({
   user: {
     name: string | null;
     email: string | null;
+    telefone?: string | null;
+    cpf?: string | null;
+    role?: string | null;
     avatar_url: string | null;
   };
 }) {
@@ -81,7 +90,7 @@ export function NavUser({
       toast.error("Erro ao fazer logout");
     } else {
       toast.success("Logout realizado com sucesso");
-      isMobile && setOpen(false);
+      if (isMobile) setOpen(false);
       router.push("/login");
       router.refresh();
     }
@@ -97,31 +106,27 @@ export function NavUser({
 
       if (!authUser) return;
 
-      const { data } = await supabase
-        .from("profiles")
-        .select("name, email, phone, cpf, avatar_url, role")
-        .eq("user_id", authUser.id)
-        .single();
+      try {
+        const account = await getMyAccountProfile();
 
-      setProfile(
-        data
-          ? {
-              name: data.name,
-              email: data.email,
-              telefone: data.phone,
-              cpf: data.cpf,
-              avatar_url: data.avatar_url,
-              role: data.role,
-            }
-          : {
-              name: user.name,
-              email: user.email,
-              avatar_url: user.avatar_url,
-              telefone: null,
-              cpf: null,
-              role: null,
-            },
-      );
+        setProfile({
+          name: account.name,
+          email: account.email,
+          telefone: account.telefone,
+          cpf: account.cpf,
+          avatar_url: account.avatarUrl,
+          role: account.role,
+        });
+      } catch {
+        setProfile({
+          name: user.name,
+          email: user.email,
+          avatar_url: user.avatar_url,
+          telefone: user.telefone ?? null,
+          cpf: user.cpf ?? null,
+          role: user.role ?? null,
+        });
+      }
     };
 
     loadProfile();
@@ -176,7 +181,7 @@ export function NavUser({
                 <DropdownMenuItem
                   onClick={() => {
                     setModalOpen(true);
-                    isMobile && setOpen(false);
+                    if (isMobile) setOpen(false);
                   }}
                   className="cursor-pointer"
                 >

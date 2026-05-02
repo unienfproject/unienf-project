@@ -6,30 +6,11 @@ import CreateCostModal from "./CreateCostModal";
 import {
   type Cost,
   type MensalidadeRow,
-  getCostsByMonth,
-  getMonthlySummary,
+  getCostsByRange,
+  getFinancialSummaryByRange,
   getFinanceiroEntriesByMonth,
-  getMensalidadesByMonth,
+  getMensalidadesByRange,
 } from "@/app/_lib/actions/finance";
-
-function monthLabel(month: number) {
-  return (
-    [
-      "Jan",
-      "Fev",
-      "Mar",
-      "Abr",
-      "Mai",
-      "Jun",
-      "Jul",
-      "Ago",
-      "Set",
-      "Out",
-      "Nov",
-      "Dez",
-    ][month - 1] ?? `M${month}`
-  );
-}
 
 function formatBRL(value: number) {
   return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -39,6 +20,16 @@ function formatPct(value: number | null) {
   if (value === null) return "-";
   const sign = value > 0 ? "+" : "";
   return `${sign}${value.toFixed(1)}%`;
+}
+
+function parseSearchDate(value: string | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatRangeLabel(from: Date, to: Date) {
+  return `${from.toLocaleDateString("pt-BR")} a ${to.toLocaleDateString("pt-BR")}`;
 }
 
 function computeCostInsights(costs: Cost[]) {
@@ -65,8 +56,8 @@ function computeCostInsights(costs: Cost[]) {
 function computeMensalidadeInsights(rows: MensalidadeRow[]) {
   const totalAlunos = new Set(rows.map((r) => r.studentId)).size;
 
-  const pagos = rows.filter((r) => r.status === "pago");
-  const pendentes = rows.filter((r) => r.status === "pendente");
+  const pagos = rows.filter((r) => (r.valorPago ?? 0) > 0);
+  const pendentes = rows.filter((r) => r.valorFaltante > 0);
 
   const alunosPagos = new Set(pagos.map((r) => r.studentId)).size;
   const alunosPendentes = new Set(pendentes.map((r) => r.studentId)).size;
@@ -103,27 +94,31 @@ export default async function FinanceiroAdminView({
 }: {
   searchParams?: { year?: string; month?: string; from?: string; to?: string };
 }) {
-  const dateTo = searchParams?.to
-    ? new Date(searchParams.to)
+  const parsedTo = parseSearchDate(searchParams?.to);
+  const dateTo = parsedTo
+    ? parsedTo
     : searchParams?.year && searchParams?.month
       ? new Date(Number(searchParams.year), Number(searchParams.month) - 1, 1)
       : new Date();
 
-  const dateFrom = searchParams?.from
-    ? new Date(searchParams.from)
+  const parsedFrom = parseSearchDate(searchParams?.from);
+  const dateFrom = parsedFrom
+    ? parsedFrom
     : new Date(new Date(dateTo).getFullYear(), dateTo.getMonth() - 5, 1);
 
   const year = dateTo.getFullYear();
   const month = dateTo.getMonth() + 1;
 
-  const summary = await getMonthlySummary(year, month);
-  const costs = (await getCostsByMonth(year, month)) as Cost[];
+  const periodLabel = formatRangeLabel(dateFrom, dateTo);
+
+  const summary = await getFinancialSummaryByRange(dateFrom, dateTo);
+  const costs = (await getCostsByRange(dateFrom, dateTo)) as Cost[];
 
   const { totalCosts, count, maxCost, categoriesSorted } =
     computeCostInsights(costs);
   const net = summary.totalPaid - totalCosts;
 
-  const mensalidades = await getMensalidadesByMonth(year, month);
+  const mensalidades = await getMensalidadesByRange(dateFrom, dateTo);
   const mensalidadeInsights = computeMensalidadeInsights(mensalidades);
 
   const financeiroEntries = await getFinanceiroEntriesByMonth(year, month);
@@ -154,8 +149,7 @@ export default async function FinanceiroAdminView({
               Novos Alunos (Matrículas)
             </h2>
             <span className="text-xs text-slate-500">
-              Período: {dateFrom.toLocaleDateString("pt-BR")} a{" "}
-              {dateTo.toLocaleDateString("pt-BR")}
+              Período: {periodLabel}
             </span>
           </div>
           <div className="flex h-48 items-end gap-2 pt-4">
@@ -181,21 +175,21 @@ export default async function FinanceiroAdminView({
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <Card
-            title={`Recebido em ${monthLabel(month)}/${year}`}
+            title="Recebido no periodo"
             value={formatBRL(summary.totalPaid)}
             badge={<StatusBadge label="Entradas" variant="blue" />}
-            helper={`Mês anterior: ${formatBRL(summary.prevMonthTotalPaid)}`}
+            helper={`Periodo anterior: ${formatBRL(summary.prevMonthTotalPaid)}`}
           />
 
           <Card
-            title={`Custos em ${monthLabel(month)}/${year}`}
+            title="Custos no periodo"
             value={formatBRL(totalCosts)}
             badge={<StatusBadge label="Custos" variant="gray" />}
-            helper={`${count} lançamento(s) no mês`}
+            helper={`${count} lancamento(s) no periodo`}
           />
 
           <Card
-            title="Saldo do mês"
+            title="Saldo do periodo"
             value={formatBRL(net)}
             badge={
               <StatusBadge
@@ -211,7 +205,7 @@ export default async function FinanceiroAdminView({
           />
 
           <Card
-            title="Variação vs mês anterior"
+            title="Variacao vs periodo anterior"
             value={formatBRL(summary.delta)}
             badge={
               <StatusBadge
@@ -226,7 +220,7 @@ export default async function FinanceiroAdminView({
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
           <div className="border-b p-4">
             <h2 className="font-semibold text-slate-900">
-              Mensalidades em {monthLabel(month)}/{year}
+              Mensalidades no periodo
             </h2>
             <p className="text-sm text-slate-600">
               Consolidado de previsão, recebido, pendente e adimplência.
@@ -326,7 +320,7 @@ export default async function FinanceiroAdminView({
           <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold text-slate-900">
-                Maior custo do mês
+                Maior custo do periodo
               </h2>
               <span className="text-xs text-slate-500">Ponto de atenção</span>
             </div>
@@ -351,7 +345,7 @@ export default async function FinanceiroAdminView({
                 </div>
               ) : (
                 <p className="text-sm text-slate-600">
-                  Nenhum custo lançado no mês.
+                  Nenhum custo lançado no período.
                 </p>
               )}
             </div>
@@ -367,7 +361,7 @@ export default async function FinanceiroAdminView({
           <div className="flex flex-col gap-1 border-b p-4 md:flex-row md:items-end md:justify-between">
             <div>
               <h2 className="font-semibold text-slate-900">
-                Custos internos do mês
+                Custos internos do periodo
               </h2>
               <p className="text-sm text-slate-600">
                 Lançamentos internos para controle administrativo.
@@ -375,7 +369,7 @@ export default async function FinanceiroAdminView({
             </div>
 
             <div className="text-sm text-slate-700">
-              Total do mês:{" "}
+              Total do periodo:{" "}
               <span className="font-semibold text-slate-900">
                 {formatBRL(totalCosts)}
               </span>

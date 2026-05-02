@@ -64,7 +64,7 @@ export async function getUserProfile(): Promise<Profile | null> {
 
     const { data: profileData, error } = await supabase
       .from("profiles")
-      .select("name, email, avatar_url, role")
+      .select("name, email, phone, avatar_url, role")
       .eq("user_id", user.id)
       .single();
 

@@ -27,6 +27,8 @@ export default async function FinanceiroPage(props: Props) {
         searchParams={{
           year: typeof searchParams.year === "string" ? searchParams.year : undefined,
           month: typeof searchParams.month === "string" ? searchParams.month : undefined,
+          from: typeof searchParams.from === "string" ? searchParams.from : undefined,
+          to: typeof searchParams.to === "string" ? searchParams.to : undefined,
         }}
       />
     </div>

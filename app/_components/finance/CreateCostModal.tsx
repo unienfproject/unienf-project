@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
+import { createInternalCost } from "@/app/_lib/actions/finance";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
@@ -15,6 +17,7 @@ export default function CreateCostModal({
   competenceMonth,
 }: Props) {
   const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
 
   return (
     <>
@@ -42,6 +45,7 @@ export default function CreateCostModal({
               <Button
                 type="button"
                 onClick={() => setOpen(false)}
+                disabled={pending}
                 className="hover:bg-primary/50 cursor-pointer rounded-md border border-slate-200 px-3 py-2 text-sm"
               >
                 Fechar
@@ -52,7 +56,8 @@ export default function CreateCostModal({
               className="flex flex-col gap-4 p-5"
               onSubmit={async (e) => {
                 e.preventDefault();
-                const fd = new FormData(e.currentTarget);
+                const form = e.currentTarget;
+                const fd = new FormData(form);
 
                 const payload = {
                   competenceYear,
@@ -65,8 +70,25 @@ export default function CreateCostModal({
                   incurredAt: String(fd.get("incurredAt") ?? "").trim(),
                 };
 
-                console.log("Novo custo (mock):", payload);
-                setOpen(false);
+                if (!Number.isFinite(payload.amount) || payload.amount <= 0) {
+                  toast.error("Informe um valor maior que zero.");
+                  return;
+                }
+
+                startTransition(async () => {
+                  try {
+                    await createInternalCost(payload);
+                    toast.success("Custo lancado com sucesso.");
+                    form.reset();
+                    setOpen(false);
+                  } catch (err) {
+                    toast.error(
+                      err instanceof Error
+                        ? err.message
+                        : "Erro ao lancar custo.",
+                    );
+                  }
+                });
               }}
             >
               <div className="space-y-2">
@@ -124,15 +146,17 @@ export default function CreateCostModal({
                 <Button
                   type="button"
                   onClick={() => setOpen(false)}
+                  disabled={pending}
                   className="h-10 cursor-pointer rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 hover:bg-[#ff3333] hover:text-white"
                 >
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
+                  disabled={pending}
                   className="h-10 rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
                 >
-                  Salvar custo
+                  {pending ? "Salvando..." : "Salvar custo"}
                 </Button>
               </div>
             </form>
