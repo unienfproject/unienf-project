@@ -3,8 +3,33 @@
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
 import type { PaginatedResult } from "@/app/_lib/actions/pagination";
+import { revalidatePath } from "next/cache";
 
 type PickerItem = { id: string; label: string };
+
+function buildPeriodFromStartDate(startDate: string): string {
+  const [yearStr, monthStr] = startDate.split("-");
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month)) {
+    const now = new Date();
+    const semester = now.getMonth() + 1 <= 6 ? 1 : 2;
+    return `${now.getFullYear()}.${semester}`;
+  }
+
+  const semester = month <= 6 ? 1 : 2;
+  return `${year}.${semester}`;
+}
+
+function buildTurmaTag(params: {
+  disciplinaName: string;
+  professorName: string;
+  startDate: string;
+  endDate: string;
+}) {
+  return `${params.disciplinaName} - ${params.professorName} - ${params.startDate} - ${params.endDate}`;
+}
 
 export async function listProfessoresForPicker(): Promise<PickerItem[]> {
   const supabase = await createServerSupabaseClient();
@@ -27,10 +52,13 @@ export type TurmaRow = {
   id: string;
   name: string;
   tag: string;
+  period: string;
   startDate: string;
   endDate: string;
   status: string;
+  disciplinaId: string | null;
   disciplinaName: string | null;
+  professorId: string | null;
   professorName: string | null;
   createdAt: string;
 };
@@ -50,6 +78,7 @@ export async function listTurmas(): Promise<TurmaRow[]> {
       `
       id,
       tag,
+      period,
       start_date,
       end_date,
       status,
@@ -74,10 +103,13 @@ export async function listTurmas(): Promise<TurmaRow[]> {
       id: t.id,
       name: t.tag,
       tag: t.tag,
+      period: t.period ?? "",
       startDate: t.start_date,
       endDate: t.end_date,
       status: t.status,
+      disciplinaId: t.disciplina_id ? String(t.disciplina_id) : null,
       disciplinaName: disciplina?.name || null,
+      professorId: t.professor_id ? String(t.professor_id) : null,
       professorName: profile?.name || null,
       createdAt: t.created_at,
     };
@@ -130,8 +162,11 @@ export async function listTurmasPaginated(params: {
       `
         id,
         tag,
+        period,
         start_date,
         end_date,
+        disciplina_id,
+        professor_id,
         status,
         created_at,
         disciplinas:disciplinas!turmas_disciplina_id_fkey (
@@ -150,7 +185,21 @@ export async function listTurmasPaginated(params: {
   const { data, error } = await dataQuery;
   if (error) throw new Error(error.message);
 
-  const items: TurmaRow[] = (data ?? []).map((r: any) => {
+  type TurmaPaginatedRow = {
+    id: unknown;
+    tag: unknown;
+    period: unknown;
+    start_date: unknown;
+    end_date: unknown;
+    status: unknown;
+    disciplina_id: unknown;
+    professor_id: unknown;
+    created_at: unknown;
+    disciplinas: { name: string | null } | { name: string | null }[] | null;
+    professor_profile: { name: string | null } | { name: string | null }[] | null;
+  };
+
+  const items: TurmaRow[] = ((data ?? []) as TurmaPaginatedRow[]).map((r) => {
     const disc = Array.isArray(r.disciplinas)
       ? r.disciplinas[0]
       : r.disciplinas;
@@ -162,16 +211,145 @@ export async function listTurmasPaginated(params: {
       id: String(r.id),
       name: String(r.tag ?? ""),
       tag: String(r.tag ?? ""),
+      period: String(r.period ?? ""),
       startDate: String(r.start_date ?? ""),
       endDate: String(r.end_date ?? ""),
       status: String(r.status ?? ""),
+      disciplinaId: r.disciplina_id ? String(r.disciplina_id) : null,
       disciplinaName: disc?.name ?? null,
+      professorId: r.professor_id ? String(r.professor_id) : null,
       professorName: prof?.name ?? null,
       createdAt: String(r.created_at ?? ""),
     };
   });
 
   return { items, total, page, pageSize, totalPages };
+}
+
+export async function updateTurmaAdmin(input: {
+  turmaId: string;
+  tag?: string;
+  period?: string;
+  startDate: string;
+  endDate: string;
+  disciplinaId: string;
+}) {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  const allowedRoles = ["administrativo", "coordenação"];
+  if (!allowedRoles.includes(profile.role ?? "")) {
+    throw new Error("Sem permissão para editar turmas.");
+  }
+
+  const turmaId = String(input.turmaId ?? "").trim();
+  const disciplinaId = String(input.disciplinaId ?? "").trim();
+  const startDate = String(input.startDate ?? "").trim();
+  const endDate = String(input.endDate ?? "").trim() || startDate;
+
+  if (!turmaId) throw new Error("Turma inválida.");
+  if (!disciplinaId) throw new Error("Selecione uma disciplina.");
+  if (!startDate) throw new Error("Informe a data de início.");
+  if (!endDate) throw new Error("Informe a data de término.");
+
+  const supabase = await createServerSupabaseClient();
+
+  const { data: turma, error: turmaError } = await supabase
+    .from("turmas")
+    .select(
+      `
+        id,
+        tag,
+        start_date,
+        end_date,
+        professor_id,
+        disciplinas:disciplinas!turmas_disciplina_id_fkey(name),
+        professor_profile:profiles!turmas_professor_id_fkey(name, email)
+      `,
+    )
+    .eq("id", turmaId)
+    .single();
+
+  if (turmaError) throw new Error(turmaError.message);
+  if (!turma) throw new Error("Turma não encontrada.");
+
+  const { data: disciplina, error: disciplinaError } = await supabase
+    .from("disciplinas")
+    .select("name")
+    .eq("id", disciplinaId)
+    .single();
+
+  if (disciplinaError || !disciplina?.name) {
+    throw new Error("Disciplina selecionada não encontrada.");
+  }
+
+  type JoinedName = { name: string | null; email?: string | null };
+  type TurmaEditRow = {
+    tag: string | null;
+    start_date: string | null;
+    end_date: string | null;
+    professor_id: string | null;
+    disciplinas: { name: string | null } | { name: string | null }[] | null;
+    professor_profile: JoinedName | JoinedName[] | null;
+  };
+
+  const turmaRow = turma as TurmaEditRow;
+  const oldDisciplina = Array.isArray(turmaRow.disciplinas)
+    ? turmaRow.disciplinas[0]
+    : turmaRow.disciplinas;
+  const professor = Array.isArray(turmaRow.professor_profile)
+    ? turmaRow.professor_profile[0]
+    : turmaRow.professor_profile;
+  const professorName = (professor?.name ?? professor?.email ?? "").trim();
+
+  if (!professorName) {
+    throw new Error("Professor da turma sem nome válido para gerar etiqueta.");
+  }
+
+  const oldGeneratedTag = buildTurmaTag({
+    disciplinaName: String(oldDisciplina?.name ?? "").trim(),
+    professorName,
+    startDate: String(turmaRow.start_date ?? "").trim(),
+    endDate: String(turmaRow.end_date ?? "").trim(),
+  });
+  const newGeneratedTag = buildTurmaTag({
+    disciplinaName: disciplina.name.trim(),
+    professorName,
+    startDate,
+    endDate,
+  });
+
+  const submittedTag = String(input.tag ?? "").trim();
+  const currentTag = String(turmaRow.tag ?? "").trim();
+  const tag =
+    !submittedTag || (submittedTag === currentTag && currentTag === oldGeneratedTag)
+      ? newGeneratedTag
+      : submittedTag;
+  const period = String(input.period ?? "").trim() || buildPeriodFromStartDate(startDate);
+
+  const { error } = await supabase
+    .from("turmas")
+    .update({
+      tag,
+      period,
+      start_date: startDate,
+      end_date: endDate,
+      disciplina_id: disciplinaId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", turmaId);
+
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/turmas");
+  revalidatePath(`/admin/turmas/${turmaId}`);
+  revalidatePath("/recepcao/turmas");
+  revalidatePath(`/recepcao/turmas/${turmaId}`);
+  revalidatePath("/professores/turmas");
+  revalidatePath(`/professores/turmas/${turmaId}`);
+  revalidatePath("/admin/financeiro");
+  revalidatePath("/recepcao/financeiro");
+  revalidatePath("/aluno/financeiro");
 }
 
 export type TurmaDetailForStaff = {

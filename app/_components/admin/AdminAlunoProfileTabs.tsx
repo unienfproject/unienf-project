@@ -370,7 +370,7 @@ function PlanoFinanceiroForm({
       onSubmit={handleSubmit}
       className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
     >
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-2">
         <h3 className="text-base font-semibold text-slate-900">
           Plano financeiro
         </h3>

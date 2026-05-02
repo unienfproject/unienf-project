@@ -331,41 +331,47 @@ export default function Professores() {
 
           {editingProfessor && (
             <div className="space-y-4">
-              <Label htmlFor="Nome">Nome</Label>
-              <Input
-                value={editingProfessor.name}
-                onChange={(e) =>
-                  setEditingProfessor({
-                    ...editingProfessor,
-                    name: e.target.value,
-                  })
-                }
-                placeholder="Nome"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="Nome">Nome</Label>
+                <Input
+                  value={editingProfessor.name}
+                  onChange={(e) =>
+                    setEditingProfessor({
+                      ...editingProfessor,
+                      name: e.target.value,
+                    })
+                  }
+                  placeholder="Nome"
+                />
+              </div>
 
-              <Label htmlFor="Email">Email</Label>
-              <Input
-                value={editingProfessor.email ?? ""}
-                onChange={(e) =>
-                  setEditingProfessor({
-                    ...editingProfessor,
-                    email: e.target.value,
-                  })
-                }
-                placeholder="Email"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="Email">Email</Label>
+                <Input
+                  value={editingProfessor.email ?? ""}
+                  onChange={(e) =>
+                    setEditingProfessor({
+                      ...editingProfessor,
+                      email: e.target.value,
+                    })
+                  }
+                  placeholder="Email"
+                />
+              </div>
 
-              <Label htmlFor="Telefone">Telefone</Label>
-              <Input
-                value={editingProfessor.telefone ?? ""}
-                onChange={(e) =>
-                  setEditingProfessor({
-                    ...editingProfessor,
-                    telefone: e.target.value || null,
-                  })
-                }
-                placeholder="Telefone"
-              />
+              <div className="space-y-2">
+                <Label htmlFor="Telefone">Telefone</Label>
+                <Input
+                  value={editingProfessor.telefone ?? ""}
+                  onChange={(e) =>
+                    setEditingProfessor({
+                      ...editingProfessor,
+                      telefone: e.target.value || null,
+                    })
+                  }
+                  placeholder="Telefone"
+                />
+              </div>
             </div>
           )}
 

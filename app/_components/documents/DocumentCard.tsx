@@ -108,13 +108,12 @@ export default function DocumentCard({
 
       {canEdit && (
         <div className="mt-4 space-y-3">
-          <div>
+          <div className="space-y-2">
             <Label className="text-sm">Observações</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               placeholder="Adicione observações sobre este documento..."
-              className="mt-1"
               rows={2}
             />
             <Button
@@ -181,13 +180,12 @@ export default function DocumentCard({
           </div>
 
           {showRejectForm && (
-            <div className="rounded border border-red-200 bg-red-50 p-3">
+            <div className="space-y-2 rounded border border-red-200 bg-red-50 p-3">
               <Label className="text-sm text-red-800">Motivo da Rejeição</Label>
               <Textarea
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 placeholder="Digite o motivo da rejeição..."
-                className="mt-1"
                 rows={2}
               />
               <div className="mt-2 flex gap-2">

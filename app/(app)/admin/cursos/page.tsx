@@ -238,7 +238,7 @@ export default function CursosPage() {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div>
+            <div className="space-y-2">
               <Label>Nome do curso</Label>
               <Input
                 value={formName}
@@ -246,7 +246,7 @@ export default function CursosPage() {
               />
             </div>
 
-            <div>
+            <div className="space-y-2">
               <Label>Duração (meses)</Label>
               <Input
                 type="number"
@@ -296,20 +296,18 @@ export default function CursosPage() {
             <DialogTitle>Editar Curso</DialogTitle>
           </DialogHeader>
 
-          <div className="gap-2 space-y-4">
-            <div className="gap-2">
+          <div className="space-y-4">
+            <div className="space-y-2">
               <Label>Nome do curso</Label>
               <Input
-                className="mt-2"
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
               />
             </div>
 
-            <div className="gap-2">
+            <div className="space-y-2">
               <Label>Duração (meses)</Label>
               <Input
-                className="mt-2"
                 type="number"
                 value={formDuration}
                 onChange={(e) =>

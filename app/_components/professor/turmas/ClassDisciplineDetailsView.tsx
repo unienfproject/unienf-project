@@ -276,7 +276,9 @@ export default function ClassDisciplineDetailsView({
                       </TableCell>
                       <TableCell className="px-4 py-3">
                         <div className="flex justify-end gap-2">
-                          <Link href={`${profileHrefPrefix}/${student.id}`}>
+                          <Link
+                            href={`${profileHrefPrefix}/${student.id}?turmaId=${details.id}`}
+                          >
                             <Button variant="outline" size="sm">
                               Ver Perfil
                             </Button>

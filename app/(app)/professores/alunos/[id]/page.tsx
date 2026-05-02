@@ -31,9 +31,14 @@ function statusClass(status: "aprovado" | "reprovado" | "em_andamento") {
 
 export default async function StudentDetailsPage({
   params,
+  searchParams,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ turmaId?: string }>;
 }) {
+  const { id } = await params;
+  const query = await searchParams;
+  const turmaId = query?.turmaId?.trim();
   const profile = await getUserProfile();
 
   if (!profile) {
@@ -50,27 +55,34 @@ export default async function StudentDetailsPage({
   let notas: Awaited<ReturnType<typeof listNotasByStudent>> = [];
   let frequencias: Awaited<ReturnType<typeof listFrequenciasByStudent>> = [];
   try {
-    studentData = await getStudentPersonalData(params.id, profile.user_id);
-    notas = await listNotasByStudent(params.id);
-    frequencias = await listFrequenciasByStudent(params.id);
+    studentData = await getStudentPersonalData(id, profile.user_id);
+    notas = await listNotasByStudent(id, { turmaId });
+    frequencias = await listFrequenciasByStudent(id, { turmaId });
   } catch (error) {
     return (
       <div>
         <p className="text-red-600">
           {error instanceof Error ? error.message : "Erro ao carregar aluno."}
         </p>
-        <Link href="/professores/alunos" className="mt-4 inline-block">
+        <Link
+          href={turmaId ? `/professores/turmas/${turmaId}` : "/professores/alunos"}
+          className="mt-4 inline-block"
+        >
           <Button variant="outline">Voltar</Button>
         </Link>
       </div>
     );
   }
 
+  const turmasVisiveis = turmaId
+    ? studentData.turmas.filter((turma) => turma.id === turmaId)
+    : studentData.turmas;
+
   return (
     <div className="flex flex-col">
       <div className="flex flex-col gap-3">
         <div className="flex items-center gap-3">
-          <Link href="/professores/alunos">
+          <Link href={turmaId ? `/professores/turmas/${turmaId}` : "/professores/alunos"}>
             <Button variant="ghost" size="icon" className="h-10 w-10">
               <ArrowLeft className="h-5 w-5" />
             </Button>
@@ -151,13 +163,13 @@ export default async function StudentDetailsPage({
 
         <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-semibold text-slate-900">Turmas</h2>
-          {studentData.turmas.length === 0 ? (
+          {turmasVisiveis.length === 0 ? (
             <p className="text-sm text-slate-500">
               Aluno não está vinculado a nenhuma turma.
             </p>
           ) : (
             <div className="space-y-3">
-              {studentData.turmas.map((turma) => (
+              {turmasVisiveis.map((turma) => (
                 <div
                   key={turma.id}
                   className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3"

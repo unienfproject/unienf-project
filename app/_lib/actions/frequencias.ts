@@ -269,6 +269,7 @@ export async function savePeriodFrequencia(input: {
 async function listFrequenciasByStudentInternal(
   studentId: string,
   allowedRoles: string[],
+  options: { turmaId?: string } = {},
 ): Promise<FrequenciaTurmaSummary[]> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
@@ -287,7 +288,11 @@ async function listFrequenciasByStudentInternal(
     throw new Error(turmasError.message);
   }
 
-  const turmaIds = (turmaAlunos ?? []).map((row) => String(row.turma_id));
+  let turmaIds = (turmaAlunos ?? []).map((row) => String(row.turma_id));
+  const requestedTurmaId = options.turmaId?.trim();
+  if (requestedTurmaId) {
+    turmaIds = turmaIds.filter((turmaId) => turmaId === requestedTurmaId);
+  }
   if (turmaIds.length === 0) return [];
 
   let turmasQuery = supabase
@@ -343,11 +348,12 @@ export async function listMyFrequencias(): Promise<FrequenciaTurmaSummary[]> {
 
 export async function listFrequenciasByStudent(
   studentId: string,
+  options: { turmaId?: string } = {},
 ): Promise<FrequenciaTurmaSummary[]> {
   return listFrequenciasByStudentInternal(studentId, [
     "recepção",
     "administrativo",
     "coordenação",
     "professor",
-  ]);
+  ], options);
 }

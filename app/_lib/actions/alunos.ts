@@ -509,7 +509,6 @@ export async function getStudentPersonalData(
       turma_id,
       turmas:turmas!turma_alunos_turma_id_fkey(
         id,
-        name,
         tag,
         disciplinas:disciplinas!turmas_disciplina_id_fkey(name)
       )
@@ -525,13 +524,11 @@ export async function getStudentPersonalData(
     turmas:
       | {
           id: string;
-          name: string;
           tag: string;
           disciplinas: { name: string } | { name: string }[];
         }
       | {
           id: string;
-          name: string;
           tag: string;
           disciplinas: { name: string } | { name: string }[];
         }[];
@@ -548,7 +545,7 @@ export async function getStudentPersonalData(
 
       return {
         id: turma?.id ?? "",
-        name: turma?.name ?? "",
+        name: turma?.tag ?? "",
         tag: turma?.tag ?? "",
         disciplinaName: disciplina?.name ?? null,
       };

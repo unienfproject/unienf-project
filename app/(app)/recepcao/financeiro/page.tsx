@@ -235,7 +235,7 @@ export default async function RecepcaoFinanceiroPage({
                             value={m.id}
                           />
 
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-2">
                             <span className="text-xs text-slate-600">
                               Valor pago
                             </span>
@@ -250,7 +250,7 @@ export default async function RecepcaoFinanceiroPage({
                             />
                           </div>
 
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-2">
                             <span className="text-xs text-slate-600">
                               Forma
                             </span>
@@ -269,7 +269,7 @@ export default async function RecepcaoFinanceiroPage({
                             </Select>
                           </div>
 
-                          <div className="flex flex-col gap-1">
+                          <div className="flex flex-col gap-2">
                             <span className="text-xs text-slate-600">Data</span>
                             <Input
                               type="date"

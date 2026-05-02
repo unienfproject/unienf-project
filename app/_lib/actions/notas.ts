@@ -228,6 +228,7 @@ export type NotasByTurmaForStaff = {
 
 export async function listNotasByStudent(
   studentId: string,
+  options: { turmaId?: string } = {},
 ): Promise<NotasByTurmaForStaff[]> {
   const profile = await getUserProfile();
   if (!profile) throw new Error("Sessão inválida.");
@@ -254,7 +255,12 @@ export async function listNotasByStudent(
     return [];
   }
 
-  const turmaIds = turmaAlunos.map((ta) => ta.turma_id);
+  let turmaIds = turmaAlunos.map((ta) => ta.turma_id);
+  const requestedTurmaId = options.turmaId?.trim();
+  if (requestedTurmaId) {
+    turmaIds = turmaIds.filter((turmaId) => String(turmaId) === requestedTurmaId);
+    if (turmaIds.length === 0) return [];
+  }
 
   // Buscar dados das turmas
   let turmasQuery = supabase

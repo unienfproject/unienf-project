@@ -84,7 +84,7 @@ export default function FinanceiroRecepcaoView() {
 
       <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-end gap-3">
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <span className="text-sm text-slate-700">Ano</span>
             <input
               className="w-[120px] rounded-md border px-3 py-2 text-sm"
@@ -93,7 +93,7 @@ export default function FinanceiroRecepcaoView() {
             />
           </div>
 
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <span className="text-sm text-slate-700">Mês</span>
             <select
               className="w-[160px] rounded-md border px-3 py-2 text-sm"

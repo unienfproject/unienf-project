@@ -105,7 +105,7 @@ export default function NewUserForm() {
 
   return (
     <form onSubmit={onSubmit} className="grid grid-cols-1 gap-6 md:grid-cols-2">
-      <div>
+      <div className="space-y-2">
         <Label className="block text-sm font-medium text-gray-700">
           Nome completo
         </Label>
@@ -113,34 +113,34 @@ export default function NewUserForm() {
           type="text"
           value={form.name}
           onChange={(e) => onChange("name", e.target.value)}
-          className="focus:border-primary focus:ring-primary mt-1 w-full rounded-lg border-gray-300"
+          className="focus:border-primary focus:ring-primary w-full rounded-lg border-gray-300"
           placeholder="Nome do Usuário"
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label className="block text-sm font-medium text-gray-700">CPF</Label>
         <Input
           type="text"
           value={form.cpf}
           onChange={(e) => onChange("cpf", e.target.value)}
-          className="focus:border-primary focus:ring-primary mt-1 w-full rounded-lg border-gray-300"
+          className="focus:border-primary focus:ring-primary w-full rounded-lg border-gray-300"
           placeholder="000.000.000-00"
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label className="block text-sm font-medium text-gray-700">Email</Label>
         <Input
           type="email"
           value={form.email}
           onChange={(e) => onChange("email", e.target.value)}
-          className="focus:border-primary focus:ring-primary mt-1 w-full rounded-lg border-gray-300"
+          className="focus:border-primary focus:ring-primary w-full rounded-lg border-gray-300"
           placeholder="email@exemplo.com"
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label className="block text-sm font-medium text-gray-700">
           Telefone
         </Label>
@@ -148,15 +148,15 @@ export default function NewUserForm() {
           type="tel"
           value={form.telefone}
           onChange={(e) => onChange("telefone", e.target.value)}
-          className="focus:border-primary focus:ring-primary mt-1 w-full rounded-lg border-gray-300"
+          className="focus:border-primary focus:ring-primary w-full rounded-lg border-gray-300"
           placeholder="(00) 00000-0000"
         />
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label className="block text-sm font-medium text-gray-700">Setor</Label>
         <Select value={form.role} onValueChange={(v) => onChange("role", v)}>
-          <SelectTrigger className="focus:border-primary focus:ring-primary mt-1 w-full rounded-lg border-gray-300">
+          <SelectTrigger className="focus:border-primary focus:ring-primary w-full rounded-lg border-gray-300">
             <SelectValue placeholder="Selecione" />
           </SelectTrigger>
           <SelectContent>
@@ -168,7 +168,7 @@ export default function NewUserForm() {
         </Select>
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label className="block text-sm font-medium text-gray-700">Senha</Label>
         <div className="relative">
           <Input
@@ -177,7 +177,7 @@ export default function NewUserForm() {
             onChange={(e) => onChange("password", e.target.value)}
             placeholder="••••••••"
             required
-            className="focus:border-primary focus:ring-primary mt-1 w-full rounded-lg border-gray-300 pr-10"
+            className="focus:border-primary focus:ring-primary w-full rounded-lg border-gray-300 pr-10"
           />
           <Button
             type="button"
@@ -229,7 +229,7 @@ export default function NewUserForm() {
         ) : null}
       </div>
 
-      <div>
+      <div className="space-y-2">
         <Label className="block text-sm font-medium text-gray-700">
           Confirmar senha
         </Label>
@@ -237,12 +237,12 @@ export default function NewUserForm() {
           type="password"
           value={form.confirmPassword}
           onChange={(e) => onChange("confirmPassword", e.target.value)}
-          className="focus:border-primary focus:ring-primary mt-1 w-full rounded-lg border-gray-300"
+          className="focus:border-primary focus:ring-primary w-full rounded-lg border-gray-300"
           placeholder="••••••••"
         />
       </div>
 
-      <div className="md:col-span-2">
+      <div className="space-y-2 md:col-span-2">
         <Label className="block text-sm font-medium text-gray-700">
           Observações
         </Label>
@@ -250,7 +250,7 @@ export default function NewUserForm() {
           rows={4}
           value={form.observation}
           onChange={(e) => onChange("observation", e.target.value)}
-          className="focus:border-primary focus:ring-primary mt-1 w-full rounded-lg border-gray-300"
+          className="focus:border-primary focus:ring-primary w-full rounded-lg border-gray-300"
           placeholder="Informações adicionais"
         />
       </div>

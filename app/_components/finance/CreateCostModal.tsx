@@ -69,7 +69,7 @@ export default function CreateCostModal({
                 setOpen(false);
               }}
             >
-              <div className="flex flex-col gap-1">
+              <div className="space-y-2">
                 <Label className="text-sm font-medium text-slate-700">
                   Categoria
                 </Label>
@@ -81,7 +81,7 @@ export default function CreateCostModal({
                 />
               </div>
 
-              <div className="flex flex-col gap-1">
+              <div className="space-y-2">
                 <Label className="text-sm font-medium text-slate-700">
                   Descrição
                 </Label>
@@ -94,7 +94,7 @@ export default function CreateCostModal({
               </div>
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                <div className="flex flex-col gap-1">
+                <div className="space-y-2">
                   <Label className="text-sm font-medium text-slate-700">
                     Valor (R$)
                   </Label>
@@ -106,7 +106,7 @@ export default function CreateCostModal({
                   />
                 </div>
 
-                <div className="flex flex-col gap-1">
+                <div className="space-y-2">
                   <Label className="text-sm font-medium text-slate-700">
                     Data do custo
                   </Label>

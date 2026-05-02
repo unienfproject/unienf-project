@@ -32,7 +32,7 @@ export default async function FinanceiroAlunoView({
   return (
     <div className="flex flex-col">
       <main className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-2">
           <h1 className="text-2xl font-bold text-slate-900">Financeiro</h1>
           <p className="text-xl text-slate-600">
             Aluno:{" "}
