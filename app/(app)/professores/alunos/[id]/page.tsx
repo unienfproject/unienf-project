@@ -101,7 +101,7 @@ export default async function StudentDetailsPage({
       <Tabs defaultValue="dados-pessoais" className="mt-6 pb-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="dados-pessoais">Dados Pessoais</TabsTrigger>
-          <TabsTrigger value="academico">AcadÃªmico</TabsTrigger>
+          <TabsTrigger value="academico">Acadêmico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="dados-pessoais" className="mt-6">

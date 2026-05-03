@@ -8,6 +8,8 @@ interface StatCardProps {
   variant?: "default" | "success" | "warning" | "muted";
   trend?: string;
   className?: string;
+  labelClassName?: string;
+  valueClassName?: string;
 }
 
 const variantStyles = {
@@ -31,6 +33,8 @@ export default function StatCard({
   variant = "default",
   trend,
   className,
+  labelClassName,
+  valueClassName,
 }: StatCardProps) {
   return (
     <div
@@ -42,10 +46,17 @@ export default function StatCard({
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-muted-foreground mb-1 text-sm font-medium">
+          <p
+            className={cn(
+              "text-muted-foreground mb-1 text-sm font-medium",
+              labelClassName,
+            )}
+          >
             {label}
           </p>
-          <p className="text-foreground text-3xl font-bold">{value}</p>
+          <p className={cn("text-foreground text-3xl font-bold", valueClassName)}>
+            {value}
+          </p>
           {trend && (
             <p className="text-success mt-2 text-sm font-medium">{trend}</p>
           )}

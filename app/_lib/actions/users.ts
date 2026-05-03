@@ -100,6 +100,7 @@ export async function createInternalUser(input: {
       user_metadata: {
         name,
         phone: telefone,
+        cpf,
         role,
       },
       app_metadata: {

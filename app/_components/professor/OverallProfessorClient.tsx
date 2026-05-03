@@ -27,7 +27,7 @@ export default function OverallProfessorClient(props: {
       <main className="flex flex-1 flex-col">
         <div className="space-y-6">
           <div>
-            <h1 className="text-foreground text-2xl font-bold">
+            <h1 className="text-foreground text-xl font-bold">
               Olá, {professorName}!
             </h1>
             <p className="text-muted-foreground">
@@ -53,7 +53,7 @@ export default function OverallProfessorClient(props: {
           <div className="flex flex-col gap-6 lg:flex-col">
             <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-6 lg:col-span-2">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-foreground text-lg font-semibold">
+                <h3 className="text-foreground text-base font-semibold">
                   Minhas Turmas
                 </h3>
                 <Button
@@ -94,7 +94,7 @@ export default function OverallProfessorClient(props: {
                       </div>
 
                       <div className="text-right">
-                        <p className="text-foreground text-lg font-semibold">
+                        <p className="text-foreground text-base font-semibold">
                           {t.totalAlunos}
                         </p>
                         <p className="text-muted-foreground text-xs">alunos</p>
@@ -106,7 +106,7 @@ export default function OverallProfessorClient(props: {
             </div>
 
             <div className="flex flex-col bg-card border-border/50 shadow-soft rounded-2xl border p-6">
-              <h3 className="text-foreground mb-4 text-lg font-semibold">
+              <h3 className="text-foreground mb-4 text-base font-semibold">
                 Pendências
               </h3>
               <div className="text-muted-foreground rounded-xl bg-muted/30 p-4 text-sm">
@@ -119,3 +119,5 @@ export default function OverallProfessorClient(props: {
     </div>
   );
 }
+
+

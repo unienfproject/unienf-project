@@ -20,7 +20,9 @@ export async function getMyAccountProfile(): Promise<MyAccountProfile> {
   if (!profile) throw new Error("Sessão inválida.");
 
   const supabase = await createServerSupabaseClient();
-
+  const {
+    data: { user: authUser },
+  } = await supabase.auth.getUser();
   const { data, error } = await supabase
     .from("profiles")
     .select("user_id, role, name, email, phone, avatar_url, created_at")
@@ -30,7 +32,15 @@ export async function getMyAccountProfile(): Promise<MyAccountProfile> {
   if (error) throw new Error(error.message);
   if (!data) throw new Error("Perfil não encontrado.");
 
-  let cpf: string | null = null;
+  const metadataCpf =
+    typeof authUser?.user_metadata?.cpf === "string"
+      ? authUser.user_metadata.cpf
+      : null;
+  const metadataPhone =
+    typeof authUser?.user_metadata?.phone === "string"
+      ? authUser.user_metadata.phone
+      : null;
+  let cpf: string | null = metadataCpf;
 
   if (data.role === "aluno") {
     const { data: alunoData } = await supabase
@@ -47,7 +57,7 @@ export async function getMyAccountProfile(): Promise<MyAccountProfile> {
     role: String(data.role ?? ""),
     name: data.name ?? null,
     email: data.email ?? null,
-    telefone: data.phone ?? null,
+    telefone: data.phone ?? metadataPhone,
     cpf,
     avatarUrl: data.avatar_url ?? null,
     createdAt: data.created_at ?? null,
@@ -63,7 +73,6 @@ export async function updateMyAccountProfile(input: {
   if (!profile) throw new Error("Sessão inválida.");
 
   const supabase = await createServerSupabaseClient();
-
   const updateData: {
     name?: string | null;
     phone?: string | null;
@@ -84,3 +93,5 @@ export async function updateMyAccountProfile(input: {
 
   revalidatePath("/perfil");
 }
+
+

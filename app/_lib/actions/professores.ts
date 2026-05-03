@@ -81,6 +81,7 @@ export async function createProfessor(input: {
       user_metadata: {
         name,
         phone: telefone,
+        cpf,
         role: "professor",
       },
       app_metadata: {

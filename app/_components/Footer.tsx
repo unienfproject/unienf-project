@@ -7,7 +7,7 @@ export default function Footer() {
   return (
     <footer
       id="contato"
-      className="bg-foreground text-card flex flex-col items-center justify-center gap-4 py-16"
+      className="bg-foreground text-card flex flex-col items-center justify-center gap-4 py-8"
     >
       <div className="container mx-auto px-4 lg:px-8">
         <div className="mb-12 grid grid-cols-1 gap-12 md:grid-cols-2 lg:grid-cols-4">

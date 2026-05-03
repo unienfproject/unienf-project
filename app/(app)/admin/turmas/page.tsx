@@ -205,10 +205,10 @@ export function TurmasPageContent({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h1 className="text-foreground text-2xl font-bold">
-                Disciplinas Cadastradas
+                Turmas Cadastradas
               </h1>
               <p className="text-muted-foreground">
-                Gerencie todas as disciplinas cadastradas
+                Gerencie todas as turmas cadastradas
               </p>
             </div>
 
@@ -218,7 +218,7 @@ export function TurmasPageContent({
                 className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium shadow-sm transition-all duration-200 hover:shadow-md"
               >
                 <FolderPlus />
-                Nova Disciplina
+                Nova Turma
               </Button>
             ) : null}
           </div>
@@ -232,7 +232,7 @@ export function TurmasPageContent({
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-12"
-                  placeholder="Buscar por disciplina, professor ou etiqueta..."
+                  placeholder="Buscar por turma, professor ou disciplina..."
                 />
               </div>
             </div>
@@ -366,21 +366,21 @@ export function TurmasPageContent({
             </section>
           ) : null}
 
-          <div>
-            <div className="overflow-x-auto">
-              <Table>
+          <div className="bg-card border-border/50 shadow-soft overflow-hidden rounded-2xl border">
+            <div className="w-full">
+              <Table className="table-fixed [&_td]:whitespace-normal [&_th]:whitespace-normal">
                 <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
+                    <TableHead className="text-muted-foreground w-[32%] px-4 py-4 text-left text-sm font-medium">
                       Turma
                     </TableHead>
-                    <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
+                    <TableHead className="text-muted-foreground w-[24%] px-4 py-4 text-left text-sm font-medium">
                       Professor
                     </TableHead>
-                    <TableHead className="text-muted-foreground px-6 py-4 text-left text-sm font-medium">
+                    <TableHead className="text-muted-foreground w-[34%] px-4 py-4 text-left text-sm font-medium">
                       Disciplina
                     </TableHead>
-                    <TableHead className="text-muted-foreground px-6 py-4 text-right text-sm font-medium">
+                    <TableHead className="text-muted-foreground w-[10%] px-4 py-4 text-right text-sm font-medium">
                       Ações
                     </TableHead>
                   </TableRow>
@@ -391,16 +391,16 @@ export function TurmasPageContent({
                     <TableRow>
                       <TableCell
                         colSpan={4}
-                        className="text-muted-foreground px-6 py-6 text-center"
+                        className="text-muted-foreground px-4 py-6 text-center"
                       >
-                        Carregando Disciplinas...
+                         Carregando turmas...
                       </TableCell>
                     </TableRow>
                   ) : turmas.length === 0 ? (
                     <TableRow>
                       <TableCell
                         colSpan={4}
-                        className="text-muted-foreground px-6 py-4 text-center"
+                        className="text-muted-foreground px-4 py-4 text-center"
                       >
                         {search
                           ? "Nenhuma turma encontrada com o termo pesquisado."
@@ -423,30 +423,34 @@ export function TurmasPageContent({
                           key={turma.id}
                           className="border-border/50 hover:bg-muted/20 bg-background border-b transition-colors last:border-0"
                         >
-                          <TableCell className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                          <TableCell className="px-4 py-4 align-top whitespace-normal">
+                            <div className="flex items-start gap-3">
+                              <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
                                 <span className="text-primary text-sm font-semibold">
                                   {initials}
                                 </span>
                               </div>
-                              <div>
-                                <p className="text-foreground text-sm font-medium">
+                              <div className="min-w-0">
+                                <p className="text-foreground break-words text-sm font-medium">
                                   {disciplina}
                                 </p>
                               </div>
                             </div>
                           </TableCell>
 
-                          <TableCell className="text-foreground px-6 py-4 text-sm">
-                            {turma.professorName || "-"}
+                          <TableCell className="text-foreground px-4 py-4 align-top text-sm whitespace-normal">
+                            <span className="block break-words">
+                              {turma.professorName || "-"}
+                            </span>
                           </TableCell>
 
-                          <TableCell className="text-foreground px-6 py-4 text-sm">
-                            {turma.tag || "-"}
+                          <TableCell className="text-foreground px-4 py-4 align-top text-sm whitespace-normal">
+                            <span className="block break-words leading-5">
+                              {turma.tag || "-"}
+                            </span>
                           </TableCell>
 
-                          <TableCell className="px-6 py-4 text-right">
+                          <TableCell className="px-4 py-4 text-right align-top">
                             <div className="flex items-center justify-end">
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -498,9 +502,9 @@ export function TurmasPageContent({
               </Table>
             </div>
 
-            <div className="border-border/50 flex items-center justify-between border-t px-6 py-4">
+            <div className="border-border/50 flex items-center justify-between border-t px-4 py-4">
               <p className="text-muted-foreground text-sm">
-                Mostrando {turmas.length} de {total} disciplinas
+                Mostrando {turmas.length} de {total} turmas
               </p>
 
               <div className="flex items-center gap-2">

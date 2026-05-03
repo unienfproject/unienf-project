@@ -11,7 +11,7 @@ function KpiCard({ title, value }: { title: string; value: string }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="text-xs font-medium text-slate-600">{title}</div>
-      <div className="mt-1 text-2xl font-bold text-slate-900">{value}</div>
+      <div className="mt-1 text-xl font-bold text-slate-900">{value}</div>
     </div>
   );
 }
@@ -48,7 +48,7 @@ export default async function RecepcaoHomePage() {
       <main className="p-3">
       <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Recepção</h1>
+          <h1 className="text-xl font-bold text-slate-900">Recepção</h1>
           <p className="text-slate-600">
             Visão Geral <br />
             Operador: {profile.name ?? profile.email ?? "Recepção"}.
@@ -64,7 +64,7 @@ export default async function RecepcaoHomePage() {
 
       <section className="gap-6 overflow-hidden rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="border-b p-4">
-          <h2 className="font-semibold text-slate-900">Avisos Recentes</h2>
+          <h2 className="font-medium text-slate-900">Avisos Recentes</h2>
           <p className="text-sm text-slate-600">Últimos Avisos</p>
         </div>
 
@@ -73,7 +73,7 @@ export default async function RecepcaoHomePage() {
             <div key={n.id} className="p-4">
               <div className="flex flex-col gap-1 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <h3 className="text-base font-semibold text-slate-900">
+                  <h3 className="text-sm font-medium text-slate-900">
                     {n.title}
                   </h3>
                   <p className="text-xs text-slate-500">
@@ -99,3 +99,5 @@ export default async function RecepcaoHomePage() {
     </div>
   );
 }
+
+

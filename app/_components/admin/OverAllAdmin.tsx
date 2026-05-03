@@ -1,6 +1,7 @@
 "use client";
 
 import AdminPeriodFilter from "@/app/_components/admin/AdminPeriodFilter";
+import RegistrationBarChart from "@/app/_components/admin/RegistrationBarChart";
 import ActivityItem from "@/app/_components/aluno/ActivityItem";
 import StatCard from "@/app/_components/StatCard";
 import { Button } from "@/app/_components/ui/button";
@@ -14,9 +15,7 @@ import {
 } from "@/app/_components/ui/table";
 import {
   Check,
-  FileText,
   FolderOpen,
-  TrendingUp,
   UserCheck,
   Users,
 } from "lucide-react";
@@ -42,10 +41,12 @@ export default function PendingDocumentsClient({
   registrationStats?: RegistrationStats[];
   recentActivities?: RecentAuditActivity[];
 }) {
+  const [renderedAt] = useState(() => Date.now());
+
   function formatRelativeTime(iso: string) {
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return "-";
-    const diffMs = Date.now() - date.getTime();
+    const diffMs = renderedAt - date.getTime();
     const minuteMs = 60 * 1000;
     const hourMs = 60 * minuteMs;
     const dayMs = 24 * hourMs;
@@ -77,7 +78,7 @@ export default function PendingDocumentsClient({
       <main className="flex flex-1 flex-col">
         <div className="space-y-6">
           <div>
-            <h1 className="text-foreground text-2xl font-bold">Visão Geral</h1>
+            <h1 className="text-foreground text-xl font-bold">Visão Geral</h1>
             <p className="text-muted-foreground">
               Acompanhe as principais métricas da instituição
             </p>
@@ -108,10 +109,10 @@ export default function PendingDocumentsClient({
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-6 lg:col-span-2">
+            <div className="bg-card border-border/50 shadow-soft self-start rounded-2xl border p-6 lg:col-span-2">
               <div className="mb-6 flex items-center justify-between">
                 <div>
-                  <h3 className="text-foreground text-lg font-semibold">
+                  <h3 className="text-foreground text-base font-semibold">
                     Matrículas por Mês
                   </h3>
                   <p className="text-muted-foreground text-sm">
@@ -120,51 +121,14 @@ export default function PendingDocumentsClient({
                 </div>
                 <AdminPeriodFilter />
               </div>
-              {registrationStats.length > 0 ? (
-                <div className="flex h-64 items-end gap-2 pt-4">
-                  {registrationStats.map((d) => {
-                    const max = Math.max(
-                      ...registrationStats.map((s) => s.count),
-                      1,
-                    );
-                    const heightPct = (d.count / max) * 100;
-                    return (
-                      <div
-                        key={d.label}
-                        className="group relative flex h-full flex-1 flex-col items-center justify-end gap-2"
-                      >
-                        <div
-                          className="min-h-[4px] w-full rounded-t-md bg-sky-500 transition-all hover:bg-sky-600"
-                          style={{ height: `${heightPct}%` }}
-                        >
-                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded bg-slate-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                            {d.count} alunos
-                          </div>
-                        </div>
-                        <span className="text-xs whitespace-nowrap text-slate-600">
-                          {d.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="bg-muted/30 flex h-64 items-center justify-center rounded-xl">
-                  <div className="text-center">
-                    <TrendingUp className="text-primary mx-auto mb-3 h-12 w-12" />
-                    <p className="text-muted-foreground">
-                      Sem dados no período
-                    </p>
-                  </div>
-                </div>
-              )}
+              <RegistrationBarChart data={registrationStats} />
             </div>
 
-            <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-6">
-              <h3 className="text-foreground mb-4 text-lg font-semibold">
+            <div className="bg-card border-border/50 shadow-soft self-start rounded-2xl border p-6">
+              <h3 className="text-foreground mb-4 text-base font-semibold">
                 Atividades Recentes
               </h3>
-              <div className="space-y-4">
+              <div className="max-h-72 space-y-4 overflow-y-auto pr-1">
                 {recentActivities.length > 0 ? (
                   recentActivities.map((activity) => (
                     <ActivityItem
@@ -187,7 +151,7 @@ export default function PendingDocumentsClient({
           <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-6">
             <div className="mb-6 flex items-center justify-between">
               <div>
-                <h3 className="text-foreground text-lg font-semibold">
+                <h3 className="text-foreground text-base font-semibold">
                   Documentos Pendentes
                 </h3>
                 <p className="text-muted-foreground text-sm">
@@ -271,3 +235,5 @@ export default function PendingDocumentsClient({
     </main>
   );
 }
+
+

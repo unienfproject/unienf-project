@@ -175,7 +175,7 @@ export default function AttendanceModal({
 
           <TabsContent value="diaria" className="mt-4 space-y-4">
             <div className="grid gap-3 sm:grid-cols-[180px_1fr] sm:items-end">
-              <div className="space-y-2">
+              <div className="w-fit space-y-2">
                 <Label htmlFor="attendance-date">Data</Label>
                 <Input
                   id="attendance-date"
@@ -236,8 +236,8 @@ export default function AttendanceModal({
           </TabsContent>
 
           <TabsContent value="periodo" className="mt-4 space-y-4">
-            <div className="grid gap-3 sm:grid-cols-[180px_1fr] sm:items-end">
-              <div className="space-y-2">
+            <div className="space-y-3">
+              <div className="w-fit space-y-2">
                 <Label htmlFor="total-classes">Aulas no período</Label>
                 <Input
                   id="total-classes"
@@ -246,6 +246,7 @@ export default function AttendanceModal({
                   step="1"
                   value={totalClasses}
                   onChange={(event) => setTotalClasses(event.target.value)}
+                  className="w-28"
                 />
               </div>
               <p className="text-sm text-slate-600">
@@ -306,3 +307,4 @@ export default function AttendanceModal({
     </Dialog>
   );
 }
+

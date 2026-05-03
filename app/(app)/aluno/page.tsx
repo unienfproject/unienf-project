@@ -22,30 +22,41 @@ export default async function OverallAlunoPage() {
       <main className="flex flex-1 flex-col">
         <div className="space-y-6">
           <div>
-            <h1 className="text-foreground text-2xl font-bold">Olá, {ov.alunoName}!</h1>
+            <h1 className="text-foreground text-[22px] font-bold">Olá, {ov.alunoName}!</h1>
             <p className="text-muted-foreground">Acompanhe seu progresso e atividades</p>
           </div>
 
           <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            <StatCard label="Minha Turma" value={ov.turmaAtualLabel ?? "-"} icon={BookOpen} variant="default" />
+            <StatCard
+              label="Minha Turma"
+              value={ov.turmaAtualLabel ?? "-"}
+              icon={BookOpen}
+              variant="default"
+              labelClassName="text-xs"
+              valueClassName="text-[28px]"
+            />
             <StatCard
               label="Média Geral"
               value={ov.mediaGeral == null ? "-" : ov.mediaGeral.toFixed(1)}
               icon={Award}
               variant={ov.mediaGeral != null && ov.mediaGeral >= 7 ? "success" : "muted"}
+              labelClassName="text-xs"
+              valueClassName="text-[28px]"
             />
             <StatCard
               label="Documentos Pendentes"
               value={ov.documentos.pendentes}
               icon={FileText}
               variant={ov.documentos.pendentes > 0 ? "warning" : "success"}
+              labelClassName="text-xs"
+              valueClassName="text-[28px]"
             />
           </div>
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-6 lg:col-span-2">
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-foreground text-lg font-semibold">Últimas Notas</h3>
+                <h3 className="text-foreground text-[17px] font-semibold">Últimas Notas</h3>
                 <Button asChild className="hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium">
                   <Link href="/aluno/notas">
                     Ver todas <ArrowRight className="ml-2 h-4 w-4" />
@@ -63,7 +74,7 @@ export default async function OverallAlunoPage() {
                     <div key={n.id} className="bg-muted/30 flex items-center justify-between rounded-xl p-4">
                       <div className="flex items-center gap-4">
                         <div className="bg-success/10 flex h-12 w-12 items-center justify-center rounded-xl">
-                          <span className="text-success text-lg font-bold">{n.value.toFixed(1).replace(".0", "")}</span>
+                          <span className="text-success text-base font-bold">{n.value.toFixed(1).replace(".0", "")}</span>
                         </div>
                         <div>
                           <p className="text-foreground font-medium">{n.turmaLabel}</p>
@@ -79,7 +90,7 @@ export default async function OverallAlunoPage() {
 
             <div className="space-y-6">
               <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-6">
-                <h3 className="text-foreground mb-4 text-lg font-semibold">Meus Documentos</h3>
+                <h3 className="text-foreground mb-4 text-[17px] font-semibold">Meus Documentos</h3>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -111,7 +122,7 @@ export default async function OverallAlunoPage() {
               </div>
 
               <div className="bg-card border-border/50 shadow-soft rounded-2xl border p-6">
-                <h3 className="text-foreground mb-4 flex items-center gap-2 text-lg font-semibold">
+                <h3 className="text-foreground mb-4 flex items-center gap-2 text-[17px] font-semibold">
                   <Bell className="text-primary h-5 w-5" />
                   Avisos Recentes
                 </h3>
@@ -146,3 +157,7 @@ export default async function OverallAlunoPage() {
     </div>
   );
 }
+
+
+
+

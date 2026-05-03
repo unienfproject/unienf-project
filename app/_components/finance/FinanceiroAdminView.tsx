@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import RegistrationBarChart from "@/app/_components/admin/RegistrationBarChart";
 import StatusBadge from "@/app/_components/StatusBadge";
 import AdminPeriodFilter from "../admin/AdminPeriodFilter";
 import { getStudentRegistrationsStats } from "@/app/_lib/actions/dashboard";
@@ -152,25 +153,7 @@ export default async function FinanceiroAdminView({
               Período: {periodLabel}
             </span>
           </div>
-          <div className="flex h-48 items-end gap-2 pt-4">
-            {registrationStats.map((d) => {
-              const max = Math.max(...registrationStats.map((s) => s.count), 1);
-              const heightPct = (d.count / max) * 100;
-              return (
-                <div key={d.label} className="group relative flex h-full flex-1 flex-col items-center justify-end gap-2">
-                  <div
-                    className="w-full min-h-[4px] rounded-t-md bg-sky-500 transition-all hover:bg-sky-600"
-                    style={{ height: `${heightPct}%` }}
-                  >
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded bg-slate-800 px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                      {d.count} alunos
-                    </div>
-                  </div>
-                  <span className="text-xs text-slate-600 whitespace-nowrap">{d.label}</span>
-                </div>
-              );
-            })}
-          </div>
+          <RegistrationBarChart data={registrationStats} heightClassName="h-48" />
         </div>
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4">

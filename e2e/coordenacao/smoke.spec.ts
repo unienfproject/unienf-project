@@ -16,7 +16,7 @@ const MENU: [string, RegExp][] = [
   ["Avisos", /\/admin\/avisos/],
 ];
 
-test.describe("Coordenação — smoke", () => {
+test.describe("Coordenação - smoke", () => {
   test("menu lateral: itens de coordenação (sem Usuários/Valores)", async ({
     page,
   }) => {
@@ -24,17 +24,17 @@ test.describe("Coordenação — smoke", () => {
     if (await hasBrokenAuthenticatedAppState(page)) {
       test.skip(
         true,
-        "Ambiente de coordenaÃ§Ã£o indisponÃ­vel ou credenciais nÃ£o pertencem Ã  role esperada.",
+        "Ambiente de coordenação indisponível ou credenciais não pertencem à role esperada.",
       );
       return;
     }
     if (
-      (await page.getByRole("link", { name: "VisÃ£o Geral", exact: true }).count()) ===
+      (await page.getByRole("link", { name: "Visão Geral", exact: true }).count()) ===
       0
     ) {
       test.skip(
         true,
-        "Ambiente de coordenaÃ§Ã£o sem menu lateral navegÃ¡vel neste ambiente.",
+        "Ambiente de coordenação sem menu lateral navegável neste ambiente.",
       );
       return;
     }

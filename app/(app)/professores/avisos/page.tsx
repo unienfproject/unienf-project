@@ -25,7 +25,7 @@ export default async function ProfessorAvisosPage() {
 
   const classes = await listTeacherClassesForPicker(profile.user_id);
 
-  const students = await listStudentsForPicker();
+  const students = await listStudentsForPicker(profile.user_id);
 
   return (
     <div className="flex flex-col">

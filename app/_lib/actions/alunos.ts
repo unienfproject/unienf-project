@@ -1,6 +1,7 @@
 "use server";
 
 import { logAudit } from "@/app/_lib/actions/audit";
+import { listMyAvisosForAluno } from "@/app/_lib/actions/avisos";
 import type { PaginatedResult } from "@/app/_lib/actions/pagination";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { saveDbErrorLog } from "@/app/_lib/server/dbErrorLogger";
@@ -179,6 +180,7 @@ export async function createAluno(input: {
       user_metadata: {
         name,
         phone: telefone,
+        cpf,
         role: "aluno",
       },
       app_metadata: {
@@ -1279,32 +1281,12 @@ export async function getAlunoOverviewDashboard(): Promise<AlunoDashboardOvervie
   let avisosRecentes: AlunoDashboardAvisoItem[] = [];
 
   try {
-    const base = supabase
-      .from("avisos")
-      .select("id, title, created_at")
-      .order("created_at", { ascending: false })
-      .limit(5);
-
-    const { data, error } = turmaAtualLabel
-      ? await base.or(`aluno_id.eq.${alunoId},turma_tag.eq.${turmaAtualLabel}`)
-      : await base.eq("aluno_id", alunoId);
-
-    // Observação:
-    // Eu filtrei por turma_tag porque no seu sistema turma parece ser "tag".
-    // Se no seu banco o aviso relaciona por turma_id, trocamos para turma_id.eq.<id>.
-    if (error) {
-      if (error.code === "42703" || error.code === "42P01") {
-        avisosRecentes = [];
-      } else {
-        throw error;
-      }
-    } else {
-      avisosRecentes = (data ?? []).map((a: any) => ({
-        id: String(a.id),
-        title: String(a.title ?? "Aviso"),
-        createdAt: String(a.created_at),
-      }));
-    }
+    const avisos = await listMyAvisosForAluno();
+    avisosRecentes = avisos.slice(0, 5).map((aviso) => ({
+      id: aviso.id,
+      title: aviso.title || "Aviso",
+      createdAt: aviso.createdAt,
+    }));
   } catch {
     avisosRecentes = [];
   }
@@ -1318,3 +1300,4 @@ export async function getAlunoOverviewDashboard(): Promise<AlunoDashboardOvervie
     avisosRecentes,
   };
 }
+

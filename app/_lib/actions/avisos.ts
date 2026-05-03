@@ -81,20 +81,11 @@ async function requireAllowedRoles() {
   return profile;
 }
 
-export async function listAvisosForStudent(
+async function fetchAvisosForStudentId(
   studentId: string,
 ): Promise<AvisoForStudent[]> {
-  const profile = await getUserProfile();
-  if (!profile) throw new Error("Sessão inválida.");
-
-  const allowedRoles = ["recepção", "administrativo", "coordenação"];
-  if (!allowedRoles.includes(profile.role ?? "")) {
-    throw new Error("Sem permissão para listar avisos do aluno.");
-  }
-
   const supabase = await createServerSupabaseClient();
 
-  // Buscar avisos direcionados ao aluno (via aviso_alunos)
   const { data: avisoAlunos, error: avisoAlunosError } = await supabase
     .from("aviso_alunos")
     .select("aviso_id")
@@ -110,7 +101,6 @@ export async function listAvisosForStudent(
       ? avisoAlunos.map((aa) => aa.aviso_id)
       : [];
 
-  // Buscar avisos das turmas do aluno
   const { data: turmaAlunos, error: turmaAlunosError } = await supabase
     .from("turma_alunos")
     .select("turma_id")
@@ -121,11 +111,8 @@ export async function listAvisosForStudent(
     turmaIds = turmaAlunos.map((ta) => ta.turma_id);
   }
 
-  // Buscar avisos direcionados ao aluno ou às suas turmas
-  // Fazer duas queries separadas e combinar os resultados
   const avisosFormatados: AvisoForStudent[] = [];
 
-  // 1. Buscar avisos direcionados diretamente ao aluno
   if (avisoIds.length > 0) {
     const { data: avisosDiretos, error: avisosDiretosError } = await supabase
       .from("avisos")
@@ -164,7 +151,6 @@ export async function listAvisosForStudent(
     }
   }
 
-  // 2. Buscar avisos das turmas do aluno
   if (turmaIds.length > 0) {
     const { data: avisosTurmas, error: avisosTurmasError } = await supabase
       .from("avisos")
@@ -186,7 +172,6 @@ export async function listAvisosForStudent(
 
     if (!avisosTurmasError && avisosTurmas) {
       for (const aviso of avisosTurmas) {
-        // Evitar duplicatas
         if (avisosFormatados.some((a) => a.id === String(aviso.id))) {
           continue;
         }
@@ -221,12 +206,35 @@ export async function listAvisosForStudent(
     }
   }
 
-  // Ordenar por data (mais recente primeiro)
-  avisosFormatados.sort((a, b) => {
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-  });
+  avisosFormatados.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+  );
 
   return avisosFormatados;
+}
+
+export async function listAvisosForStudent(
+  studentId: string,
+): Promise<AvisoForStudent[]> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+
+  const allowedRoles = ["recepção", "administrativo", "coordenação"];
+  if (!allowedRoles.includes(profile.role ?? "")) {
+    throw new Error("Sem permissão para listar avisos do aluno.");
+  }
+
+  return fetchAvisosForStudentId(studentId);
+}
+
+export async function listMyAvisosForAluno(): Promise<AvisoForStudent[]> {
+  const profile = await getUserProfile();
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "aluno") {
+    throw new Error("Sem permissão para listar os próprios avisos.");
+  }
+
+  return fetchAvisosForStudentId(profile.user_id);
 }
 
 export async function listAvisos(): Promise<AvisoListRow[]> {
@@ -268,6 +276,25 @@ export async function listAvisos(): Promise<AvisoListRow[]> {
   const rows = (data ?? []) as AvisoRow[];
 
   const targetCountMap = new Map<string, number>();
+  const turmaIds = Array.from(
+    new Set(
+      rows
+        .filter((row) => row.scope_type === "turma" && row.turma_id)
+        .map((row) => String(row.turma_id)),
+    ),
+  );
+  const turmaLabelMap = new Map<string, string>();
+
+  if (turmaIds.length > 0) {
+    const { data: turmas } = await supabase
+      .from("turmas")
+      .select("id, tag")
+      .in("id", turmaIds);
+
+    for (const turma of turmas ?? []) {
+      turmaLabelMap.set(String(turma.id), String(turma.tag ?? turma.id));
+    }
+  }
 
   for (const aviso of rows) {
     const id = String(aviso.id);
@@ -295,9 +322,13 @@ export async function listAvisos(): Promise<AvisoListRow[]> {
 
     let targetLabel: string | null = null;
     if (r.scope_type === "turma" && r.turma_id) {
-      targetLabel = `Turma: ${String(r.turma_id)}`;
+      const turmaId = String(r.turma_id);
+      targetLabel = `Turma: ${turmaLabelMap.get(turmaId) ?? turmaId}`;
     } else if (r.scope_type === "alunos") {
-      targetLabel = "Todos os alunos";
+      targetLabel =
+        totalTargets === 1
+          ? "1 aluno selecionado"
+          : `${totalTargets} alunos selecionados`;
     }
 
     return {

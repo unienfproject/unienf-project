@@ -3,11 +3,11 @@
 import NoticeDetailsDialog, {
   type NoticeDetailsData,
 } from "@/app/_components/avisos/NoticeDetailsDialog";
+import { createNotice, NoticeRow } from "@/app/_lib/actions/notices";
 import { useMemo, useState, useTransition } from "react";
-import { createNotice } from "@/app/_lib/actions/notices";
-import { NoticeRow } from "@/app/_lib/actions/notices";
+
+import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
-import { Textarea } from "../../ui/textarea";
 import {
   Select,
   SelectContent,
@@ -15,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../ui/select";
-import { Button } from "../../ui/button";
+import { Textarea } from "../../ui/textarea";
 
 type PickerItem = { id: string; label: string };
 
@@ -102,7 +102,7 @@ function CreateNoticeModal({
             setError(null);
 
             if (!title.trim() || !message.trim()) {
-              setError("Informe título e mensagem.");
+              setError("Informe titulo e mensagem.");
               return;
             }
 
@@ -137,7 +137,7 @@ function CreateNoticeModal({
           }}
         >
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Field label="Título">
+            <Field label="Titulo">
               <Input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -183,7 +183,7 @@ function CreateNoticeModal({
                     Selecionar turma
                   </h4>
                   <p className="text-xs text-slate-600">
-                    Envia para todos os alunos vinculados à turma.
+                    Envia para todos os alunos vinculados a turma.
                   </p>
                 </div>
               </div>
@@ -214,7 +214,7 @@ function CreateNoticeModal({
                     Selecionar alunos
                   </h4>
                   <p className="text-xs text-slate-600">
-                    Selecione manualmente alunos unitários ou múltiplos.
+                    Selecione manualmente alunos unitarios ou multiplos.
                   </p>
                 </div>
 
@@ -327,9 +327,8 @@ export default function TeacherNoticesView({
     "todos",
   );
   const [openCreate, setOpenCreate] = useState(false);
-  const [selectedNotice, setSelectedNotice] = useState<NoticeDetailsData | null>(
-    null,
-  );
+  const [selectedNotice, setSelectedNotice] =
+    useState<NoticeDetailsData | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -351,7 +350,7 @@ export default function TeacherNoticesView({
   }, [notices, query, filter, teacherName]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col">
       <NoticeDetailsDialog
         open={selectedNotice !== null}
         onOpenChange={(open) => {
@@ -361,134 +360,138 @@ export default function TeacherNoticesView({
       />
 
       <main className="flex flex-col">
-      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Avisos</h1>
-          <p className="text-slate-600">
-            Professor: {teacherName}. <br/>
-            Visualize avisos e envie comunicados para alunos ou turmas.
-          </p>
-        </div>
+        <div className="space-y-6">
+          <header className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+            <div className="space-y-1">
+              <h1 className="text-[22px] font-bold text-slate-900">Avisos</h1>
+              <p className="text-slate-600">
+                Professor: {teacherName}. <br />
+                Visualize avisos e envie comunicados para alunos ou turmas.
+              </p>
+            </div>
 
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex flex-col gap-1">
-            <span className="text-xs text-slate-600">Buscar</span>
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="h-10 w-[280px] rounded-md border border-slate-200 bg-white px-3 text-sm"
-              placeholder="Título, mensagem ou autor..."
+            <div className="flex flex-col gap-4 md:flex-row md:items-end">
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs text-slate-600">Buscar</span>
+                <Input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm md:w-[320px]"
+                  placeholder="Titulo, mensagem ou autor..."
+                />
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs text-slate-600">Filtro</span>
+                <Select
+                  value={filter}
+                  onValueChange={(value) =>
+                    setFilter(value as "todos" | "meus" | "coord_admin")
+                  }
+                >
+                  <SelectTrigger className="h-11 w-full rounded-md border border-slate-200 bg-white px-3 text-sm md:w-[220px]">
+                    <SelectValue placeholder="Filtrar avisos..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    <SelectItem value="meus">Meus avisos</SelectItem>
+                    <SelectItem value="coord_admin">
+                      Coordenacao/Administrativo
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Button
+                type="button"
+                onClick={() => setOpenCreate(true)}
+                className="h-11 rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
+              >
+                Criar aviso
+              </Button>
+            </div>
+          </header>
+
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <Kpi title="Total de avisos" value={String(notices.length)} />
+            <Kpi
+              title="De coordenacao/admin"
+              value={String(
+                notices.filter((n) => n.author_role !== "professor").length,
+              )}
+            />
+            <Kpi
+              title="Meus avisos"
+              value={String(
+                notices.filter((n) => n.author_role === "professor").length,
+              )}
             />
           </div>
 
-          <div className="flex flex-col gap-4">
-            <span className="text-xs text-slate-600">Filtro</span>
-            <Select
-              value={filter}
-              onValueChange={(value) =>
-                setFilter(value as "todos" | "meus" | "coord_admin")
-              }
-            >
-              <SelectTrigger className="h-10 w-[220px] rounded-md border border-slate-200 bg-white px-3 text-sm">
-                <SelectValue placeholder="Filtrar avisos..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos</SelectItem>
-                <SelectItem value="meus">Meus avisos</SelectItem>
-                <SelectItem value="coord_admin">
-                  Coordenação/Administrativo
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button
-            type="button"
-            onClick={() => setOpenCreate(true)}
-            className="h-10 rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
-          >
-            Criar aviso
-          </Button>
-        </div>
-      </header>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Kpi title="Total de avisos" value={String(notices.length)} />
-        <Kpi
-          title="De coordenação/admin"
-          value={String(
-            notices.filter((n) => n.author_role !== "professor").length,
-          )}
-        />
-        <Kpi
-          title="Meus avisos"
-          value={String(
-            notices.filter((n) => n.author_role === "professor").length,
-          )}
-        />
-      </div>
-
-      <div className="overflow-hidden gap-4 rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="border-b p-4">
-          <h2 className="font-semibold text-slate-900">Últimos avisos</h2>
-          <p className="text-sm text-slate-600">
-            Lista de avisos visíveis para você.
-          </p>
-        </div>
-
-        <div className="divide-y gap-4">
-          {filtered.map((n) => (
-            <div key={n.id} className="flex flex-col gap-4 p-4">
-              <div className="flex flex-col gap-1 md:flex-row md:items-start md:justify-between">
-                <div className="flex flex-col">
-                  <h3 className="text-base font-semibold text-slate-900">
-                    {n.title}
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    {n.author_name} • {n.author_role} •{" "}
-                    {formatDate(n.created_at)}
-                  </p>
-                </div>
-
-                <span className="mt-2 inline-flex w-fit rounded-full bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700 md:mt-0">
-                  {n.audience.type === "turma"
-                    ? `Turma: ${n.audience.classLabel}`
-                    : `Alunos: ${n.audience.studentCount}`}
-                </span>
-              </div>
-
-              <p className="mt-3 text-sm whitespace-pre-line text-slate-700">
-                {n.message}
+          <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="border-b px-5 py-5">
+              <h2 className="font-semibold text-slate-900">Ultimos avisos</h2>
+              <p className="mt-1 text-sm text-slate-600">
+                Lista de avisos visiveis para voce.
               </p>
+            </div>
 
-              <div className="flex justify-end">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() =>
-                    setSelectedNotice({
-                      title: n.title,
-                      message: n.message,
-                      authorName: n.author_name,
-                      authorRole: n.author_role,
-                      createdAt: n.created_at,
-                    })
-                  }
+            <div className="space-y-4 p-5">
+              {filtered.map((n) => (
+                <article
+                  key={n.id}
+                  className="rounded-xl border border-slate-200 bg-slate-50/50 p-5"
                 >
-                  Ver detalhes
-                </Button>
-              </div>
-            </div>
-          ))}
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="space-y-1">
+                      <h3 className="text-base font-semibold text-slate-900">
+                        {n.title}
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        {n.author_name} • {n.author_role} •{" "}
+                        {formatDate(n.created_at)}
+                      </p>
+                    </div>
 
-          {!filtered.length ? (
-            <div className="p-6 text-center text-slate-500">
-              Nenhum aviso encontrado.
+                    <span className="inline-flex w-fit rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                      {n.audience.type === "turma"
+                        ? `Turma: ${n.audience.classLabel}`
+                        : `Alunos: ${n.audience.studentCount}`}
+                    </span>
+                  </div>
+
+                  <p className="mt-4 whitespace-pre-line text-sm leading-6 text-slate-700">
+                    {n.message}
+                  </p>
+
+                  <div className="mt-4 flex justify-end">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() =>
+                        setSelectedNotice({
+                          title: n.title,
+                          message: n.message,
+                          authorName: n.author_name,
+                          authorRole: n.author_role,
+                          createdAt: n.created_at,
+                        })
+                      }
+                    >
+                      Ver detalhes
+                    </Button>
+                  </div>
+                </article>
+              ))}
+
+              {!filtered.length ? (
+                <div className="p-6 text-center text-slate-500">
+                  Nenhum aviso encontrado.
+                </div>
+              ) : null}
             </div>
-          ) : null}
+          </section>
         </div>
-        
-      </div>
       </main>
 
       {openCreate ? (

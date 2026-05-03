@@ -3,7 +3,16 @@
 import { logAudit } from "@/app/_lib/actions/audit";
 import { getUserProfile } from "@/app/_lib/actions/profile";
 import { createServerSupabaseClient } from "@/app/_lib/supabase/server";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
+
+function getAdminSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  return createAdminClient(url, serviceKey, {
+    auth: { persistSession: false },
+  });
+}
 
 export type StudentRowForRecepcao = {
   id: string;
@@ -107,12 +116,41 @@ export async function listPendingMensalidades() {
 
 export async function listNoticesReadOnly() {
   const profile = await getUserProfile();
-  if (!profile) throw new Error("SessÃ£o invÃ¡lida.");
-  if (profile.role !== "recepÃ§Ã£o") throw new Error("Sem permissÃ£o.");
+  if (!profile) throw new Error("Sessão inválida.");
+  if (profile.role !== "recepÃ§Ã£o") throw new Error("Sem permissão.");
 
-  const supabase = await createServerSupabaseClient();
+  const adminSupabase = getAdminSupabase();
 
-  return [];
+  const { data, error } = await adminSupabase
+    .from("avisos")
+    .select(
+      `
+      id,
+      title,
+      message,
+      created_at,
+      profiles:profiles!avisos_author_id_fkey(name, role)
+    `,
+    )
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (error.code === "42P01") return [];
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((item) => {
+    const author = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+
+    return {
+      id: String(item.id),
+      title: String(item.title ?? ""),
+      message: String(item.message ?? ""),
+      created_at: String(item.created_at ?? ""),
+      author_role: String(author?.role ?? "administrativo"),
+      author_name: String(author?.name ?? "Não informado"),
+    };
+  });
 }
 
 export async function markMensalidadeAsPaid(input: {
@@ -214,3 +252,5 @@ export type NoticeRow = {
   author_role: string;
   author_name: string;
 };
+
+

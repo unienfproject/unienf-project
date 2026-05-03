@@ -110,12 +110,22 @@ export function NavUser({
         const account = await getMyAccountProfile();
 
         setProfile({
-          name: account.name,
-          email: account.email,
-          telefone: account.telefone,
-          cpf: account.cpf,
-          avatar_url: account.avatarUrl,
-          role: account.role,
+          name: account.name ?? user.name,
+          email: account.email ?? user.email,
+          telefone:
+            account.telefone ??
+            user.telefone ??
+            (typeof authUser.user_metadata?.phone === "string"
+              ? authUser.user_metadata.phone
+              : null),
+          cpf:
+            account.cpf ??
+            user.cpf ??
+            (typeof authUser.user_metadata?.cpf === "string"
+              ? authUser.user_metadata.cpf
+              : null),
+          avatar_url: account.avatarUrl ?? user.avatar_url,
+          role: account.role ?? user.role,
         });
       } catch {
         setProfile({

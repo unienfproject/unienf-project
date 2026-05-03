@@ -114,9 +114,9 @@ export async function listProfessorDisciplinas(): Promise<
   ProfessorDisciplinaRow[]
 > {
   const profile = await getUserProfile();
-  if (!profile) throw new Error("SessÃ£o invÃ¡lida.");
+  if (!profile) throw new Error("Sessão inválida.");
   if (profile.role !== "professor") {
-    throw new Error("Sem permissÃ£o para listar disciplinas.");
+    throw new Error("Sem permissão para listar disciplinas.");
   }
 
   const supabaseAdmin = getAdminClient();
@@ -189,16 +189,16 @@ export async function updateProfessorDisciplinaEmenta(input: {
   conteudo: string;
 }) {
   const profile = await getUserProfile();
-  if (!profile) throw new Error("SessÃ£o invÃ¡lida.");
+  if (!profile) throw new Error("Sessão inválida.");
   if (profile.role !== "professor") {
-    throw new Error("Sem permissÃ£o para editar ementa.");
+    throw new Error("Sem permissão para editar ementa.");
   }
 
   const disciplinaId = String(input.disciplinaId ?? "").trim();
   const conteudo = String(input.conteudo ?? "").trim();
 
-  if (!disciplinaId) throw new Error("Disciplina invÃ¡lida.");
-  if (!conteudo) throw new Error("Ementa Ã© obrigatÃ³ria.");
+  if (!disciplinaId) throw new Error("Disciplina inválida.");
+  if (!conteudo) throw new Error("Ementa é obrigatória.");
 
   const supabaseAdmin = getAdminClient();
   const disciplinaIdsFromTurmas =
@@ -224,7 +224,7 @@ export async function updateProfessorDisciplinaEmenta(input: {
   const linkedToMyClass = disciplinaIdsFromTurmas.includes(disciplinaId);
 
   if (!createdByMe && !linkedToMyClass) {
-    throw new Error("VocÃª nÃ£o tem permissÃ£o para editar esta ementa.");
+    throw new Error("Você não tem permissão para editar esta ementa.");
   }
 
   const { error } = await supabaseAdmin
