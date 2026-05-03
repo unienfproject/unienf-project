@@ -21,11 +21,7 @@ export default function CreateCostModal({
 
   return (
     <>
-      <Button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="h-10 cursor-pointer rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
-      >
+      <Button type="button" onClick={() => setOpen(true)}>
         Lançar custo
       </Button>
 
@@ -44,9 +40,9 @@ export default function CreateCostModal({
               </div>
               <Button
                 type="button"
+                variant="outline"
                 onClick={() => setOpen(false)}
                 disabled={pending}
-                className="hover:bg-primary/50 cursor-pointer rounded-md border border-slate-200 px-3 py-2 text-sm"
               >
                 Fechar
               </Button>
@@ -145,17 +141,13 @@ export default function CreateCostModal({
               <div className="flex items-center justify-end gap-2 border-t pt-4">
                 <Button
                   type="button"
+                  variant="outline"
                   onClick={() => setOpen(false)}
                   disabled={pending}
-                  className="h-10 cursor-pointer rounded-md border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 hover:bg-[#ff3333] hover:text-white"
                 >
                   Cancelar
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={pending}
-                  className="h-10 rounded-md bg-sky-500 px-4 text-sm font-medium text-white hover:bg-sky-600"
-                >
+                <Button type="submit" disabled={pending}>
                   {pending ? "Salvando..." : "Salvar custo"}
                 </Button>
               </div>

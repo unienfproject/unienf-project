@@ -128,8 +128,8 @@ export default function PeriodRangeButton({
   return (
     <Dialog open={open} onOpenChange={(v) => (setOpen(v), setError(null))}>
       <DialogTrigger asChild>
-        <Button className="ring-offset-background focus-visible:ring-ring border-input bg-primary hover:bg-accent hover:text-accent-foreground inline-flex h-9 items-center justify-center gap-2 rounded-md border px-3 text-sm font-medium whitespace-nowrap transition-all duration-200 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0">
-          <CalendarIcon className="mr-2 h-4 w-4" />
+        <Button type="button" variant="outline">
+          <CalendarIcon className="h-4 w-4" />
           Período
         </Button>
       </DialogTrigger>
